@@ -31,6 +31,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AjaxControlToolkit, Version=4.1.60919.0, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\AjaxControlToolkit.dll</HintPath>
+    </Reference>
     <Reference Include="CMS.Base, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Base.dll</HintPath>
@@ -51,9 +55,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.DataEngine.dll</HintPath>
     </Reference>
+    <Reference Include="CMS.DeviceProfiles, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.DeviceProfiles.dll</HintPath>
+    </Reference>
     <Reference Include="CMS.DocumentEngine, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.DocumentEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.DocumentEngine.Web.UI, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.DocumentEngine.Web.UI.dll</HintPath>
     </Reference>
     <Reference Include="CMS.EventLog, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -78,6 +90,10 @@
     <Reference Include="CMS.ImportExport, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.ImportExport.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.LicenseProvider, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.LicenseProvider.dll</HintPath>
     </Reference>
     <Reference Include="CMS.MacroEngine, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -123,9 +139,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.UIControls.dll</HintPath>
     </Reference>
+    <Reference Include="CMS.WorkflowEngine, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.WorkflowEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.WorkflowEngine.Web.UI">
+      <HintPath>..\Lib\CMS.WorkflowEngine.Web.UI.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -141,10 +165,186 @@
     <Compile Include="Classes\Interfaces\IBindingBaseInfo.cs" />
     <Compile Include="Classes\Interfaces\IOrderableBaseInfo.cs" />
     <Compile Include="Helpers\RelHelper.cs" />
+    <Compile Include="Other\Enums.cs" />
+    <Compile Include="Other\Functions.cs" />
     <Compile Include="Other\RelationshipExtendedEnumsAndMacroEnumGenerator.cs" />
     <Compile Include="Other\RelationshipExtendedLoaderModule.cs" />
     <Compile Include="Other\RelationshipExtendedMacroNamespace.cs" />
     <Compile Include="Other\RelationshipMacros.cs" />
+    <Compile Include="PagesAndControls\Controls\Basic\OrderByControl.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\Basic\OrderByControl.designer.cs">
+      <DependentUpon>OrderByControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\EditMenu.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\EditMenu.designer.cs">
+      <DependentUpon>EditMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedCategories.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedCategories.designer.cs">
+      <DependentUpon>RelatedCategories.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\Relateddocs_List.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\Relateddocs_List.designer.cs">
+      <DependentUpon>Relateddocs_List.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedDocuments.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedDocuments.designer.cs">
+      <DependentUpon>RelatedDocuments.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedPage_Tree.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedPage_Tree.designer.cs">
+      <DependentUpon>RelatedPage_Tree.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedPage_UniSelector.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\RelatedPage_UniSelector.designer.cs">
+      <DependentUpon>RelatedPage_UniSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\Relationships\AddRelatedDocument.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\Relationships\AddRelatedDocument.designer.cs">
+      <DependentUpon>AddRelatedDocument.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\UIControls\OrderableBindingEditItemWithNodeSupport.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\Controls\UIControls\OrderableBindingEditItemWithNodeSupport.designer.cs">
+      <DependentUpon>OrderableBindingEditItemWithNodeSupport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\AdvancedCategorySelector\AdvancedCategorySelector.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\AdvancedCategorySelector\AdvancedCategorySelector.designer.cs">
+      <DependentUpon>AdvancedCategorySelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\AdvancedManyToManySelector\AdvancedManyToManySelector.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\AdvancedManyToManySelector\AdvancedManyToManySelector.designer.cs">
+      <DependentUpon>AdvancedManyToManySelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\RelatedDocuments.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\RelatedDocuments.designer.cs">
+      <DependentUpon>RelatedDocuments.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\SelectRelationshipNames.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\FormControls\SelectRelationshipNames.designer.cs">
+      <DependentUpon>SelectRelationshipNames.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\OrderableUniSelector\UniSelector.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\OrderableUniSelector\UniSelector.designer.cs">
+      <DependentUpon>UniSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\Breadcrumbs.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\Breadcrumbs.designer.cs">
+      <DependentUpon>Breadcrumbs.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\HeaderActions.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\HeaderActions.designer.cs">
+      <DependentUpon>HeaderActions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\Help.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\Help.designer.cs">
+      <DependentUpon>Help.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\PageTitle.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\PageElements\PageTitle.designer.cs">
+      <DependentUpon>PageTitle.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\Pager\UIPager.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\Pager\UIPager.designer.cs">
+      <DependentUpon>UIPager.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\Templates\Relateddocs_Add.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\Templates\Relateddocs_Add.designer.cs">
+      <DependentUpon>Relateddocs_Add.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\Templates\Relateddocs_List.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\Templates\Relateddocs_List.designer.cs">
+      <DependentUpon>Relateddocs_List.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniControls\UniButton.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniControls\UniButton.designer.cs">
+      <DependentUpon>UniButton.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniGrid\Controls\AdvancedExport.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniGrid\Controls\AdvancedExport.designer.cs">
+      <DependentUpon>AdvancedExport.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniGrid\Controls\MassActions.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniGrid\Controls\MassActions.designer.cs">
+      <DependentUpon>MassActions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniGrid\UniGrid.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniGrid\UniGrid.designer.cs">
+      <DependentUpon>UniGrid.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\BaseUniSelector.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\BaseUniSelector.designer.cs">
+      <DependentUpon>BaseUniSelector.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\Controls\SelectionDialog.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\Controls\SelectionDialog.designer.cs">
+      <DependentUpon>SelectionDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\SelectionDialog.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\SelectionDialog.designer.cs">
+      <DependentUpon>SelectionDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\UniSelector.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PagesAndControls\UI\UniSelector\UniSelector.designer.cs">
+      <DependentUpon>UniSelector.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

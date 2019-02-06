@@ -1,7 +1,5 @@
-<%@ Control Language="C#" AutoEventWireup="false"
-    Inherits="CMSModules_RelationshipExtended_UI_UniSelector_Controls_SelectionDialog"  CodeFile="SelectionDialog.ascx.cs" %>
-
-<%@ Register Src="~/CMSAdminControls/UI/UniGrid/UniGrid.ascx" TagName="UniGrid" TagPrefix="cms" %>
+<%@ Control Language="C#" AutoEventWireup="false" Inherits="Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Controls_SelectionDialog" %>
+<%@ Register Src="~/CMSModules/RelationshipsExtended/UI/UniGrid/UniGrid.ascx" TagName="UniGrid" TagPrefix="cms" %>
 
 <asp:Panel ID="pnlBody" runat="server">
     <asp:Panel ID="pnlFilter" runat="server" CssClass="header-panel" Visible="false">

@@ -1,5 +1,4 @@
-<%@ Control Language="C#" AutoEventWireup="true" CodeFile="~/CMSModules/RelationshipsExtended/Controls/RelatedPage_Tree.ascx.cs" Inherits="CMSModules_RelationshipExtended_Controls_RelatedPage_Tree" %>
-
+<%@ Control Language="C#" AutoEventWireup="true" Inherits="Compiled_CMSModules_RelationshipsExtended_Controls_RelatedPage_Tree" %>
 <asp:Button runat="server" ID="btnAdd" CssClass="btn btn-primary AddButton" Text="Add Selected Pages" OnClick="btnAdd_Click" />
 <asp:DropDownList runat="server" ID="ddlCurrentNodeDirection" CssClass="DropDownField form-control DirectionSelector">
     <asp:ListItem Value="LeftNode">Add as Right-side Page</asp:ListItem>

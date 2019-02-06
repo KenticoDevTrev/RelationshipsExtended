@@ -1,6 +1,5 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="Relateddocs_List.ascx.cs" Inherits="CMSModules_RelationshipExtended_Controls_Relateddocs_List" %>
-<%@ Register Src="~/CMSModules/RelationshipsExtended/Controls/RelatedDocuments.ascx"
-    TagName="RelatedDocuments" TagPrefix="cms" %>
+﻿<%@ Control Language="C#" AutoEventWireup="true" Inherits="Compiled_CMSModules_RelationshipsExtended_Controls_Relateddocs_List" %>
+<%@ Register Src="~/CMSModules/RelationshipsExtended/Controls/RelatedDocuments.ascx" TagName="RelatedDocuments" TagPrefix="cms" %>
 
 <asp:Panel ID="pnlContent" runat="server" CssClass="Unsorted">
         <div class="PageContent">

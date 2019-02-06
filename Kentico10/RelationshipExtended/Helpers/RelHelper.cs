@@ -711,12 +711,20 @@ namespace RelationshipsExtended
         /// <returns>The Non-Linked Node ID, -1 if it can't find the main Node</returns>
         public static int GetPrimaryNodeID(int NodeID)
         {
-            TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstObject;
-            while (NodeObj != null && NodeObj.NodeLinkedNodeID > 0)
+            return CacheHelper.Cache<int>(cs =>
             {
-                NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstObject;
-            }
-            return (NodeObj != null ? NodeObj.NodeID : -1);
+                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstObject;
+                while (NodeObj != null && NodeObj.NodeLinkedNodeID > 0)
+                {
+                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstObject;
+                }
+                int PrimaryNodeID = (NodeObj != null ? NodeObj.NodeID : -1);
+                if (cs.Cached)
+                {
+                    cs.CacheDependency = CacheHelper.GetCacheDependency(new string[] { "nodeid|" + NodeID, "nodeid|" + PrimaryNodeID });
+                }
+                return PrimaryNodeID;
+            }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), "GetPrimaryNodeID", NodeID));
         }
 
         /// <summary>

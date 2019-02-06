@@ -1,6 +1,5 @@
-<%@ Control Language="C#" AutoEventWireup="true" CodeFile="RelatedDocuments.ascx.cs"
-    Inherits="CMSModules_RelationshipExtended_Controls_RelatedDocuments" %>
-<%@ Register Src="~/CMSAdminControls/UI/UniGrid/UniGrid.ascx" TagName="UniGrid" TagPrefix="cms" %>
+<%@ Control Language="C#" AutoEventWireup="true" Inherits="Compiled_CMSModules_RelationshipsExtended_Controls_RelatedDocuments" %>
+<%@ Register Src="~/CMSModules/RelationshipsExtended/UI/UniGrid/UniGrid.ascx" TagName="UniGrid" TagPrefix="cms" %>
 <div>
     <cms:CMSUpdatePanel ID="pnlUpdate" runat="server" class="">
         <ContentTemplate>

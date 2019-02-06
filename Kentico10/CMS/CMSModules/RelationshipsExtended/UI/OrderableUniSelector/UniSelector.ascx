@@ -1,8 +1,6 @@
-<%@ Control Language="C#" AutoEventWireup="true" Inherits="CMSModules_UI_OrderableUniSelector_UniSelector_UniSelector"
-     CodeFile="UniSelector.ascx.cs" %>
-
-<%@ Register Src="~/CMSAdminControls/UI/UniGrid/UniGrid.ascx" TagName="UniGrid" TagPrefix="cms" %>
-<%@ Register Src="~/CMSAdminControls/UI/UniControls/UniButton.ascx" TagName="UniButton" TagPrefix="cms" %>
+<%@ Control Language="C#" AutoEventWireup="true" Inherits="Compiled_CMSModules_RelationshipsExtended_UI_OrderableUniSelector_UniSelector_UniSelector" %>
+<%@ Register Src="~/CMSModules/RelationshipsExtended/UI/UniGrid/UniGrid.ascx" TagName="UniGrid" TagPrefix="cms" %>
+<%@ Register Src="~/CMSModules/RelationshipsExtended/UI/UniControls/UniButton.ascx" TagName="UniButton" TagPrefix="cms" %>
 
 <asp:Label ID="lblStatus" runat="server" EnableViewState="False" CssClass="form-control-text InfoLabel" />
 
