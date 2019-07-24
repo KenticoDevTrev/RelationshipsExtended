@@ -124,7 +124,7 @@ namespace RelationshipsExtended
             var BindingObjectSingleton = BindingObjectFactory.Singleton;
             var BindingObj = new ObjectQuery(BindingObjectType)
                            .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName(), CorrectObjectID)
-                           .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName(), actionArgument).FirstObject;
+                           .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName(), actionArgument).FirstOrDefault();
 
             var ObjectFactory = new InfoObjectFactory(ObjectType);
             var ObjectSingleton = (ObjectFactory != null && ObjectFactory.Singleton != null ? ObjectFactory.Singleton : null);
@@ -146,7 +146,7 @@ namespace RelationshipsExtended
                                 int NewPosition = ValidationHelper.GetInteger(Values[2], 0);
                                 BindingObj = new ObjectQuery(BindingObjectType)
                                     .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName(), CorrectObjectID)
-                                    .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName(), ObjectID).FirstObject;
+                                    .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName(), ObjectID).FirstOrDefault();
                                 ((IOrderableBaseInfo)BindingObj).SetObjectOrderRelative(NewPosition - OrigPosition);
                             }
                         }
@@ -330,7 +330,7 @@ namespace RelationshipsExtended
                 var OrderItem = new ObjectQuery(BindingObjectType)
                     .WhereEquals(ParentObjectReference, CorrectObjectID)
                     .WhereEquals(BoundObjectReference, dr[ObjectIDColumn])
-                    .FirstObject;
+                    .FirstOrDefault();
                 if (OrderItem != null)
                 {
                     dr["OrderableObjectUniSelector_Order"] = ValidationHelper.GetInteger(OrderItem.GetValue(OrderColumn), 0);

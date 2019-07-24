@@ -87,9 +87,10 @@ namespace Demo
         /// <param name="barId">ObjectType.demo_bar ID</param>  
         protected virtual FooBarInfo GetFooBarInfoInternal(int fooId, int barId)
         {
-            return GetSingleObject()
+            return ProviderObject.GetObjectQuery().TopN(1)
                 .WhereEquals("FooID", fooId)
-                .WhereEquals("BarID", barId);
+                .WhereEquals("BarID", barId)
+                .FirstOrDefault();
         }
 
 

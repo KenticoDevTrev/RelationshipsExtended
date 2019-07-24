@@ -2,6 +2,7 @@
 using CMS.DocumentEngine;
 using CMS.FormEngine;
 using CMS.Helpers;
+using CMS.MacroEngine;
 using CMS.Relationships;
 using CMS.UIControls;
 using RelationshipsExtended;

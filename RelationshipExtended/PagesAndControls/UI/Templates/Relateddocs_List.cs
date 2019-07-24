@@ -110,13 +110,6 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_Templates_Rela
                 {
                     relatedDocuments.Enabled = enabled = false;
                 }
-
-                menuElem.AddExtraAction(new HeaderAction()
-                {
-                    Enabled = enabled,
-                    Text = GetString("relationship.addrelateddocs"),
-                    RedirectUrl = "~/CMSModules/Content/CMSDesk/Properties/Relateddocs_Add.aspx?nodeid=" + NodeID
-                });
             }
         }
 

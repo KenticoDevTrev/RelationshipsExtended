@@ -1068,13 +1068,13 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
 
     private bool DisplayApplyWorkflowButton(bool showWorkflowButtons)
     {
-        var allowed = !Node.IsLink && !IsLiveSite && (PortalContext.ViewMode != ViewModeEnum.EditLive) && ShowApplyWorkflow && (Step == null) && showWorkflowButtons && DocumentManager.IsActionAllowed(DocumentComponentEvents.APPLY_WORKFLOW) && Service<ILicenseService>.Entry().CheckLicense(WorkflowInfo.TYPEINFO.Feature, null, false);
+        var allowed = !Node.IsLink && !IsLiveSite && (PortalContext.ViewMode != ViewModeEnum.EditLive) && ShowApplyWorkflow && (Step == null) && showWorkflowButtons && DocumentManager.IsActionAllowed(DocumentComponentEvents.APPLY_WORKFLOW) && ObjectFactory<ILicenseService>.StaticSingleton().CheckLicense(WorkflowInfo.TYPEINFO.Feature, null, false);
 
         // Check workflow count
         if (allowed)
         {
             allowed = WorkflowInfoProvider.GetWorkflows()
-                                          .Where(new WhereCondition().WhereTrue("WorkflowEnabled").Or().WhereNull("WorkflowEnabled"))
+                                          .WhereTrue("WorkflowEnabled")
                                           .Where(new WhereCondition().WhereNotEquals("WorkflowType", (int)WorkflowTypeEnum.Automation).Or().WhereNull("WorkflowType"))
                                           .Count > 0;
         }

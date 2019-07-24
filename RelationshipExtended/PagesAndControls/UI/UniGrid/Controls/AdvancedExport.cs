@@ -12,7 +12,7 @@ using CMS.Base.Web.UI;
 using CMS.Membership;
 using CMS.SiteProvider;
 using CMS.UIControls;
-
+using CMS.ImportExport;
 
 public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniGrid_Controls_AdvancedExport : AdvancedExport, IPostBackEventHandler
 {

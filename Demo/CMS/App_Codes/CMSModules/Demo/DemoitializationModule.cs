@@ -37,8 +37,6 @@ public class DemoitializationModule : Module
         NodeFooInfo.TYPEINFO.Events.Update.After += NodeFoo_Insert_Or_Update_Or_Delete_After;
         NodeFooInfo.TYPEINFO.Events.Delete.After += NodeFoo_Insert_Or_Update_Or_Delete_After;
 
-
-
         // Manually add items to Document Update task
         StagingEvents.LogTask.Before += LogTask_Before;
 
@@ -56,7 +54,7 @@ public class DemoitializationModule : Module
             if (NodeTable != null && NodeTable.Columns.Contains("NodeGuid"))
             {
                 // Get node ID
-                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeGUID", NodeTable.Rows[0]["NodeGuid"]).FirstObject;
+                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeGUID", NodeTable.Rows[0]["NodeGuid"]).FirstOrDefault();
 
                 // Don't want to trigger updates as we set the data in the database, so we won't log synchronziations
                 using (new CMSActionContext()
@@ -107,7 +105,6 @@ public class DemoitializationModule : Module
                             CurrentObj.SetObjectOrder(FooIndex + 1);
                         }
                     }
-                    
                     #endregion
                 }
 				if (RelHelper.IsStagingEnabled(NodeObj.NodeSiteID))

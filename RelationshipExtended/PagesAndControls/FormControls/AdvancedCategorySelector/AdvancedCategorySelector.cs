@@ -30,16 +30,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
 
     #region "Variables"
 
-    private bool mEnableSiteSelection;
-    private DialogConfiguration mConfig;
     private DisplayType DisplayMode;
     private SaveType SaveModeVal;
     private CategoryFieldSaveType FieldSaveModeVal;
     private string AllowableCategoryIDWhere;
     private string DefaultSortOrder;
     private int ExpandCategoryLevel;
-    private int previousValue = -1;
-    private string CategoryIDValues;
     private List<CategoryInfo> PossibleCategories;
     private List<CategoryInfo> CurrentCategories;
     private List<CategoryInfo> _InitialRealCurrentCategoriesHolder;
@@ -1090,7 +1086,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                         }
                         break;
                     case CategoryFieldSaveType.GUID:
-                        var ClassObject = CategoryInfoProvider.GetCategories().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstObject;
+                        var ClassObject = CategoryInfoProvider.GetCategories().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstOrDefault();
                         if (ClassObject != null)
                         {
                             DocumentCategoryIds.Add(ValidationHelper.GetInteger(ClassObject["CategoryID"], 0));

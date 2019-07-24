@@ -610,13 +610,11 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 {
                     // Remove relationship
                     RelationshipInfoProvider.RemoveRelationship(relationshipId);
-
                     if (RelHelper.IsStagingEnabled())
                     {
                         // Log synchronization
                         DocumentSynchronizationHelper.LogDocumentChange(TreeNode.NodeSiteName, TreeNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, TreeProvider);
                     }
-
                     ShowConfirmation(GetString("relationship.wasdeleted"));
                     URLHelper.RefreshCurrentPage();
                 }
@@ -681,7 +679,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 string tooltip = null;
                 string customName = null;
                 int NodeID = ValidationHelper.GetInteger(parameter, 0);
-                var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeName, NodeLevel, ClassName").FirstObject;
+                var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeName, NodeLevel, ClassName").FirstOrDefault();
                 // Not root and is in the allowed page types
                 if (NodeObj.NodeLevel != 0 && (!string.IsNullOrWhiteSpace(ToolTipFormat) || !string.IsNullOrWhiteSpace(DisplayNameFormat)) && AllowedPageTypes.ToLower().Split(";,|".ToCharArray()).Contains(NodeObj.NodeClassName.ToLower()))
                 {

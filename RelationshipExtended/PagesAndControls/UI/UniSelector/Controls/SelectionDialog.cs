@@ -14,7 +14,7 @@ using CMS.Helpers;
 using CMS.MacroEngine;
 using CMS.UIControls;
 using RelationshipsExtended;
-
+using RelationshipsExtended.Other;
 public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Controls_SelectionDialog : CMSUserControl, IObjectTypeDriven, ICallbackEventHandler
 {
     public Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Controls_SelectionDialog() { }
@@ -515,7 +515,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Co
                     if (!disabled)
                     {
                         string safeItemID = GetSafe(itemID);
-                        string itemHash = ValidationHelper.GetHashString(itemID);
+                        string itemHash = ValidationHelper.GetHashString(itemID, new HashSettings(ClientID));
                         switch (selectionMode)
                         {
                             case SelectionModeEnum.Multiple:
@@ -799,13 +799,13 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Co
         {
             pnlSearch.Visible = true;
 
-            if (!URLHelper.IsPostback())
+            if (!RequestHelper.IsPostBack())
             {
                 ScriptHelper.RegisterStartupScript(this, typeof(string), "Focus", ScriptHelper.GetScript("try{document.getElementById('" + txtSearch.ClientID + "').focus();}catch(err){}"));
             }
         }
 
-        if (!URLHelper.IsPostback())
+        if (!RequestHelper.IsPostBack())
         {
             uniGrid.Pager.DefaultPageSize = itemsPerPage;
         }
@@ -1417,7 +1417,10 @@ function US_Submit() {
 
             // Update selected items and hash on client
             var valuesString = string.Format("{0}{1}{0}", valuesSeparator, filteredValues.Join(valuesSeparator.ToString()));
-            result = valuesString + "#" + ValidationHelper.GetHashString(valuesString);
+
+            // The UniSelector uses it's ClientID for hash validation, so must use the same, not this client id
+            //result = valuesString + "#" + ValidationHelper.GetHashString(valuesString, new HashSettings(ClientID));
+            result = valuesString + "#" + ValidationHelper.GetHashString(valuesString, new HashSettings(QueryHelper.GetControlClientId("clientId", string.Empty)));
         }
 
         return result;

@@ -813,7 +813,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
 
     private int GetRelationshipCount()
     {
-        return RelationshipInfoProvider.GetCount(query => query.WhereEquals("RelationshipNameID", GetRelationshipNameId()));
+        return RelationshipInfoProvider.GetRelationships().WhereEquals("RelationshipNameID", GetRelationshipNameId()).Count();
     }
 
     #endregion

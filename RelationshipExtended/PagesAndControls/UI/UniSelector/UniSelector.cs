@@ -7,13 +7,12 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 
 using CMS.Base.Web.UI;
+using CMS.DataEngine;
 using CMS.FormEngine.Web.UI;
 using CMS.Helpers;
-using CMS.DataEngine;
 using CMS.Membership;
 using CMS.SiteProvider;
 using CMS.UIControls;
-
 
 public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_UniSelector : UniSelector, IPostBackEventHandler, ICallbackEventHandler
 {
@@ -26,7 +25,9 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
     private DataSet mResultDs;
     private int mNewCurrentPage;
     private bool mHashIsValid = true;
+    private bool mAllowInitHash = true;
     private bool mRegisterScripts;
+    private bool mRegisterDialogScripts;
     private bool mLoaded;
     private bool mHashValidated;
     private bool mPageChanged;
@@ -40,7 +41,6 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
     private string mUniSelectorClientID;
     private string mDropDownSearchResults = String.Empty;
     private string mAdditionalAutocompleteWidgetClass = String.Empty;
-    private string mAdditionalDropDownCSSClass = String.Empty;
     private string mInitSet = String.Empty;
 
     private readonly ListItemCollection mDropDownItems = new ListItemCollection();
@@ -66,16 +66,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
     /// <summary>
     /// Additional CSS class for drop down list control.
     /// </summary>
-    public String AdditionalDropDownCSSClass
+    public string AdditionalDropDownCSSClass
     {
-        get
-        {
-            return mAdditionalDropDownCSSClass;
-        }
-        set
-        {
-            mAdditionalDropDownCSSClass = value;
-        }
+        get;
+        set;
     }
 
 
@@ -92,7 +86,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
 
 
     /// <summary>
-    /// Returns control's client ID based on usage autocomplete. Ussually used in javascript in combination with value property.
+    /// Returns control's client ID based on usage autocomplete. Usually used in javascript in combination with value property.
     /// </summary>
     public string DropDownControlID
     {
@@ -209,6 +203,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
     /// Custom ToolTip option i added
     /// </summary>
     public string ToolTipFormat { get; set; }
+
 
 
 
@@ -485,11 +480,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
     {
         base.OnInit(e);
 
-        if (String.IsNullOrEmpty(hdnHash.Value))
-        {
-            // Init hash value
-            hdnHash.Value = ValidationHelper.GetHashString(String.Empty);
-        }
+        SetHashValue(true);
     }
 
 
@@ -630,9 +621,14 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
             }
         }
 
-        if (mode == SelectionModeEnum.SingleDropDownList && UseUniSelectorAutocomplete)
+        if (mode == SelectionModeEnum.SingleDropDownList)
         {
-            RegisterAutocompleteScripts();
+            SetOnChangeClientScript();
+
+            if (UseUniSelectorAutocomplete)
+            {
+                RegisterAutocompleteScripts();
+            }
         }
 
         base.OnPreRender(e);
@@ -660,11 +656,11 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
 
         if (!String.IsNullOrEmpty(CssClass))
         {
-            classAtr = String.Format(" class=\"{0}\"", CssClass);
+            classAtr = $" class=\"{CssClass}\"";
         }
         if (!String.IsNullOrEmpty(ControlStyle))
         {
-            styleAtr = String.Format(" style=\"{0}\"", ControlStyle);
+            styleAtr = $" style=\"{ControlStyle}\"";
         }
 
         writer.Write("<div id=\"{0}\"{1}{2}>", UniSelectorClientID, classAtr, styleAtr);
@@ -688,7 +684,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
         // Only raise selected index changed when other than (more items...) is selected
         if (drpSingleSelect.SelectedValue != US_MORE_RECORDS.ToString())
         {
-            RaiseSelectionChanged();
+            var renderChangeScript = drpSingleSelect.AutoPostBack;
+            RaiseSelectionChanged(renderChangeScript);
         }
     }
 
@@ -716,9 +713,9 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
                     CMSCheckBox chkCheckbox = new CMSCheckBox
                     {
                         ClientIDMode = ClientIDMode.Static,
-                        ID = string.Format("chk{0}_{1}", mCheckBoxClass, itemID)
+                        ID = HTMLHelper.EncodeForHtmlAttribute($"chk{mCheckBoxClass}_{itemID}")
                     };
-                    chkCheckbox.InputAttributes.Add("onclick", String.Format("US_ProcessItem('{0}', {1}, this);", UniSelectorClientID, ScriptSafeValueSeparator));
+                    chkCheckbox.InputAttributes.Add("onclick", $"US_ProcessItem('{UniSelectorClientID}', {ScriptSafeValueSeparator}, this);");
                     chkCheckbox.InputAttributes.Add("class", "chk" + mCheckBoxClass);
 
                     // Keep the check status if checked
@@ -740,11 +737,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Un
 
                     LinkButton lnkButton = new LinkButton();
                     lnkButton.Text = HTMLHelper.HTMLEncode(TextHelper.LimitLength(itemName, 100));
-                    lnkButton.OnClientClick = String.Format(
-@"if(this.href){{
-    US_ProcessItem('{0}', {1}, document.getElementById('chk{2}_{3}'), true);
+                    lnkButton.OnClientClick = $@"if (this.href) {{
+    US_ProcessItem('{UniSelectorClientID}', {ScriptSafeValueSeparator}, document.getElementById({ScriptHelper.GetString("chk" + mCheckBoxClass + "_" + itemID)}), true);
 }}
-return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, ScriptHelper.GetString(itemID).Trim('\''));
+return false;";
 
                     val = lnkButton;
                     break;
@@ -824,7 +820,7 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
         if (!String.IsNullOrEmpty(hiddenSelected.Value))
         {
             hiddenField.Value = DataHelper.GetNewItemsInList(hiddenSelected.Value, hiddenField.Value, ValuesSeparator);
-            hdnHash.Value = ValidationHelper.GetHashString(hiddenField.Value);
+            SetHashValue();
 
             Reload(true);
 
@@ -836,6 +832,17 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
 
 
     #region "Public methods"
+
+    /// <summary>
+    /// Reloads control's content.
+    /// </summary>
+    protected override void ReloadControlInternal()
+    {
+        base.ReloadControlInternal();
+
+        Reload(true);
+    }
+
 
     /// <summary>
     /// Reloads all controls.
@@ -880,7 +887,7 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
     /// Adds CSS class to autocomplete uniselector.
     /// </summary>
     /// <param name="cssClass">Class to add</param>
-    public void AddClassToAutocompleteWidget(String cssClass)
+    public void AddClassToAutocompleteWidget(string cssClass)
     {
         mAdditionalAutocompleteWidgetClass = cssClass;
     }
@@ -891,7 +898,7 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
     /// </summary>
     public string GetSelectionDialogScript()
     {
-        var script = String.Format("US_SelectionDialog_{0}(); return false;", UniSelectorClientID);
+        var script = $"US_SelectionDialog_{UniSelectorClientID}(); return false;";
         if (!OnGetSelectionDialogScript.IsBound)
         {
             return script;
@@ -986,6 +993,8 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
                 break;
         }
 
+        SetHashValue();
+        mAllowInitHash = false;
         ViewState["HasValue"] = true;
     }
 
@@ -995,7 +1004,6 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
         hdnDialogSelect.Value = String.Empty;
         txtSingleSelect.Text = String.Empty;
         hiddenField.Value = String.Empty;
-        hdnHash.Value = ValidationHelper.GetHashString(String.Empty);
         hdnValue.Value = String.Empty;
         drpSingleSelect.SelectedIndex = -1;
         ViewState["HasValue"] = false;
@@ -1005,13 +1013,13 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
             // Ensure selection of first item in list and proper hash value
             EnsureSelectedField(null);
         }
+        SetHashValue();
     }
 
 
     private void SetHiddenValue(object value)
     {
         hiddenField.Value = String.Format("{0}{1}{0}", ValuesSeparator, ValidationHelper.GetString(value, String.Empty).Trim(ValuesSeparator));
-        hdnHash.Value = ValidationHelper.GetHashString(hiddenField.Value);
     }
 
 
@@ -1023,7 +1031,6 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
             txtSingleSelect.Text = text;
         }
         hiddenField.Value = String.Format("{0}{1}{0}", ValuesSeparator, text);
-        hdnHash.Value = ValidationHelper.GetHashString(hiddenField.Value);
     }
 
 
@@ -1035,14 +1042,9 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
 
         if (!UseUniSelectorAutocomplete)
         {
-            if (!mLoaded)
-            {
-                hdnHash.Value = ValidationHelper.GetHashString(val);
-            }
             if (drpSingleSelect.Items.FindByValue(hdnDialogSelect.Value) != null)
             {
                 drpSingleSelect.SelectedValue = hdnDialogSelect.Value;
-                hdnHash.Value = ValidationHelper.GetHashString(val);
             }
             else
             {
@@ -1052,7 +1054,6 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
         }
         else
         {
-            hdnHash.Value = ValidationHelper.GetHashString(val);
             mEnsureSelectedField = true;
         }
     }
@@ -1129,22 +1130,26 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
     {
         string value = GetValue(false).ToString();
 
-        // Validate hash (if not special value - all, empty...)
-        var settings = new HashSettings
+        // Validate only non empty values
+        if (!String.IsNullOrEmpty(value))
         {
-            Redirect = false
-        };
-
-        mHashIsValid = ValidationHelper.ValidateHash(value, hdnHash.Value, settings);
-        if (!String.IsNullOrEmpty(value) && !mHashIsValid)
-        {
-            if (!IsLiveSite)
+            // Validate hash (if not special value - all, empty...)
+            var settings = new HashSettings(ClientID)
             {
-                // Data is not consistent!
-                ShowWarning(GetString("uniselector.badhash"));
+                Redirect = false
+            };
+
+            mHashIsValid = ValidationHelper.ValidateHash(value, hdnHash.Value, settings);
+            if (!mHashIsValid)
+            {
+                if (!IsLiveSite)
+                {
+                    // Data is not consistent!
+                    ShowWarning(GetString("uniselector.badhash"));
+                }
+                // Reset value
+                Value = null;
             }
-            // Reset value
-            Value = null;
         }
         mHashValidated = true;
     }
@@ -1205,110 +1210,133 @@ return false;", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass, S
     /// </summary>
     private void LoadObjects()
     {
-        if (Object != null)
+        if (Object == null)
         {
-            // Reset string builder
-            mJavaScript.Clear();
+            lblStatus.Text = $"[UniSelector]: Object type '{ObjectType}' not found.";
+            StopProcessing = true;
 
-            EnsureColumnNames();
+            return;
+        }
 
-            SelectionModeEnum mode = SelectionMode;
+        // Reset string builder
+        mJavaScript.Clear();
 
-            // ADJUSTMENT to point to custom uniselector for it
-            string url = "~/CMSModules/RelationshipsExtended/UI/UniSelector/" + (IsLiveSite ? "LiveSelectionDialog.aspx" : "SelectionDialog.aspx");
+        EnsureColumnNames();
 
-            if (!String.IsNullOrEmpty(SelectItemPageUrl))
-            {
-                url = SelectItemPageUrl;
-            }
+        SelectionModeEnum mode = SelectionMode;
 
-            url += "?SelectionMode=" + mode + "&hidElem=" + GetClientID(hiddenField) + "&params=" + Server.UrlEncode(ScriptHelper.GetString(Identifier, false)) + "&clientId=" + UniSelectorClientID + "&localize=" + (LocalizeItems ? 1 : 0) + "&hashElem=" + GetClientID(hdnHash) + AdditionalUrlParameters;
+        // Open selection dialog depending if UniSelector is on live site
+        string url = "~/CMSModules/RelationshipsExtended/UI/UniSelector/" + (IsLiveSite ? "LiveSelectionDialog.aspx" : "SelectionDialog.aspx");
 
-            // Add a session value for the tooltip taht matches the identity, since can't find a way to pass it through the hash like the rest...
-            SessionHelper.SetValue("ToolTipFormat_" + Identifier, ToolTipFormat);
+        if (!String.IsNullOrEmpty(SelectItemPageUrl))
+        {
+            url = SelectItemPageUrl;
+        }
 
-            // Create modal dialogs and datasets according to selection mode
-            switch (mode)
-            {
-                // Single text box selection mode
-                case SelectionModeEnum.SingleTextBox:
-                    url += "&txtElem=" + GetClientID(txtSingleSelect);
-                    break;
+        url += "?SelectionMode=" + mode + "&hidElem=" + GetClientID(hiddenField) + "&params=" + Server.UrlEncode(ScriptHelper.GetString(Identifier, false)) + "&clientId=" + UniSelectorClientID + "&localize=" + (LocalizeItems ? 1 : 0) + "&hashElem=" + GetClientID(hdnHash) + AdditionalUrlParameters;
 
-                // Single drop down list selection mode
-                case SelectionModeEnum.SingleDropDownList:
+        // Add a session value for the tooltip taht matches the identity, since can't find a way to pass it through the hash like the rest...
+        SessionHelper.SetValue("ToolTipFormat_" + Identifier, ToolTipFormat);
+
+        // Create modal dialogs and datasets according to selection mode
+        switch (mode)
+        {
+            // Single text box selection mode
+            case SelectionModeEnum.SingleTextBox:
+                url += "&txtElem=" + GetClientID(txtSingleSelect);
+                break;
+
+            // Single drop down list selection mode
+            case SelectionModeEnum.SingleDropDownList:
+                {
+                    var topN = MaxDisplayedTotalItems + 1;
+                    if (!UseUniSelectorAutocomplete)
                     {
-                        if (!UseUniSelectorAutocomplete)
-                        {
-                            mResultDs = GetResultSet(null, MaxDisplayedTotalItems + 1);
-                        }
+                        mResultDs = GetResultSet(null, topN);
+                    }
 
+                    // Do not generate script for selection dialog if there is no more items
+                    if (DataHelper.GetItemsCount(mResultDs) < topN)
+                    {
+                        url = null;
+                    }
+                    else
+                    {
                         url += "&selectElem=" + GetClientID(hdnDialogSelect);
                     }
-                    break;
-
-                // Multiple selection mode
-                case SelectionModeEnum.Multiple:
-                    LoadUniGrid();
-                    break;
-
-                // Multiple text box selection mode
-                case SelectionModeEnum.MultipleTextBox:
-                    url += "&txtElem=" + GetClientID(txtSingleSelect);
-                    break;
-
-                // Button selection
-                case SelectionModeEnum.SingleButton:
-                case SelectionModeEnum.MultipleButton:
-                case SelectionModeEnum.SingleTransformation:
-                    break;
-
-                default:
-                    url = null;
-                    mResultDs = null;
-                    break;
-            }
-
-            // Selection dialog window
-            if (url != null)
-            {
-                // Add IsSiteManager parameter to handle edit and new window                
-                url += IsSiteManager ? "&siteManager=true" : String.Empty;
-
-                // Add hash
-                string hash = ValidationHelper.GetHashString(url.Substring(url.IndexOf('?')));
-                url += "&hash=" + hash;
-
-                mJavaScript.Append("function US_SelectionDialog_", UniSelectorClientID, "(values) { ", Page.ClientScript.GetCallbackEventReference(this, "values", "US_SelectionDialogReady_" + UniSelectorClientID, "'" + ScriptHelper.ResolveUrl(url) + "'"), "; } \n");
-            }
-
-            // Create selection changed function
-            if (OnSelectionChangedAvailable())
-            {
-                mJavaScript.Append("function US_SelectionChanged_", UniSelectorClientID, "() { ", Page.ClientScript.GetPostBackEventReference(this, "selectionchanged"), "; } \n");
-            }
-
-            // New item window
-            if (DisplayNewButton)
-            {
-                // Get the new URL
-                var newUrl = GetNewUrl(UniSelectorClientID);
-
-                if (!string.IsNullOrEmpty(newUrl))
-                {
-                    mJavaScript.Append("function US_NewItem_", UniSelectorClientID, "(selectedItem) {{ var url = '", ScriptHelper.ResolveUrl(newUrl), "';selectedItem = US_TrimSeparators(selectedItem, ", ScriptSafeValueSeparator, @");modalDialog(url.replace(/##ITEMID##/i, selectedItem),'NewItem', ", EditDialogWindowWidth, ", ", EditDialogWindowHeight, "); }} \n");
                 }
-            }
+                break;
 
-            // Edit item window
-            if (DisplayEditButton)
+            // Multiple selection mode
+            case SelectionModeEnum.Multiple:
+                LoadUniGrid();
+                break;
+
+            // Multiple text box selection mode
+            case SelectionModeEnum.MultipleTextBox:
+                url += "&txtElem=" + GetClientID(txtSingleSelect);
+                break;
+
+            // Button selection
+            case SelectionModeEnum.SingleButton:
+            case SelectionModeEnum.MultipleButton:
+            case SelectionModeEnum.SingleTransformation:
+                break;
+
+            default:
+                url = null;
+                mResultDs = null;
+                break;
+        }
+
+        // Selection dialog window
+        if (url != null)
+        {
+            // Add IsSiteManager parameter to handle edit and new window                
+            url += IsSiteManager ? "&siteManager=true" : String.Empty;
+
+            // Add hash
+            string hash = ValidationHelper.GetHashString(url.Substring(url.IndexOf('?')), new HashSettings(""));
+            url += "&hash=" + hash;
+
+            mJavaScript.Append("function US_SelectionDialog_", UniSelectorClientID, "(values) { ", Page.ClientScript.GetCallbackEventReference(this, "values", "US_SelectionDialogReady_" + UniSelectorClientID, "'" + ScriptHelper.ResolveUrl(url) + "'"), "; } \n");
+
+            mJavaScript.AppendFormat(
+            @"
+function US_SelectionDialogReady_{0}(rvalue, context)
+{{
+    modalDialog(context + ((rvalue != '') ? '&selectedvalue=' + rvalue : ''), '{1}', {2}, {3}, null, null, true);
+    return false;
+}}", UniSelectorClientID, DialogWindowName, DialogWindowWidth, DialogWindowHeight);
+        }
+
+        // Create selection changed function
+        if (OnSelectionChangedAvailable())
+        {
+            mJavaScript.Append("function US_SelectionChanged_", UniSelectorClientID, "() { ", Page.ClientScript.GetPostBackEventReference(this, "selectionchanged"), "; } \n");
+        }
+
+        // New item window
+        if (DisplayNewButton)
+        {
+            // Get the new URL
+            var newUrl = GetNewUrl(UniSelectorClientID);
+
+            if (!string.IsNullOrEmpty(newUrl))
             {
-                // Get the edit URL
-                var editUrl = GetEditUrl(UniSelectorClientID);
+                mJavaScript.Append("function US_NewItem_", UniSelectorClientID, "(selectedItem) {{ var url = '", ScriptHelper.ResolveUrl(newUrl), "';selectedItem = US_TrimSeparators(selectedItem, ", ScriptSafeValueSeparator, @");modalDialog(url.replace(/##ITEMID##/i, selectedItem),'NewItem', ", EditDialogWindowWidth, ", ", EditDialogWindowHeight, "); }} \n");
+            }
+        }
 
-                if (!String.IsNullOrEmpty(editUrl))
-                {
-                    mJavaScript.Append(@"
+        // Edit item window
+        if (DisplayEditButton)
+        {
+            // Get the edit URL
+            var editUrl = GetEditUrl(UniSelectorClientID);
+
+            if (!String.IsNullOrEmpty(editUrl))
+            {
+                mJavaScript.Append(@"
 function US_EditItem_", UniSelectorClientID, @"(selectedItem) {
     selectedItem = US_TrimSeparators(selectedItem, ", ScriptSafeValueSeparator, @");
     if (selectedItem == '') {
@@ -1330,15 +1358,13 @@ function US_EditItem_", UniSelectorClientID, @"(selectedItem) {
     modalDialog(url.replace(/##ITEMID##/i, selectedItem),'", EditWindowName, "', ", EditDialogWindowWidth, ", ", EditDialogWindowHeight, @"); 
 }
 ");
-                }
             }
+        }
 
-            // Get the confirmation
-            var conf = String.Empty;
-            if (!String.IsNullOrEmpty(SelectionConfirmation))
-            {
-                conf = "if (!confirm(" + ScriptHelper.GetString(SelectionConfirmation) + ")) { return false; }";
-            }
+        if ((url != null) || DisplayNewButton || DisplayEditButton)
+        {
+            // Get the confirmation script
+            var conf = !String.IsNullOrEmpty(SelectionConfirmation) ? "if (!confirm(" + ScriptHelper.GetString(SelectionConfirmation) + ")) { return false; }" : "";
 
             // Get the check changes if it is set to true
             var checkChanges = CheckChanges ? "if (CheckChanges && !CheckChanges()) return false;" : "";
@@ -1357,11 +1383,7 @@ function US_SelectNewValue_", UniSelectorClientID, @"(selValue){
     return false;
 }
 ");
-        }
-        else
-        {
-            lblStatus.Text = "[UniSelector]: Object type '" + ObjectType + "' not found.";
-            StopProcessing = true;
+            mRegisterDialogScripts = true;
         }
     }
 
@@ -1449,7 +1471,7 @@ function US_SelectNewValue_", UniSelectorClientID, @"(selValue){
                     DataSet item = GetResultSet(value, 1);
                     if (!DataHelper.DataSourceIsEmpty(item))
                     {
-                        ListItem newItem = NewListItem(item.Tables[0].Rows[0]);
+                        ListItem newItem = NewListItem(item.Tables[0].Rows[0], ClientID);
                         if (newItem != null)
                         {
                             // Add selected item to drop down list
@@ -1487,11 +1509,15 @@ function US_SelectNewValue_", UniSelectorClientID, @"(selValue){
     /// </summary>
     private void RegisterScripts()
     {
-        // Register JavaScript
-        ScriptHelper.RegisterDialogScript(Page);
+        if (mRegisterDialogScripts)
+        {
+            ScriptHelper.RegisterDialogScript(Page);
+        }
 
-        mJavaScript.AppendFormat(
-            @"
+        if (SelectionMode == SelectionModeEnum.SingleDropDownList)
+        {
+            mJavaScript.AppendFormat(
+                @"
 function HashElem_{0}() {{
     return document.getElementById('{1}');
 }}
@@ -1499,26 +1525,19 @@ function SetHash_{0}(selector) {{
     if (selector != null && selector.selectedIndex >= 0) {{
         var hashElem = HashElem_{0}();
         if (hashElem != null) {{
-            hashElem.value = selector.options[selector.selectedIndex].getAttribute('{5}');
+            hashElem.value = selector.options[selector.selectedIndex].getAttribute('{2}');
         }}
     }}
 }}
-function US_SelectionDialogReady_{0}(rvalue, context)
-{{
-    modalDialog(context + ((rvalue != '') ? '&selectedvalue=' + rvalue : ''), '{2}', {3}, {4}, null, null, true);
-    return false;
-}}", UniSelectorClientID, GetClientID(hdnHash), DialogWindowName, DialogWindowWidth, DialogWindowHeight, SpecialFieldsDefinition.DATA_HASH_ATTRIBUTE);
+", UniSelectorClientID, GetClientID(hdnHash), SpecialFieldsDefinition.DATA_HASH_ATTRIBUTE);
 
-        // Open dialog script
+            // DDL initialization
+            ScriptHelper.RegisterStartupScript(this, typeof(string), "UniSelector_" + UniSelectorClientID, ScriptHelper.GetScript($"US_InitDropDown(document.getElementById('{GetClientID(drpSingleSelect)}'))"));
+        }
+
         ScriptHelper.RegisterScriptFile(Page, "Controls/uniselector.js");
 
         ScriptHelper.RegisterClientScriptBlock(this, typeof(string), "UniSelectorReady" + UniSelectorClientID, ScriptHelper.GetScript(mJavaScript.ToString()));
-
-        if (SelectionMode == SelectionModeEnum.SingleDropDownList)
-        {
-            // DDL initialization
-            ScriptHelper.RegisterStartupScript(this, typeof(string), "UniSelector_" + UniSelectorClientID, ScriptHelper.GetScript(string.Format("US_InitDropDown(document.getElementById('{0}'))", GetClientID(drpSingleSelect))));
-        }
     }
 
 
@@ -1577,8 +1596,7 @@ function US_SelectionDialogReady_{0}(rvalue, context)
     /// <returns>A client identifier for the specified control that does not change during the control's life cycle.</returns>
     private string GetClientID(Control control)
     {
-        string clientID;
-        if (!mClientIdentifiers.TryGetValue(control, out clientID))
+        if (!mClientIdentifiers.TryGetValue(control, out string clientID))
         {
             clientID = control.ClientID;
             mClientIdentifiers.Add(control, clientID);
@@ -1601,7 +1619,7 @@ function US_SelectionDialogReady_{0}(rvalue, context)
                 ToolTip = GetString("General.CheckAll"),
                 Enabled = Enabled
             };
-            chkAll.InputAttributes.Add("onclick", string.Format("US_SelectAllItems('{0}', {1}, this, 'chk{2}')", UniSelectorClientID, ScriptSafeValueSeparator, mCheckBoxClass));
+            chkAll.InputAttributes.Add("onclick", $"US_SelectAllItems('{UniSelectorClientID}', {ScriptSafeValueSeparator}, this, 'chk{mCheckBoxClass}')");
 
             var headerCell = gridView.HeaderRow.Cells[0];
 
@@ -1614,6 +1632,26 @@ function US_SelectionDialogReady_{0}(rvalue, context)
             {
                 gridView.HeaderRow.Cells[1].Text = GetString("general.itemname");
             }
+        }
+    }
+
+
+    private void SetOnChangeClientScript()
+    {
+        if (drpSingleSelect.Enabled)
+        {
+            // Build onchange script
+            string onChangeScript = string.Format("SetHash_{0}(this); if (!US_ItemChanged(this, '{0}')) return false;", UniSelectorClientID);
+            if (!string.IsNullOrEmpty(OnBeforeClientChanged))
+            {
+                onChangeScript = OnBeforeClientChanged + onChangeScript;
+            }
+            if (!string.IsNullOrEmpty(OnAfterClientChanged))
+            {
+                onChangeScript += OnAfterClientChanged;
+            }
+            // Add open modal window JavaScript event
+            drpSingleSelect.Attributes.Add("onchange", onChangeScript);
         }
     }
 
@@ -1631,31 +1669,29 @@ function US_SelectionDialogReady_{0}(rvalue, context)
 
         switch (SelectionMode)
         {
-            // Dropdownlist mode
             case SelectionModeEnum.SingleDropDownList:
                 SetupSingleDropDownList();
                 break;
 
-            // Multiple selection mode
             case SelectionModeEnum.Multiple:
                 SetupMultiple();
                 break;
 
-            // Button mode
             case SelectionModeEnum.SingleButton:
             case SelectionModeEnum.MultipleButton:
-                SetupButton();
+                SetupButtonMode();
                 break;
 
-            // Single textbox/transformation mode
             case SelectionModeEnum.SingleTextBox:
-            case SelectionModeEnum.SingleTransformation:
-                SetupSingleTMode();
+                SetupSingleTextBoxMode();
                 break;
 
-            // Multiple textbox
             case SelectionModeEnum.MultipleTextBox:
                 SetupMultipleTextBox();
+                break;
+
+            case SelectionModeEnum.SingleTransformation:
+                SetupSingleTransformationMode();
                 break;
         }
     }
@@ -1666,65 +1702,94 @@ function US_SelectionDialogReady_{0}(rvalue, context)
     /// </summary>
     private void SetupMultipleTextBox()
     {
-        // Select button
-        if (AllowEditTextBox)
+        SetupTextBoxButtons();
+    }
+
+
+    /// <summary>
+    /// Sets up the single textbox mode.
+    /// </summary>
+    /// <remarks>
+    /// Use only for SingleTextBox and MultipleTextBox modes.
+    /// </remarks>
+    private void SetupSingleTextBoxMode()
+    {
+        SetupTextBoxButtons();
+
+        var control = GetControlWithValue();
+        SetupEditButton(control);
+        SetupNewButton(control);
+    }
+
+
+    /// <summary>
+    /// Sets up client click for clear and select buttons.
+    /// </summary>
+    private void SetupTextBoxButtons()
+    {
+        var control = GetControlWithValue();
+
+        if (!HasDependingFields)
         {
-            if (!HasDependingFields)
-            {
-                btnClear.OnClientClick = GetCleanButtonScript();
-            }
-            btnSelect.OnClientClick = GetSelectButtonScript();
+            btnClear.OnClientClick = GetCleanButtonScript();
         }
-        else
+
+        btnSelect.OnClientClick = GetSelectButtonScript(control);
+    }
+
+
+    /// <summary>
+    /// Sets up visibility and client click for editation button.
+    /// </summary>
+    private void SetupEditButton(Control control)
+    {
+        if (DisplayEditButton)
         {
-            btnSelect.OnClientClick = GetSelectionDialogScript();
+            btnEdit.Visible = true;
+            btnEdit.OnClientClick = GetEditButtonScript(control);
         }
     }
 
 
     /// <summary>
-    /// Sets up the single textbox/transformation mode.
+    /// Sets up visibility and client click for new button.
     /// </summary>
-    private void SetupSingleTMode()
+    private void SetupNewButton(Control control)
     {
-        bool isTextBoxMode = (SelectionMode == SelectionModeEnum.SingleTextBox);
-
-        // Select button
-        if (isTextBoxMode && AllowEditTextBox)
-        {
-            if (!HasDependingFields)
-            {
-                btnClear.OnClientClick = GetCleanButtonScript();
-            }
-            btnSelect.OnClientClick = GetSelectButtonScript();
-        }
-        else
-        {
-            btnSelect.OnClientClick = GetSelectionDialogScript();
-        }
-
-        var ctrl = isTextBoxMode && AllowEditTextBox ? (Control)txtSingleSelect : hiddenField;
-
-        // Edit button
-        if (DisplayEditButton)
-        {
-            btnEdit.Visible = true;
-            btnEdit.OnClientClick = GetEditButtonScript(ctrl);
-        }
-
-        // New button
         if (DisplayNewButton)
         {
             btnNew.Visible = true;
-            btnNew.OnClientClick = GetNewButtonScript(ctrl);
+            btnNew.OnClientClick = GetNewButtonScript(control);
         }
+    }
+
+
+    /// <summary>
+    /// Returns control holding selector value based on property <see cref="UniSelector.AllowEditTextBox"/>.
+    /// </summary>
+    private Control GetControlWithValue()
+    {
+        return AllowEditTextBox ? (Control)txtSingleSelect : hiddenField;
+    }
+
+
+    /// <summary>
+    /// Sets up the single transformation mode
+    /// </summary>
+    private void SetupSingleTransformationMode()
+    {
+        btnSelect.OnClientClick = GetSelectionDialogScript();
+
+        var control = GetControlWithValue();
+        SetupEditButton(control);
+        SetupNewButton(control);
     }
 
 
     /// <summary>
     /// Sets up the button mode
     /// </summary>
-    private void SetupButton()
+    private void SetupButtonMode()
     {
         if (Enabled)
         {
@@ -1787,27 +1852,27 @@ function US_SelectionDialogReady_{0}(rvalue, context)
     }
 
 
-    private string GetSelectButtonScript()
+    private string GetSelectButtonScript(Control inputControl)
     {
-        return string.Format("US_SelectionDialog_{0}('$|' + US_GetVal('{1}')); return false;", UniSelectorClientID, GetClientID(txtSingleSelect));
+        return $"US_SelectionDialog_{UniSelectorClientID}('$|' + US_GetVal('{GetClientID(inputControl)}')); return false;";
     }
 
 
     private string GetCleanButtonScript()
     {
-        return string.Format("US_SetVal('{0}', ''); return false;", GetClientID(txtSingleSelect));
+        return $"US_SetVal('{GetClientID(hiddenField)}', ''); US_SetVal('{GetClientID(txtSingleSelect)}', ''); return false;";
     }
 
 
     private string GetEditButtonScript(Control inputControl)
     {
-        return string.Format("US_EditItem_{0}(US_GetVal('{1}')); return false;", UniSelectorClientID, GetClientID(inputControl));
+        return $"US_EditItem_{UniSelectorClientID}(US_GetVal('{GetClientID(inputControl)}')); return false;";
     }
 
 
     private string GetNewButtonScript(Control inputControl)
     {
-        return string.Format("US_NewItem_{0}(US_GetVal('{1}')); return false;", UniSelectorClientID, GetClientID(inputControl));
+        return $"US_NewItem_{UniSelectorClientID}(US_GetVal('{GetClientID(inputControl)}')); return false;";
     }
 
     #endregion
@@ -1874,8 +1939,8 @@ function US_SelectionDialogReady_{0}(rvalue, context)
             drpSingleSelect.Visible = false;
 
             // Init special fields
-            LoadSpecialFields();
-            SpecialFields.FillItems(mResolvedSpecialFields);
+            LoadSpecialFields(ClientID);
+            SpecialFields.FillItems(mResolvedSpecialFields, ClientID);
 
             // Load default items set
             mInitSet = CreateSearchResultSet(String.Empty);
@@ -1905,7 +1970,7 @@ function US_SelectionDialogReady_{0}(rvalue, context)
                     int index = 0;
                     foreach (DataRow dr in mResultDs.Tables[0].Rows)
                     {
-                        ListItem li = NewListItem(dr);
+                        ListItem li = NewListItem(dr, ClientID);
                         if (li != null)
                         {
                             drpSingleSelect.Items.Add(li);
@@ -1920,17 +1985,17 @@ function US_SelectionDialogReady_{0}(rvalue, context)
                     // Check if all items were displayed or if '(more items)' item should be added
                     if (maxExceeded)
                     {
-                        drpSingleSelect.Items.Add(NewListItem(GetString("general.moreitems"), US_MORE_RECORDS.ToString()));
+                        drpSingleSelect.Items.Add(NewListItem(GetString("general.moreitems"), US_MORE_RECORDS.ToString(), ClientID));
                     }
                 }
 
                 // Load special fields
-                LoadSpecialFields();
+                LoadSpecialFields(ClientID);
 
                 // New item link
                 if (DisplayNewButton)
                 {
-                    drpSingleSelect.Items.Add(NewListItem(GetString("general.newitem"), US_NEW_RECORD.ToString()));
+                    drpSingleSelect.Items.Add(NewListItem(GetString("general.newitem"), US_NEW_RECORD.ToString(), ClientID));
                 }
 
                 // Load selected value to drop-down list
@@ -1942,14 +2007,14 @@ function US_SelectionDialogReady_{0}(rvalue, context)
                     // Get item name
                     string name = GetString("general.empty");
 
-                    drpSingleSelect.Items.Insert(0, NewListItem(name, NoneRecordValue));
+                    drpSingleSelect.Items.Insert(0, NewListItem(name, NoneRecordValue, ClientID));
                     EnsureSelectedField(null);
                 }
 
                 HasData = hasData;
             }
 
-            if ((drpSingleSelect.Items.Count == 1) && drpSingleSelect.SelectedValue.Equals(NoneRecordValue))
+            if ((drpSingleSelect.Items.Count == 1) && drpSingleSelect.SelectedValue.Equals(NoneRecordValue, StringComparison.Ordinal))
             {
                 // Disable if only no-data record was added
                 drpSingleSelect.Enabled = false;
@@ -1957,22 +2022,6 @@ function US_SelectionDialogReady_{0}(rvalue, context)
             else
             {
                 drpSingleSelect.Enabled = Enabled;
-            }
-
-            if (drpSingleSelect.Enabled)
-            {
-                // Build onchange script
-                string onChangeScript = string.Format("SetHash_{0}(this); if (!US_ItemChanged(this, '{0}')) return false;", UniSelectorClientID);
-                if (!string.IsNullOrEmpty(OnBeforeClientChanged))
-                {
-                    onChangeScript = OnBeforeClientChanged + onChangeScript;
-                }
-                if (!string.IsNullOrEmpty(OnAfterClientChanged))
-                {
-                    onChangeScript += OnAfterClientChanged;
-                }
-                // Add open modal window JavaScript event
-                drpSingleSelect.Attributes.Add("onchange", onChangeScript);
             }
 
             value = drpSingleSelect.SelectedValue;
@@ -2096,8 +2145,8 @@ function US_SelectionDialogReady_{0}(rvalue, context)
             // Load special fields
             if (SpecialFields.Count == 0)
             {
-                LoadSpecialFields();
-                SpecialFields.FillItems(mResolvedSpecialFields);
+                LoadSpecialFields(ClientID);
+                SpecialFields.FillItems(mResolvedSpecialFields, ClientID);
             }
 
             // Read dataset based on where condition and object type
@@ -2133,7 +2182,7 @@ function US_SelectionDialogReady_{0}(rvalue, context)
             for (int i = 0; ((i < MaxDisplayedItems) && (i < count)); i++)
             {
                 DataRow dr = mResultDs.Tables[0].Rows[i];
-                ListItem li = NewListItem(dr);
+                ListItem li = NewListItem(dr, ClientID);
                 if (li != null)
                 {
                     AppendField(li.Text, li.Value, li.Attributes[SpecialFieldsDefinition.DATA_HASH_ATTRIBUTE], sb);
@@ -2220,7 +2269,7 @@ function US_SelectionDialogReady_{0}(rvalue, context)
             // Store data to elements
             txtAutocomplete.Text = itemname;
             hdnValue.Value = dr[ReturnColumnName].ToString();
-            hdnHash.Value = ValidationHelper.GetHashString(hdnValue.Value);
+            SetHashValue();
         }
         else if (id != String.Empty)
         {
@@ -2258,12 +2307,12 @@ function US_SelectionDialogReady_{0}(rvalue, context)
         String events = String.Empty;
         if (!String.IsNullOrEmpty(OnBeforeClientChanged))
         {
-            events += String.Format("$cmsj('#{0}_txtAutocomplete').bind('onBeforeChange', function (e, value) {{{1}}});", ClientID, OnBeforeClientChanged);
+            events += $"$cmsj('#{ClientID}_txtAutocomplete').bind('onBeforeChange', function (e, value) {{{OnBeforeClientChanged}}});";
         }
 
         if (!String.IsNullOrEmpty(OnAfterClientChanged))
         {
-            events += String.Format("$cmsj('#{0}_txtAutocomplete').bind('onAfterChange', function (e, value) {{{1}}});", ClientID, OnAfterClientChanged);
+            events += $"$cmsj('#{ClientID}_txtAutocomplete').bind('onAfterChange', function (e, value) {{{OnAfterClientChanged}}});";
         }
 
         // Initial javascripts
@@ -2285,6 +2334,35 @@ function {0}_postback(){{
     GetString("general.nodatafound"), mAdditionalAutocompleteWidgetClass);
 
         ScriptHelper.RegisterClientScriptBlock(this, typeof(String), ClientID + "InitAutocompleteDropDown", ScriptHelper.GetScript(init));
+    }
+
+
+    /// <summary>
+    /// Generates hash from value based on <see cref="SelectionMode"/>.
+    /// </summary>
+    /// <param name="initHash">Indicates whether hash should be initialized based on empty string value.</param>
+    private void SetHashValue(bool initHash = false)
+    {
+        if (initHash && mAllowInitHash)
+        {
+            if (String.IsNullOrEmpty(hdnHash.Value))
+            {
+                hdnHash.Value = ValidationHelper.GetHashString(String.Empty, new HashSettings(ClientID));
+            }
+
+            return;
+        }
+
+        switch (SelectionMode)
+        {
+            case SelectionModeEnum.SingleDropDownList:
+                hdnHash.Value = ValidationHelper.GetHashString(hdnValue.Value, new HashSettings(ClientID));
+                break;
+
+            default:
+                hdnHash.Value = ValidationHelper.GetHashString(hiddenField.Value, new HashSettings(ClientID));
+                break;
+        }
     }
 
     #endregion

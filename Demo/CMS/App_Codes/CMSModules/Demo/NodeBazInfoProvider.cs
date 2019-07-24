@@ -86,9 +86,10 @@ namespace Demo
         /// <param name="bazId">ObjectType.demo_baz ID</param>  
         protected virtual NodeBazInfo GetNodeBazInfoInternal(int nodeId, int bazId)
         {
-            return GetSingleObject()
+            return ProviderObject.GetObjectQuery().TopN(1)
                 .WhereEquals("NodeID", nodeId)
-                .WhereEquals("BazID", bazId);
+                .WhereEquals("BazID", bazId)
+                .FirstOrDefault();
         }
 
 

@@ -10,6 +10,7 @@ using CMS.DataEngine;
 using CMS.SiteProvider;
 using RelationshipsExtended.Enums;
 using CMS.EventLog;
+using System.Linq;
 
 [assembly: RegisterExtension(typeof(RelationshipMacroMethods), typeof(RelationshipsExtendedMacroNamespace))]
 [assembly: RegisterExtension(typeof(RelHelperMacrosMethods), typeof(RelHelperMacroNamespace))]
@@ -36,7 +37,7 @@ namespace RelationshipsExtended
                         return CacheHelper.Cache<string>(cs =>
                         {
                             int ClassID = DataClassInfoProvider.GetDataClassInfo(ClassName).ClassID;
-                            int NodeID = new DocumentQuery().Path(ParentNodeAlias, PathTypeEnum.Single).FirstObject.NodeID;
+                            int NodeID = new DocumentQuery().Path(ParentNodeAlias, PathTypeEnum.Single).FirstOrDefault().NodeID;
                             return URLHelper.ResolveUrl(string.Format("~/CMSModules/Content/CMSDesk/Edit/Edit.aspx?action=new&classid={0}&parentnodeid={1}&parentculture={2}", ClassID, NodeID, Culture));
                         }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), ClassName, ParentNodeAlias, Culture));
                     }
@@ -182,7 +183,7 @@ namespace RelationshipsExtended
             {
                 return CacheHelper.Cache<TreeNode>(cs =>
                 {
-                    TreeNode currentNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Culture(Culture).CombineWithDefaultCulture(true).FirstObject;
+                    TreeNode currentNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Culture(Culture).CombineWithDefaultCulture(true).FirstOrDefault();
                     if (currentNode != null && cs.Cached)
                     {
                         cs.CacheDependency = CacheHelper.GetCacheDependency("nodeid|" + NodeID);

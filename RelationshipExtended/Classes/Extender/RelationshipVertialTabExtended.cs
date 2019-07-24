@@ -10,6 +10,7 @@ using CMS.DocumentEngine;
 using CMS.Helpers;
 using CMS.SiteProvider;
 using RelationshipsExtended;
+using System.Linq;
 [assembly: RegisterCustomClass("RelationshipVerticalTabExtender", typeof(RelationshipVerticalTabExtender))]
 
 namespace RelationshipsExtended
@@ -78,8 +79,8 @@ namespace RelationshipsExtended
                     string Culture = DataHelper.GetNotEmpty(URLHelper.GetQueryValue(RequestContext.RawURL, "culture"), "en-US");
                     TreeNode CurrentDocument = CacheHelper.Cache<TreeNode>(cs =>
                     {
-                        TreeNode Document = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("ClassName").FirstObject;
-                        Document = new DocumentQuery(Document.ClassName).WhereEquals("NodeID", NodeID).Culture(Culture).FirstObject;
+                        TreeNode Document = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("ClassName").FirstOrDefault();
+                        Document = new DocumentQuery(Document.ClassName).WhereEquals("NodeID", NodeID).Culture(Culture).FirstOrDefault();
                         if (cs.Cached)
                         {
                             cs.CacheDependency = CacheHelper.GetCacheDependency(new string[] { string.Format("node|{0}|{1}|{2}", Document.NodeSiteName, Document.NodeAliasPath, Culture,

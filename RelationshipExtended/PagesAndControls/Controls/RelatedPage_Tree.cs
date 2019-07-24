@@ -37,11 +37,9 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         get
         {
             // Sometimes an error is thrown by passing a where condition, if so use the UI context.
-            try
-            {
+            try { 
                 return ValidationHelper.GetString(GetValue("WhereCondition"), "");
-            }
-            catch (InvalidOperationException)
+            } catch(InvalidOperationException)
             {
                 return ValidationHelper.GetString(UIContext.Data.GetValue("WhereConditionSelector"), "");
             }
@@ -300,7 +298,6 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         }
 
         pageTree.Nodes.Clear();
-
 
         TreeNode RootNode = new TreeNode("[Tree Root]", "0")
         {

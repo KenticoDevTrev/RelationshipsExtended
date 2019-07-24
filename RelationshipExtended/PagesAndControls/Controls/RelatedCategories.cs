@@ -851,7 +851,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedC
                         }
                         break;
                     case FieldSaveType.GUID:
-                        var ClassObject = CategoryInfoProvider.GetCategories().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstObject;
+                        var ClassObject = CategoryInfoProvider.GetCategories().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstOrDefault();
                         if (ClassObject != null)
                         {
                             DocumentCategoryIds.Add(ValidationHelper.GetInteger(ClassObject["CategoryID"], 0));

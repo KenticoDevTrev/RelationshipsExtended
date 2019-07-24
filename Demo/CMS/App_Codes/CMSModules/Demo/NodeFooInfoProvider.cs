@@ -86,9 +86,10 @@ namespace Demo
         /// <param name="fooId">ObjectType.demo_foo ID</param>  
         protected virtual NodeFooInfo GetNodeFooInfoInternal(int nodeId, int fooId)
         {
-            return GetSingleObject()
+            return ProviderObject.GetObjectQuery().TopN(1)
                 .WhereEquals("NodeID", nodeId)
-                .WhereEquals("FooID", fooId);
+                .WhereEquals("FooID", fooId)
+                .FirstOrDefault();
         }
 
 

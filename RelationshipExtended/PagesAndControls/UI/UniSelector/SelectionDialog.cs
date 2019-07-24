@@ -38,7 +38,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Se
                 case SelectionModeEnum.MultipleTextBox:
                 case SelectionModeEnum.MultipleButton:
                     {
-                        SetSaveJavascript("return US_Submit();");
+                        SetSaveJavascript("if (typeof (US_Submit) === 'function') { return US_Submit(); } else { CloseDialog(); }");
                         SetSaveResourceString("general.select");
                     }
                     break;
