@@ -371,7 +371,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
                 string.Join("','", AllowedPageTypes.Split(";| ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
                 ));
         }
-        
+
         // Filter Where Condition given
         if (!string.IsNullOrWhiteSpace(WhereCondition))
         {

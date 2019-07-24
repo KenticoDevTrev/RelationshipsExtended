@@ -423,7 +423,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
 
             // Switch sides is disabled
             condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId);
-            
+
 
             InitFilterVisibility();
 
@@ -610,11 +610,13 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 {
                     // Remove relationship
                     RelationshipInfoProvider.RemoveRelationship(relationshipId);
+
                     if (RelHelper.IsStagingEnabled())
                     {
                         // Log synchronization
                         DocumentSynchronizationHelper.LogDocumentChange(TreeNode.NodeSiteName, TreeNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, TreeProvider);
                     }
+
                     ShowConfirmation(GetString("relationship.wasdeleted"));
                     URLHelper.RefreshCurrentPage();
                 }

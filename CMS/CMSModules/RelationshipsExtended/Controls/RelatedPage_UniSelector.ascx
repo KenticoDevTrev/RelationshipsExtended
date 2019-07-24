@@ -1,7 +1,7 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" Inherits="Compiled_CMSModules_RelationshipsExtended_Controls_RelatedPage_UniSelector" %>
 <%@ Register Src="~/CMSModules/RelationshipsExtended/UI/UniSelector/UniSelector.ascx" TagName="UniSelector" TagPrefix="RelExt" %>
 
-<asp:DropDownList runat="server" ID="ddlCurrentNodeDirection" CssClass="DropDownField form-control DirectionSelector">
+<asp:DropDownList runat="server" ID="ddlCurrentNodeDirection" CssClass="DropDownField form-control DirectionSelector" AutoPostBack="true" OnSelectedIndexChanged="ddlCurrentNodeDirection_SelectedIndexChanged">
     <asp:ListItem Value="LeftNode">Add as Right-side Page</asp:ListItem>
     <asp:ListItem Value="RightNode">Add as Left-side Page</asp:ListItem>
 </asp:DropDownList>

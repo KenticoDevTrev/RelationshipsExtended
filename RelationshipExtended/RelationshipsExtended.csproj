@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RelationshipsExtended</RootNamespace>
     <AssemblyName>RelationshipsExtended</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -32,27 +32,26 @@
     <DocumentationFile>bin\Release\RelationshipsExtended.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AjaxControlToolkit, Version=4.1.60919.0, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\AjaxControlToolkit.dll</HintPath>
+    <Reference Include="AjaxControlToolkit, Version=17.1.1.0, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e, processorArchitecture=MSIL">
+      <HintPath>..\packages\AjaxControlToolkit.17.1.1.0\lib\net40\AjaxControlToolkit.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Base, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Base, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Base.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Base.Web.UI, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Base.Web.UI, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Base.Web.UI.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Core, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Core, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Core.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.CustomTables, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.CustomTables, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.CustomTables.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.DataEngine, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.DataEngine, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.DataEngine.dll</HintPath>
     </Reference>
@@ -60,7 +59,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.DeviceProfiles.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.DocumentEngine, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.DocumentEngine, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.DocumentEngine.dll</HintPath>
     </Reference>
@@ -74,29 +73,28 @@
     </Reference>
     <Reference Include="CMS.FormEngine, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\CMS\Bin\CMS.FormEngine.dll</HintPath>
+      <HintPath>..\Lib\CMS.FormEngine.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.FormEngine.Web.UI, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.FormEngine.Web.UI, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.FormEngine.Web.UI.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Globalization, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Globalization, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Globalization.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Helpers, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Helpers, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Helpers.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.ImportExport, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.ImportExport, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.ImportExport.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.LicenseProvider, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="CMS.LicenseProvider">
       <HintPath>..\Lib\CMS.LicenseProvider.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.MacroEngine, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.MacroEngine, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.MacroEngine.dll</HintPath>
     </Reference>
@@ -104,11 +102,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Membership.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Modules, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Modules, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Modules.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.OnlineForms, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.OnlineForms, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.OnlineForms.dll</HintPath>
     </Reference>
@@ -120,23 +118,23 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.PortalEngine.Web.UI.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Relationships, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Relationships, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Relationships.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.SiteProvider, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.SiteProvider, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.SiteProvider.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Synchronization, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Synchronization, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Synchronization.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.Taxonomy, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.Taxonomy, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.Taxonomy.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.UIControls, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+    <Reference Include="CMS.UIControls, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.UIControls.dll</HintPath>
     </Reference>
@@ -144,7 +142,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.WorkflowEngine.dll</HintPath>
     </Reference>
-    <Reference Include="CMS.WorkflowEngine.Web.UI">
+    <Reference Include="CMS.WorkflowEngine.Web.UI, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\CMS.WorkflowEngine.Web.UI.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -356,6 +355,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Classes\Base\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

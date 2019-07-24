@@ -521,7 +521,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
                     string name = (action != null) ? action.ActionDisplayName : Step.StepDisplayName;
                     string str = (action != null) ? "workflow.actioninprogress" : "workflow.stepinprogress";
                     string text = string.Format(ResHelper.GetString(str, ResourceCulture), HTMLHelper.HTMLEncode(ResHelper.LocalizeString(name, ResourceCulture)));
-                    text = ScriptHelper.GetLoaderInlineHtml(Page, text);
+                    text = ScriptHelper.GetLoaderInlineHtml(text);
 
                     InformationText = text;
                     EnsureRefreshScript();

@@ -339,7 +339,7 @@ namespace RelationshipsExtended
             }
             return RelHelper.GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, IdentType, CondType, ObjIDTableName);
         }
-        
+
     }
 
 }

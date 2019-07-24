@@ -13,7 +13,6 @@
  * @param {boolean} data.allowSorting - Indicates if the grid should be drag & drop sortable.
  */
 cmsdefine(['CMS/WebFormCaller', 'jQuery'], function (webFormCaller, $) {
-    'use strict';
 
     var Module = function (data) {
         var config = data,
@@ -98,7 +97,7 @@ cmsdefine(['CMS/WebFormCaller', 'jQuery'], function (webFormCaller, $) {
             if (!skipCallback) {
                 webFormCaller.doCallback({
                     targetControlUniqueId: config.uniqueId,
-                    args: valueIDs + '$' + arg + '#' + argHash,
+                    args: valueIDs + ':' + arg + '#' + argHash,
                     successCallback: setHash
                 });
             }
@@ -112,7 +111,7 @@ cmsdefine(['CMS/WebFormCaller', 'jQuery'], function (webFormCaller, $) {
          * @param {jQuery} [$selectCheckBoxes] - JQuery object containing checkboxes which should be selected or cleared. $checkBoxes are used when the parameter is not specified.
          */
         selectAll = function (selAll, $selectCheckBoxes) {
-            var callBackArgument = '$',
+            var callBackArgument = ':',
                 isCheck = (typeof selAll === 'boolean') ? selAll : selAll.checked;
 
             if (!$selectCheckBoxes) {
@@ -123,7 +122,7 @@ cmsdefine(['CMS/WebFormCaller', 'jQuery'], function (webFormCaller, $) {
                 if (chkBox.checked !== isCheck) {
                     chkBox.checked = isCheck;
                     select(chkBox, true);
-                    callBackArgument += $(chkBox).data('arg') + '#' + $(chkBox).data('arghash') + '$';
+                    callBackArgument += $(chkBox).data('arg') + '#' + $(chkBox).data('arghash') + ':';
                 }
             });
 
@@ -159,7 +158,7 @@ cmsdefine(['CMS/WebFormCaller', 'jQuery'], function (webFormCaller, $) {
                 cancel: '',
                 containment: 'parent',
                 cursor: 'move',
-                handle: 'button.js-custom_move', // Customized
+                handle: 'button.js-custom_move',
                 helper: fixWidthHelper,
                 tolerance: 'pointer',
                 start: function (event, ui) {

@@ -9,19 +9,17 @@ using CMS.Helpers;
 using Demo;
 
 [assembly: RegisterObjectType(typeof(NodeRegionInfo), NodeRegionInfo.OBJECT_TYPE)]
-    
+
 namespace Demo
 {
     /// <summary>
-    /// NodeRegionInfo data container class.
+    /// Data container class for <see cref="NodeRegionInfo"/>.
     /// </summary>
-	[Serializable]
+    [Serializable]
     public partial class NodeRegionInfo : AbstractInfo<NodeRegionInfo>
     {
-        #region "Type information"
-
         /// <summary>
-        /// Object type
+        /// Object type.
         /// </summary>
         public const string OBJECT_TYPE = "demo.noderegion";
 
@@ -29,7 +27,7 @@ namespace Demo
         /// <summary>
         /// Type information.
         /// </summary>
-        public static ObjectTypeInfo TYPEINFO = new ObjectTypeInfo(typeof(NodeRegionInfoProvider), OBJECT_TYPE, "Demo.NodeRegion", "NodeRegionID", null, null, null, null, null, null, "NodeID", "cms.node")
+        public static readonly ObjectTypeInfo TYPEINFO = new ObjectTypeInfo(typeof(NodeRegionInfoProvider), OBJECT_TYPE, "Demo.NodeRegion", "NodeRegionID", null, null, null, null, null, null, "NodeID", "cms.node")
         {
 			ModuleName = "Demo",
 			TouchCacheDependencies = true,
@@ -39,20 +37,15 @@ namespace Demo
             },
             SynchronizationSettings =
             {
-                // Logging is handled separately
                 LogSynchronization = SynchronizationTypeEnum.None
-            },
+            }
         };
 
-        #endregion
-
-
-        #region "Properties"
 
         /// <summary>
         /// Node region ID
         /// </summary>
-        [DatabaseField]
+		[DatabaseField]
         public virtual int NodeRegionID
         {
             get
@@ -69,7 +62,7 @@ namespace Demo
         /// <summary>
         /// Node ID
         /// </summary>
-        [DatabaseField]
+		[DatabaseField]
         public virtual int NodeID
         {
             get
@@ -86,7 +79,7 @@ namespace Demo
         /// <summary>
         /// Region category ID
         /// </summary>
-        [DatabaseField]
+		[DatabaseField]
         public virtual int RegionCategoryID
         {
             get
@@ -99,10 +92,6 @@ namespace Demo
             }
         }
 
-        #endregion
-
-
-        #region "Type based properties and methods"
 
         /// <summary>
         /// Deletes the object using appropriate provider.
@@ -121,16 +110,12 @@ namespace Demo
             NodeRegionInfoProvider.SetNodeRegionInfo(this);
         }
 
-        #endregion
-
-
-        #region "Constructors"
-
+		
 		/// <summary>
         /// Constructor for de-serialization.
         /// </summary>
-        /// <param name="info">Serialization info</param>
-        /// <param name="context">Streaming context</param>
+        /// <param name="info">Serialization info.</param>
+        /// <param name="context">Streaming context.</param>
         protected NodeRegionInfo(SerializationInfo info, StreamingContext context)
             : base(info, context, TYPEINFO)
         {
@@ -138,7 +123,7 @@ namespace Demo
 
 
         /// <summary>
-        /// Constructor - Creates an empty NodeRegionInfo object.
+        /// Creates an empty instance of the <see cref="NodeRegionInfo"/> class.
         /// </summary>
         public NodeRegionInfo()
             : base(TYPEINFO)
@@ -147,14 +132,12 @@ namespace Demo
 
 
         /// <summary>
-        /// Constructor - Creates a new NodeRegionInfo object from the given DataRow.
+        /// Creates a new instance of the <see cref="NodeRegionInfo"/> class from the given <see cref="DataRow"/>.
         /// </summary>
-        /// <param name="dr">DataRow with the object data</param>
+        /// <param name="dr">DataRow with the object data.</param>
         public NodeRegionInfo(DataRow dr)
             : base(TYPEINFO, dr)
         {
         }
-
-        #endregion
     }
 }

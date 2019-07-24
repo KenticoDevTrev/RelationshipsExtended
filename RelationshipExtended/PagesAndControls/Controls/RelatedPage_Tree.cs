@@ -150,7 +150,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         get
         {
             return ValidationHelper.GetBoolean(GetValue("RemoveUnselectableChildTrees"), true);
-        } set
+        }
+        set
         {
             SetValue("RemoveUnselectableChildTrees", value);
         }
@@ -300,6 +301,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
 
         pageTree.Nodes.Clear();
 
+
         TreeNode RootNode = new TreeNode("[Tree Root]", "0")
         {
             SelectAction = TreeNodeSelectAction.None
@@ -333,9 +335,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
             {
                 NodeIDToTreeNode[0].ChildNodes.Add(newNode);
             }
+
         }
 
-        if(RemoveUnselectableChildTrees)
+        if (RemoveUnselectableChildTrees)
         {
             HideUnselectableChildren(RootNode);
         }
@@ -358,9 +361,9 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
     private void HideUnselectableChildren(TreeNode RootNode)
     {
         List<TreeNode> ChildrenToRemove = new List<TreeNode>();
-        foreach(TreeNode Child in RootNode.ChildNodes)
+        foreach (TreeNode Child in RootNode.ChildNodes)
         {
-            if(!HasSelectableChild(Child))
+            if (!HasSelectableChild(Child))
             {
                 ChildrenToRemove.Add(Child);
             }
@@ -370,10 +373,11 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
 
     private bool HasSelectableChild(TreeNode ParentNode)
     {
-        if(ParentNode.ChildNodes.Count == 0)
+        if (ParentNode.ChildNodes.Count == 0)
         {
             return ((RelatedPage_Tree_CustomTreeNode)ParentNode).PossiblySelectable;
-        } else
+        }
+        else
         {
             bool SelectableChildFound = false;
             List<TreeNode> ChildrenToRemove = new List<TreeNode>();
@@ -383,7 +387,9 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
                 if (!HasSelectableChild(Child))
                 {
                     ChildrenToRemove.Add(Child);
-                } else { 
+                }
+                else
+                {
                     SelectableChildFound = true;
                 }
             }
@@ -596,6 +602,7 @@ public class RelatedPage_Tree_CustomTreeNode : TreeNode
     public string Style;
     public string ToolTip;
     public bool PossiblySelectable;
+
     public NameValueCollection Attributes { get; set; }
 
     public RelatedPage_Tree_CustomTreeNode(string text, string value, string ToolTip = null)
