@@ -74,7 +74,7 @@
     </Reference>
     <Reference Include="CMS.FormEngine, Version=10.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\CMS\Bin\CMS.FormEngine.dll</HintPath>
+      <HintPath>..\Lib\CMS.FormEngine.dll</HintPath>
     </Reference>
     <Reference Include="CMS.FormEngine.Web.UI, Version=11.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

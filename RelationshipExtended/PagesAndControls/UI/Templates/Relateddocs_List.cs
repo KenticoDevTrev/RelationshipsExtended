@@ -90,8 +90,6 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_Templates_Rela
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        SetPropertyTab(TAB_RELATEDDOCS);
-
         // Check if any relationship exists
         DataSet dsRel = RelationshipNameInfoProvider.GetRelationshipNames("RelationshipAllowedObjects LIKE '%" + ObjectHelper.GROUP_DOCUMENTS + "%' AND RelationshipNameID IN (SELECT RelationshipNameID FROM CMS_RelationshipNameSite WHERE SiteID = " + SiteContext.CurrentSiteID + ")", null, 1, "RelationshipNameID");
         if (DataHelper.DataSourceIsEmpty(dsRel))

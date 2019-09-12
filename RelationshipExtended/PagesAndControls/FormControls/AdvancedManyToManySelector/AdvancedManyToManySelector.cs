@@ -831,7 +831,6 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                             .WhereEquals(JoinTableRightFieldName, GetProperObjectValue(ObjectToRemove))
                             .ToList().ForEach(x => x.Delete());
                     }
-                    break;
                 }
             }
         }
