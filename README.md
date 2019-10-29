@@ -19,10 +19,10 @@ This tool extends Kentico by allowing support and management tools for 6 Relatio
 # Documentation
 If you are new to the tool, please check out the Wiki page on this GtHub to get a general overview, then check out the full Demo Guid that shows you step by step how to leverage this tool.
 
-# Contributions, but fixes and License
+# Contributions, bug fixes and License
 Feel free to Fork and submit pull requests to contribute.
 
-You can submit bugs through the issue list and i will get to them as soon as i can, unless you want to fix it yourself and submit a pull request!
+You can submit bugs through the issue list and I will get to them as soon as I can, unless you want to fix it yourself and submit a pull request!
 
 This is free to use and modify!
 
