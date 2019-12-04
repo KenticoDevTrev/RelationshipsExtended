@@ -1,15 +1,23 @@
-﻿using CMS.CustomTables;
+﻿using CMS.Base;
+using CMS.CustomTables;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
+using CMS.EventLog;
 using CMS.Helpers;
+using CMS.LicenseProvider;
+using CMS.Membership;
 using CMS.OnlineForms;
 using CMS.SiteProvider;
+using CMS.Synchronization;
 using CMS.Taxonomy;
 using RelationshipsExtended.Enums;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
+using System.Timers;
 using System.Web;
 using System.Xml;
 
@@ -256,9 +264,485 @@ namespace RelationshipsExtended
             }, new CacheSettings(CacheMinutes, "GetBindingWhere", BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
         }
 
+        /// <summary>
+        /// Used to convert the less-than-readable staging task into a more readable format (ex: Adding Foo "Foo1" to Node "/Home/MyPage"). Use this on the StagingEvents.LogTask.Before event
+        /// </summary>
+        /// <param name="e">The Staging Log Task Event Args that is passed during the StagingEvents.LogTask.Before event</param>
+        /// <param name="NodeBindingObjectType">The Node-Binding Class Name, ex: Demo.NodeFoo</param>
+        /// <param name="NodeBindingNodeIDField">The Column name of the Binding class that contains the NodeID, ex: "NodeID"</param>
+        /// <param name="NodeBindingObjectIDField">The column name of the Binding class that contains the other object's ID, ex: "FooID"</param>
+        /// <param name="BoundObjectDescription">Description of what the Bound object is.  ex: "Foo" or "Banner"</param>
+        /// <param name="BoundObjectTypeInfo">The TypeInfo of the Object that is bound to the Node, ex: FooInfo.TypeInfo</param>
+        public static void SetBetterBindingTaskTitle(StagingLogTaskEventArgs e, string NodeBindingObjectType, string NodeBindingNodeIDField, string NodeBindingObjectIDField, string BoundObjectDescription, ObjectTypeInfo BoundObjectTypeInfo)
+        {
+            if (e.Task.TaskObjectType.ToLower() == NodeBindingObjectType.ToLower())
+            {
+                try
+                {
+                    // The Task Data is an XML version of a DataSet, so convert to DataSet, then we can add our table data.
+                    string DataSetXML = e.Task.TaskData;
+                    DataSet DocumentDataSet = new DataSet();
+                    DocumentDataSet.ReadXml(new StringReader(DataSetXML));
+                    DataTable BoundObjectTable = DocumentDataSet.Tables[0];
+
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
+
+                    string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
+                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
+                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.GUIDColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.GUIDColumn : ColumnToGet;
+                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) ? BoundObjectTypeInfo.IDColumn : ColumnToGet;
+
+                    DataRow BoundObjectDR = ConnectionHelper.ExecuteQuery(BoundObjectTypeInfo.ObjectType + ".selectall", null, where: string.Format("{0} = {1}", BoundObjectTypeInfo.IDColumn, ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingObjectIDField], -1)), columns: ColumnToGet).Tables[0].Rows[0];
+                    e.Task.TaskTitle = string.Format("{0} {1} \"{2}\" {3} Node \"{4}\"", (e.Task.TaskType == TaskTypeEnum.CreateObject ? "Adding" : "Removing"), BoundObjectDescription, BoundObjectDR["BoundObjectDR"].ToString(), (e.Task.TaskType == TaskTypeEnum.CreateObject ? "to" : "from"), Node.NodeAliasPath);
+                }
+                catch (Exception ex)
+                {
+                    EventLogProvider.LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true if Staging is eanbled for the current request, this uses the LicenseHelper.CurrentEdition (Ultimate or EMS = Staging enabled)
+        /// </summary>
+        /// <param name="SiteID">The SiteID of the task, if the SiteContext.CurrentSite is null, it will use this site</param>
+        /// <returns>True if staging is enabled</returns>
+        public static bool IsStagingEnabled(int SiteID = -1)
+        {
+            try
+            {
+                // Various checkts to make sure we have the SiteInfo, it is missing in context randomly it seems so this should allow us to do multiple checks with a fallback
+                // of just the first site, since rare that a multisite has staging on some but not all.
+                if (SiteContext.CurrentSite == null)
+                {
+                    SiteInfo Site = SiteInfoProvider.GetSiteInfo(SiteID);
+                    SiteContext.CurrentSite = Site ?? SiteInfoProvider.GetSites().FirstOrDefault();
+                }
+                if (LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging))
+                {
+                    return true;
+                }
+                else
+                {
+                    //EventLogProvider.LogEvent("W", "RelHelper", "LicenseBase", eventDescription: "Site: " + SiteContext.CurrentSiteName + ", License " + LicenseHelper.CurrentEdition + ", feature: " + LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging).ToString());
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                EventLogProvider.LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks for the Application Key for the given Guid which if present will indicate that a task needs to be generated for additional servers
+        /// </summary>
+        /// <param name="nodeGUID">The Node Guid</param>
+        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID)
+        {
+            try
+            {
+                // Check to see if there are any staging servers that are different from originator and log staging task
+                if (CallContext.GetData("UpdateAfterProcesses_" + nodeGUID) != null)
+                {
+
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeGUID", nodeGUID).FirstOrDefault();
+                    // Destroy any delete task items
+                    if (CallContext.GetData("DeleteTasks") != null)
+                    {
+                        ((List<int>)CallContext.GetData("DeleteTasks")).Remove(Node.NodeID);
+                    }
+                    string[] ServersToSendTo = (string[])CallContext.GetData("UpdateAfterProcesses_" + nodeGUID);
+
+                    // Now set this to null so the task doesn't cause a loop
+                    CallContext.SetData("UpdateAfterProcesses_" + nodeGUID, null);
+
+                    // Add a catcher so it doesn't cause a loop in thinking this event is from another source and trigger the same logic of this thing.
+                    CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, true);
+
+                    foreach (ServerInfo Server in ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
+                    {
+                        DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
+                        {
+                            NodeAliasPath = Node.NodeAliasPath,
+                            CultureCode = Node.DocumentCulture,
+                            TaskType = TaskTypeEnum.UpdateDocument,
+                            Tree = Node.TreeProvider,
+                            SiteName = Node.NodeSiteName,
+                            RunAsynchronously = false,
+                            User = MembershipContext.AuthenticatedUser,
+                            ServerID = Server.ServerID
+                        });
+                    }
+                    CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+            }
+        }
+        /// <summary>
+        /// Called on the Document.LogTask.Before, updates the Task's TaskData to include the provided Node-Bound objects
+        /// </summary>
+        /// <param name="e">The StagingLogTaskEventArgs from the Document.LogTask.Before</param>
+        /// <param name="Configurations">The Configurations, one for each object binding you are including.</param>
+        public static void UpdateTaskDataWithNodeBinding(StagingLogTaskEventArgs e, NodeBinding_DocumentLogTaskBefore_Configuration[] Configurations)
+        {
+            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+
+            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
+            {
+                //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
+                if (IsStagingEnabled(Node.NodeSiteID))
+                {
+
+                    // Get all staging servers
+                    string[] StagingServers = CacheHelper.Cache<string[]>(cs =>
+                    {
+                        if (cs.Cached)
+                        {
+                            cs.CacheDependency = CacheHelper.GetCacheDependency("staging.server|all");
+                        }
+                        return ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).Select(x => x.ServerName.ToLower()).ToArray();
+                    }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSite.SiteName), "GetServers"));
+
+
+                    // This check will detect if this event was generated from another server and the task is being created for 
+                    // another server besides it's origin.  In these cases the task should be removed and will be triggered once
+                    // all of the Processesing is done of the binding items.
+                    string[] TaskServers = e.Task.TaskServers.ToLower().Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                    try
+                    {
+                        if (TaskServers.Length > 1 && StagingServers.Except(TaskServers).Count() > 0 && CallContext.GetData("UpdateAfterProcessesProcessed_" + Node.NodeGUID) == null)
+                        {
+                            CallContext.SetData("UpdateAfterProcesses_" + Node.NodeGUID, StagingServers.Except(TaskServers).ToArray());
+                            if (CallContext.GetData("DeleteTasks") == null)
+                            {
+                                CallContext.SetData("DeleteTasks", new List<int>());
+                            }
+                            ((List<int>)CallContext.GetData("DeleteTasks")).Add(Node.NodeID);
+                            return;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                    }
+
+                    // The Task Data is an XML version of a DataSet, so convert to DataSet, then we can add our table data.
+                    string DataSetXML = e.Task.TaskData;
+                    DataSet DocumentDataSet = new DataSet();
+                    DocumentDataSet.ReadXml(new StringReader(DataSetXML));
+
+                    foreach (NodeBinding_DocumentLogTaskBefore_Configuration Configuration in Configurations)
+                    {
+                        TranslationHelper NodeBoundObjectTableHelper = new TranslationHelper();
+                        DataSet NodeBoundObjectData = SynchronizationHelper.GetObjectsData(OperationTypeEnum.Synchronization, Configuration.EmptyNodeBindingObj, string.Format(Configuration.NodeMatchStringFormat, Node.NodeID), null, true, false, NodeBoundObjectTableHelper);
+                        //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3.5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+
+                        if (NodeBoundObjectTableHelper.TranslationTable != null && NodeBoundObjectTableHelper.TranslationTable.Rows.Count > 0)
+                        {
+                            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask4", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                            NodeBoundObjectData.Tables.Add(NodeBoundObjectTableHelper.TranslationTable);
+                        }
+
+                        // Convert to XML and Back, this makes the Columns all type string so the transfer table works
+                        DataSet NodeRegionObjectDataHolder = new DataSet();
+                        NodeRegionObjectDataHolder.ReadXml(new StringReader(NodeBoundObjectData.GetXml()));
+                        if (!DataHelper.DataSourceIsEmpty(NodeRegionObjectDataHolder) && NodeRegionObjectDataHolder.Tables.Count > 0)
+                        {
+                            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                            DataHelper.TransferTables(DocumentDataSet, NodeRegionObjectDataHolder);
+                        }
+                    }
+                    //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask6", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                    // Convert it back to XML
+                    DataSetXML = DocumentDataSet.GetXml();
+                    e.Task.TaskData = DataSetXML;
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Handles the NodeBinding's TypeInfo.Events.Insert, Update, and Delete events (update only needed for binding objects with more than just the NodeID and other ObjectRef, such as Binding with Ordering)
+        /// </summary>
+        /// <param name="NodeID">The NodeID that the Bound Object is referencing</param>
+        /// <param name="BindingObjectClassName">The Bound Object's Class Name</param>
+        /// <param name="TaskOriginatorUserID">The User ID who originated the Insert/Update/Delete event, used in Task assignment.  If unset, will use the Current Authenticated User</param>
+        /// <param name="TimerMS">Delay between when the last Event triggers and when the Log Document staging task is generated (so if you add 100 bound objects, 100 log document updates aren't triggered).  Default is 2000 ms (2 seconds)</param>
+        public static void HandleNodeBindingInsertUpdateDeleteEvent(int NodeID, string BindingObjectClassName, int TaskOriginatorUserID = -1, int TimerMS = 2000)
+        {
+            // If synchronization is off, don't continue
+            if (!CMSActionContext.CurrentLogSynchronization)
+            {
+                return;
+            }
+            // If no ID given, use the Current User, when the Log Document Task is called it's in a separate thread so there is no Membership Context
+            if (TaskOriginatorUserID <= 0)
+            {
+                TaskOriginatorUserID = MembershipContext.AuthenticatedUser.UserID;
+            }
+            SiteInfo Site = SiteContext.CurrentSite;
+            // Trigger update on document, uses a Timer so if you insert multiple items, it will simply reset the timer so there will only be 1 or so calls total.
+            TreeNode Node = CacheHelper.Cache<TreeNode>(cs =>
+            {
+                TreeNode FoundNode = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstOrDefault();
+                if (cs.Cached)
+                {
+                    cs.CacheDependency = CacheHelper.GetCacheDependency("NodeID|" + FoundNode.NodeID);
+                }
+                return FoundNode;
+            }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), "HandleBindingInsertUpdateDeleteEvent", NodeID, BindingObjectClassName));
+
+            if (IsStagingEnabled(Node.NodeSiteID))
+            {
+                string TimerKey = string.Format("{0}Trigger_{1}", BindingObjectClassName, NodeID);
+                bool CreateTimer = CallContext.GetData(TimerKey) == null;
+                if (!CreateTimer)
+                {
+                    try
+                    {
+                        // Reset the existing timer
+                        Timer TheTimer = (Timer)CallContext.GetData(TimerKey);
+                        TheTimer.Stop();
+                        TheTimer.Start();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // It was disposed mid way, recrate
+                        CreateTimer = true;
+                    }
+                }
+                if (CreateTimer)
+                {
+                    // Create a new Timer, if it finishes, then log document change
+                    var TheTimer = new Timer(TimerMS)
+                    {
+                        AutoReset = false
+                    };
+                    TheTimer.Elapsed += (object TimerObj, ElapsedEventArgs ElapsedEvent) =>
+                    {
+                        ((Timer)TimerObj).Dispose();
+
+                        // Reset the Membership Context and Site so the task is logged by the user who initiated it and what license is available
+                        SiteContext.CurrentSite = Site;
+                        MembershipContext.AuthenticatedUser = CacheHelper.Cache<CurrentUserInfo>(cs =>
+                        {
+                            UserInfo User = UserInfoProvider.GetUserInfo(TaskOriginatorUserID);
+                            CurrentUserInfo CurrentUserObj = null;
+                            if (User != null)
+                            {
+                                CurrentUserObj = new CurrentUserInfo(UserInfoProvider.GetUserInfo(TaskOriginatorUserID), true);
+                            }
+                            else
+                            {
+                                CurrentUserObj = new CurrentUserInfo(MembershipContext.AuthenticatedUser, true);
+                            }
+                            if (cs.Cached)
+                            {
+                                cs.CacheDependency = CacheHelper.GetCacheDependency("cms.user|byid|" + CurrentUserObj.UserID);
+                            }
+                            return CurrentUserObj;
+                        }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), "HandleNodeBindingInsertUpdateDeleteEvent_User", TaskOriginatorUserID));
+                        DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
+                        {
+                            NodeAliasPath = Node.NodeAliasPath,
+                            CultureCode = Node.DocumentCulture,
+                            TaskType = TaskTypeEnum.UpdateDocument,
+                            Tree = Node.TreeProvider,
+                            SiteName = Node.NodeSiteName,
+                            RunAsynchronously = false,
+                            User = MembershipContext.AuthenticatedUser
+                        });
+                    };
+                    TheTimer.Start();
+                    CallContext.SetData(TimerKey, TheTimer);
+                }
+            }
+        }
+
+
         #endregion
 
         #region "Internal Helpers"
+
+        /// <summary>
+        /// Handles the Translation of the Bound ObjectIDs and returns a list of all the ObjectIDs that the Node should be bound to.
+        /// </summary>
+        /// <param name="e">The StagingSynchronizationEventArgs</param>
+        /// <param name="NodeBindingObjectClassName">The ClassName of the Node-Binding object (ex "cms.TreeCategory"</param>
+        /// <param name="NodeIDReferenceField">The NodeID reference field for your Node-Binding object (ex "NodeID")</param>
+        /// <param name="BoundObjectIDReferenceField">The Bound ObjectID reference field for your Node-Binding Object (ex "CategoryID")</param>
+        /// <param name="BoundObjectTypeInfo">The TypeInfo of the object that the Node is bound to (ex new CategoryInfo().TypeInfo)</param>
+        /// <returns>The List of all the New Object IDs that the node should be bound to.</returns>
+        public static List<int> NewBoundObjectIDs(StagingSynchronizationEventArgs e, string NodeBindingObjectClassName, string NodeIDReferenceField, string BoundObjectIDReferenceField, ObjectTypeInfo BoundObjectTypeInfo)
+        {
+            string NodeBindingObjectClassNameTableName = NodeBindingObjectClassName.ToLower().Replace(".", "_");
+            string BoundObjectClassNameTableName = BoundObjectTypeInfo.ObjectType.ToLower().Replace(".", "_");
+            // Get the Tree Category table.
+            DataTable NodeBoundTable = e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == NodeBindingObjectClassNameTableName).FirstOrDefault();
+
+            // Node has no Bindings, return empty list.
+            if (NodeBoundTable == null)
+            {
+                return new List<int>();
+            }
+
+            // Build translation from Category data
+            List<int> NewBoundIDs = new List<int>();
+            List<int> TaskBoundIDs = NodeBoundTable.Rows.Cast<DataRow>().Select(x => ValidationHelper.GetInteger(x[BoundObjectIDReferenceField], 0)).ToList();
+
+            TaskBoundIDs.RemoveAll(x => x <= 0);
+
+            // Go through the Bound object tables which we'll use to gather the fields to translate the IDs from old env to new.
+            foreach (DataTable BoundObjectTable in e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == BoundObjectClassNameTableName))
+            {
+                bool ContainsGuidColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.GUIDColumn);
+                bool ContainsCodeNameColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.CodeNameColumn);
+                bool ContainsSiteIDColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.SiteIDColumn);
+                foreach (DataRow BoundObjectDR in BoundObjectTable.Rows)
+                {
+                    int ObjectID = ValidationHelper.GetInteger(BoundObjectDR[BoundObjectTypeInfo.IDColumn], 0);
+                    if (TaskBoundIDs.Contains(ObjectID))
+                    {
+                        GetIDParameters ObjectParams = new GetIDParameters();
+                        if (ContainsGuidColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.GUIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        {
+                            ObjectParams.Guid = ValidationHelper.GetGuid(BoundObjectDR[BoundObjectTypeInfo.GUIDColumn], Guid.Empty);
+                        }
+                        if (ContainsCodeNameColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.CodeColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        {
+                            ObjectParams.CodeName = ValidationHelper.GetString(BoundObjectDR[BoundObjectTypeInfo.CodeColumn], "");
+                        }
+                        if (ContainsSiteIDColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.SiteIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        {
+                            int SiteID = ValidationHelper.GetInteger(BoundObjectDR[BoundObjectTypeInfo.SiteIDColumn], -1);
+                            if (SiteID > 0)
+                            {
+                                ObjectParams.SiteId = SiteID;
+                            }
+                        }
+                        try
+                        {
+                            int NewID = TranslationHelper.GetIDFromDB(ObjectParams, BoundObjectTypeInfo.ObjectType);
+                            if (NewID > 0)
+                            {
+                                NewBoundIDs.Add(NewID);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                        }
+                    }
+                }
+            }
+            // Also check ObjectTranslations
+            foreach (DataTable ObjectTranslationTable in e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == "objecttranslation" && x.Columns.Contains("ClassName")))
+            {
+                foreach (DataRow ObjectTranslationDR in ObjectTranslationTable.Rows.Cast<DataRow>().Where(x => ((string)x["ClassName"]).ToLower() == BoundObjectClassNameTableName))
+                {
+                    int ID = ValidationHelper.GetInteger(ObjectTranslationDR["ID"], 0);
+                    if (TaskBoundIDs.Contains(ID))
+                    {
+                        GetIDParameters GetIDParams = new GetIDParameters();
+                        Guid GuidVal = ValidationHelper.GetGuid(ObjectTranslationDR["GUID"], Guid.Empty);
+                        string CodeName = ValidationHelper.GetString(ObjectTranslationDR["CodeName"], "");
+                        string SiteName = ValidationHelper.GetString(ObjectTranslationDR["SiteName"], "");
+                        if (GuidVal != Guid.Empty)
+                        {
+                            GetIDParams.Guid = GuidVal;
+                        }
+                        if (!string.IsNullOrWhiteSpace(CodeName))
+                        {
+                            GetIDParams.CodeName = CodeName;
+                        }
+                        if (!string.IsNullOrWhiteSpace(SiteName))
+                        {
+                            GetIDParams.SiteId = CacheHelper.Cache<int>(cs =>
+                            {
+                                return SiteInfoProvider.GetSiteID(SiteName);
+                            }, new CacheSettings(CacheHelper.CacheMinutes(SiteName), "NewBoundObjectIDsSiteName", SiteName));
+                        }
+                        try
+                        {
+                            int NewID = TranslationHelper.GetIDFromDB(GetIDParams, BoundObjectTypeInfo.ObjectType);
+                            if (NewID > 0)
+                            {
+                                NewBoundIDs.Add(NewID);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                        }
+                    }
+                }
+            }
+            return NewBoundIDs;
+        }
+
+
+        /// <summary>
+        /// Helper to take IDs coming in and translate them for the new system.
+        /// </summary>
+        /// <param name="ItemID">The original Item ID</param>
+        /// <param name="TaskData">The Task's Data, must contain an ObjectTranslation table</param>
+        /// <param name="classname">The Item's Classname</param>
+        /// <returns>The proper ID value</returns>
+        public static int TranslateBindingTranslateID(int ItemID, DataSet TaskData, string classname)
+        {
+            DataTable ObjectTranslationTable = TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == "objecttranslation").FirstOrDefault();
+            if (ObjectTranslationTable == null)
+            {
+                EventLogProvider.LogEvent("E", "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
+                return -1;
+            }
+            foreach (DataRow ItemDR in ObjectTranslationTable.Rows.Cast<DataRow>()
+                .Where(x => ValidationHelper.GetString(x["ObjectType"], "").ToLower() == classname.ToLower() && ValidationHelper.GetInteger(x["ID"], -1) == ItemID))
+            {
+                int TranslationID = ValidationHelper.GetInteger(ItemDR["ID"], 0);
+                if (ItemID == TranslationID)
+                {
+                    GetIDParameters ItemParams = new GetIDParameters();
+                    if (ValidationHelper.GetGuid(ItemDR["GUID"], Guid.Empty) != Guid.Empty)
+                    {
+                        ItemParams.Guid = (Guid)ItemDR["GUID"];
+                    }
+                    if (!string.IsNullOrWhiteSpace(ValidationHelper.GetString(ItemDR["CodeName"], "")))
+                    {
+                        ItemParams.CodeName = (string)ItemDR["CodeName"];
+                    }
+                    if (ObjectTranslationTable.Columns.Contains("SiteName") && !string.IsNullOrWhiteSpace(ValidationHelper.GetString(ItemDR["SiteName"], "")))
+                    {
+                        int SiteID = SiteInfoProvider.GetSiteID((string)ItemDR["SiteName"]);
+                        if (SiteID > 0)
+                        {
+                            ItemParams.SiteId = SiteID;
+                        }
+                    }
+                    try
+                    {
+                        int NewID = TranslationHelper.GetIDFromDB(ItemParams, classname);
+                        if (NewID > 0)
+                        {
+                            ItemID = NewID;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        EventLogProvider.LogException("RelHelper.TranslateBindingTranslateID", "No Translation Found", ex, additionalMessage: "No Translation found.");
+                        return -1;
+                    }
+                }
+            }
+            return ItemID;
+        }
 
         /// <summary>
         /// Returns the proper Node ID, if the Node is a Linked Node, it will cycle through the Nodes it's lined to until it finds a Non-lined node.
@@ -648,6 +1132,25 @@ namespace RelationshipsExtended
         public ClassObjSummary(string ClassName)
         {
             this.ClassName = ClassName;
+        }
+    }
+
+    /// <summary>
+    /// Used in the RelHelper.UpdateTaskDataWithNodeBinding, pass this to allow the method to automatically find and attach the Bound data to the TaskData
+    /// </summary>
+    public class NodeBinding_DocumentLogTaskBefore_Configuration
+    {
+        public BaseInfo EmptyNodeBindingObj;
+        public string NodeMatchStringFormat;
+        /// <summary>
+        /// Provides the needed information for the Document.LogTask.Before to properly append Node-bound objects to the Document update task.
+        /// </summary>
+        /// <param name="EmptyNodeBindingObj">An empty instance of your Binding Class Info (ex new NodeItemsInfo())</param>
+        /// <param name="NodeMatchStringFormat">ex "NodeID = {0}" if your binding table has 'NodeID' as it's reference field. Used in a String.Format() to create the Where condition to find the related objects. </param>
+        public NodeBinding_DocumentLogTaskBefore_Configuration(BaseInfo EmptyNodeBindingObj, string NodeMatchStringFormat)
+        {
+            this.EmptyNodeBindingObj = EmptyNodeBindingObj;
+            this.NodeMatchStringFormat = NodeMatchStringFormat;
         }
     }
 }

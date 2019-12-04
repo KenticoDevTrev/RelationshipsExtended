@@ -9,7 +9,7 @@
     <projectUrl>http://devtrev.com/Resources/RelationshipsExtended</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <releaseNotes>Initial Release</releaseNotes>
+    <releaseNotes>Added Tree Category classes and event hooks for them and Relationships so modifying either in MVC would still operate properly.</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>Kentico HBS RelationshipsExtended MVC</tags>
   </metadata>

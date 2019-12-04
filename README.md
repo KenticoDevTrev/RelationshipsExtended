@@ -16,6 +16,9 @@ This tool extends Kentico by allowing support and management tools for 6 Relatio
 * Go to System -> Restart Application
 * If on Kentico 10, also go to System -> Macros -> Signatures and resign your macros.
 
+# MVC
+If you are using Kentico 12 MVC, you should also install the `RelationshipsExtendedMVCHelper` NuGet package on your MVC site, this will provide you with TreeCategory and AdHoc relationship support and event hooks that the Admin (Mother) also contain, so any adjustments in code will also work properly with staging and such.
+
 # Documentation
 If you are new to the tool, please check out the Wiki page on this GtHub to get a general overview, then check out the full Demo Guid that shows you step by step how to leverage this tool.
 

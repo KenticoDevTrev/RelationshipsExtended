@@ -499,6 +499,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\Bindings\TreeCategoryInfo.cs" />
+    <Compile Include="Classes\Bindings\TreeCategoryInfoProvider.cs" />
     <Compile Include="Helpers\RelHelper.cs" />
     <Compile Include="Other\Enums.cs" />
     <Compile Include="Other\RelationshipExtendedEnumsAndMacroEnumGenerator.cs" />
