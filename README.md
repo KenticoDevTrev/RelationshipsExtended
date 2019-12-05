@@ -19,6 +19,23 @@ This tool extends Kentico by allowing support and management tools for 6 Relatio
 # MVC
 If you are using Kentico 12 MVC, you should also install the `RelationshipsExtendedMVCHelper` NuGet package on your MVC site, this will provide you with TreeCategory and AdHoc relationship support and event hooks that the Admin (Mother) also contain, so any adjustments in code will also work properly with staging and such.
 
+## Ordering Related Pages in MVC
+One other issue that currently exists is Adhoc (sortable) relationships can be rather difficult in code, there is a helper that is only usable on MultiDocumentQuery objects, which have their own issues.
+
+If you wish to have an ordered relationship call using the Document, helper, follow this code:
+
+```
+DocumentHelper.GetDocuments()
+                // Inner join on the relationship
+                .Source((QuerySource s) => s.InnerJoin(new QuerySourceTable("CMS_Relationship"), new WhereCondition("NodeID = RightNodeID").WhereEquals("RelationshipNameID", RelationshipNameID).WhereEquals("LeftNodeID", NodeID)))
+                // Order by the Relationship Order
+                .OrderBy("RelationshipOrder");
+```
+
+You can likewise use `DocumentHelper.GetDocuments<MyRelatedPageType>()` or `DocumentHelper.GetDocuments("custom.MyRelatedPageType")` which will then return the additional columns found in the class.
+
+I plan on releasing a new version of this with a helper included in the near future.
+
 # Documentation
 If you are new to the tool, please check out the Wiki page on this GtHub to get a general overview, then check out the full Demo Guid that shows you step by step how to leverage this tool.
 
