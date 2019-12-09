@@ -482,6 +482,7 @@ namespace RelationshipsExtended
             {
                 return;
             }
+            
             // If no ID given, use the Current User, when the Log Document Task is called it's in a separate thread so there is no Membership Context
             if (TaskOriginatorUserID <= 0)
             {
