@@ -22,14 +22,11 @@ If you are using Kentico 12 MVC, you should also install the `RelationshipsExten
 ## Ordering Related Pages in MVC
 One other issue that currently exists is Adhoc (sortable) relationships can be rather difficult in code, there is a helper that is only usable on MultiDocumentQuery objects, which have their own issues.
 
-If you wish to have an ordered relationship call using the Document, helper, follow this code:
+If you wish to have an ordered relationship call using the DocumentQuery or MultiDocumentQuery, follow this extension found in the RelationshipsExtended namespace
 
 ```
-DocumentHelper.GetDocuments()
-                // Inner join on the relationship
-                .Source((QuerySource s) => s.InnerJoin(new QuerySourceTable("CMS_Relationship"), new WhereCondition("NodeID = RightNodeID").WhereEquals("RelationshipNameID", RelationshipNameID).WhereEquals("LeftNodeID", NodeID)))
-                // Order by the Relationship Order
-                .OrderBy("RelationshipOrder");
+DocumentHelper.GetDocuments().InRelationWithOrder(nodeGuid, "MyRelationshipName");
+DocumentHelper.GetDocuments().InRelationWithOrder(nodeID, "MyRelationshipName");
 ```
 
 You can likewise use `DocumentHelper.GetDocuments<MyRelatedPageType>()` or `DocumentHelper.GetDocuments("custom.MyRelatedPageType")` which will then return the additional columns found in the class.
