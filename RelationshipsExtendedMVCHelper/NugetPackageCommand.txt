@@ -1,1 +1,1 @@
-nuget pack RelationshipsExtendedMVCHelper.csproj -version 12.0.11
+nuget pack RelationshipsExtendedMVCHelper.csproj -version 12.29.3
