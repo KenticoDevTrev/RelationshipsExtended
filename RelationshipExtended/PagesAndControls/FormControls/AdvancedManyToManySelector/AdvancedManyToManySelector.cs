@@ -635,6 +635,26 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             InitializeControl();
         }
     }
+    /// <summary>
+    /// Sets the where condition for filter on custom table filtering.
+    /// </summary>
+    public override string GetWhereCondition()
+    {
+
+        List<string> SelectedObjectRefIDs = GetSelectedObjects();
+        if(SelectedObjectRefIDs.Count > 0)
+        {
+            var query = new DataQuery(JoinTableName + ".selectall").Column(JoinTableLeftFieldName).WhereIn(JoinTableRightFieldName, SelectedObjectRefIDs).Distinct();
+            WhereCondition where = new WhereCondition();
+
+            where.WhereIn(JoinTableLeftFieldName, query);
+            return where.ToString();
+        }
+        else
+        {
+            return base.GetWhereCondition();
+        }
+    }
 
     protected void InitializeFormControl()
     {
@@ -777,6 +797,13 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
     /// <param name="e"></param>
     private void Form_OnAfterSaveJoinTable(object sender, EventArgs e)
     {
+
+        //dont save data for filter forms
+        if (sender is CMS.FormEngine.Web.UI.FilterForm)
+        {
+            return;
+        }
+
         // Add key so it will load the new data even though it is a 'postback' after this.
         DataClassInfo JoinTableClassInfo = DataClassInfoProvider.GetDataClassInfo(JoinTableName);
         if (JoinTableClassInfo != null)
