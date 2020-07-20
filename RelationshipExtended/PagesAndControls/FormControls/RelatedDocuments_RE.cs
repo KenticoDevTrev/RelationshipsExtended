@@ -291,7 +291,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
     {
         get
         {
-            return IsAdHocRelationship ? true : GetValue("DefaultSide", true);
+            return IsAdHocRelationship ? false : GetValue("DefaultSide", true);
         }
         set
         {
