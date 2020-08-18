@@ -37,9 +37,11 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         get
         {
             // Sometimes an error is thrown by passing a where condition, if so use the UI context.
-            try { 
+            try
+            {
                 return ValidationHelper.GetString(GetValue("WhereCondition"), "");
-            } catch(InvalidOperationException)
+            }
+            catch (InvalidOperationException)
             {
                 return ValidationHelper.GetString(UIContext.Data.GetValue("WhereConditionSelector"), "");
             }
@@ -71,6 +73,32 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         set
         {
             SetValue("BindOnPrimaryNodeOnly", value);
+        }
+    }
+
+    private string RelatedNodeSite
+    {
+        get
+        {
+            return ValidationHelper.GetString(GetValue("RelatedNodeSite"), "");
+        }
+        set
+        {
+            SetValue("RelatedNodeSite", value);
+        }
+    }
+
+    private string RelatedNodeSiteName
+    {
+        get
+        {
+            switch (RelatedNodeSite)
+            {
+                case "#currentsite":
+                    return SiteContext.CurrentSiteName;
+                default:
+                    return RelatedNodeSite;
+            }
         }
     }
 
@@ -253,6 +281,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         foreach (string Path in StartingPathArray)
         {
             docQuery.Path(Path, PathTypeEnum.Section);
+        }
+        if (!string.IsNullOrWhiteSpace(RelatedNodeSiteName))
+        {
+            docQuery.OnSite(RelatedNodeSiteName);
         }
         List<CMS.DocumentEngine.TreeNode> Nodes = docQuery.TypedResult.ToList();
 

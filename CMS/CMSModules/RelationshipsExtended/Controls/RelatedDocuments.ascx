@@ -14,3 +14,13 @@
       cursor: default;
     }
 </style>
+<asp:Literal runat="server" ID="ltrStyleHide" Visible="false">
+<style>
+    button[id*='gotopageright'] {
+        display: none !important;
+    }
+    button[id*='gotopageleft'] {
+        display: none !important;
+    }
+</style>
+</asp:Literal>
