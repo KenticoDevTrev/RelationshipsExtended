@@ -224,7 +224,8 @@ namespace RelationshipsExtended
         /// Checks for the Application Key for the given Guid which if present will indicate that a task needs to be generated for additional servers
         /// </summary>
         /// <param name="nodeGUID">The Node Guid</param>
-        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID)
+        /// <param name="TaskEnumToUse">The task type that should be processed</param>
+        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID, TaskTypeEnum TaskEnumToUse = TaskTypeEnum.UpdateDocument)
         {
             try
             {
@@ -252,7 +253,7 @@ namespace RelationshipsExtended
                         {
                             NodeAliasPath = Node.NodeAliasPath,
                             CultureCode = Node.DocumentCulture,
-                            TaskType = TaskTypeEnum.UpdateDocument,
+                            TaskType = TaskEnumToUse,
                             Tree = Node.TreeProvider,
                             SiteName = Node.NodeSiteName,
                             RunAsynchronously = false,
@@ -276,7 +277,7 @@ namespace RelationshipsExtended
         /// <summary>
         /// Returns true if Staging is eanbled for the current request, this uses the LicenseHelper.CurrentEdition (Ultimate or EMS = Staging enabled)
         /// </summary>
-        /// <param name="Site">The SiteID of the task, if the SiteContext.CurrentSite is null, it will use this site</param>
+        /// <param name="SiteID">The SiteID of the task, if the SiteContext.CurrentSite is null, it will use this site</param>
         /// <returns>True if staging is enabled</returns>
         public static bool IsStagingEnabled(int SiteID = -1)
         {
@@ -319,7 +320,7 @@ namespace RelationshipsExtended
             if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
             {
                 //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
-                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstObject;
+                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
                 if (IsStagingEnabled(Node.NodeSiteID))
                 {
 

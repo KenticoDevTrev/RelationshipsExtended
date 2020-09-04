@@ -174,7 +174,7 @@ namespace RelationshipsExtended
 
         private void ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
         {
-            if (e.TaskType == TaskTypeEnum.UpdateDocument)
+            if (e.TaskType == TaskTypeEnum.UpdateDocument || e.TaskType == TaskTypeEnum.CreateDocument || e.TaskType == TaskTypeEnum.MoveDocument || e.TaskType == TaskTypeEnum.PublishDocument || e.TaskType == TaskTypeEnum.ArchiveDocument)
             {
                 // Seems the first table is always the node's table, the table name dose change by the document page type.
                 DataTable NodeTable = e.TaskData.Tables[0];
@@ -201,8 +201,15 @@ namespace RelationshipsExtended
                     }
                     if (RelHelper.IsStagingEnabled(NodeObj.NodeSiteID))
                     {
+                        TaskTypeEnum TaskTypeToUse = e.TaskType;
+                        switch (e.TaskType)
+                        {
+                            case TaskTypeEnum.MoveDocument:
+                                TaskTypeToUse = TaskTypeEnum.UpdateDocument;
+                                break;
+                        }
                         // Check if we need to generate a task for a server that isn't the origin server
-                        RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID);
+                        RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID, TaskTypeToUse);
                     }
                 }
                 else

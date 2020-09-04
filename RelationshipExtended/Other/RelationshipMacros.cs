@@ -22,6 +22,7 @@ namespace RelationshipsExtended
         [MacroMethodParam(0, "ClassName", typeof(string), "The class name of the page type that will be created.")]
         [MacroMethodParam(1, "ParentNodeAlias", typeof(string), "The parent node alias that the page will be inserted at.")]
         [MacroMethodParam(2, "CurrentCulture", typeof(string), "The document culture, will default to en-US if not provided.")]
+        [MacroMethodParam(3, "CurrentSiteName", typeof(string), "The Site Name selection for the Related Node Site.")]
         public static object GetNewPageLink(EvaluationContext context, params object[] parameters)
         {
             try
@@ -31,14 +32,24 @@ namespace RelationshipsExtended
                     string ClassName = ValidationHelper.GetString(parameters[0], "");
                     string ParentNodeAlias = ValidationHelper.GetString(parameters[1], "");
                     string Culture = ValidationHelper.GetString(parameters.Length > 2 ? parameters[2] : "en-US", "en-US");
+                    string SiteName = ValidationHelper.GetString(parameters.Length > 3 ? parameters[3] : SiteContext.CurrentSiteName, SiteContext.CurrentSiteName);
+                    string SiteDomain = "";
+                    if (SiteName.Equals("#currentsite", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        SiteName = SiteContext.CurrentSiteName;
+                    }
+                    if (!string.IsNullOrWhiteSpace(SiteName) && !SiteName.Equals(SiteContext.CurrentSiteName, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        SiteDomain = (System.Web.HttpContext.Current.Request.IsSecureConnection ? "https://" : "http://") + SiteInfoProvider.GetSiteInfo(SiteName).DomainName.Trim('/');
+                    }
                     if (!string.IsNullOrWhiteSpace(ClassName) && !string.IsNullOrWhiteSpace(ParentNodeAlias))
                     {
                         return CacheHelper.Cache<string>(cs =>
                         {
                             int ClassID = DataClassInfoProvider.GetDataClassInfo(ClassName).ClassID;
                             int NodeID = new DocumentQuery().Path(ParentNodeAlias, PathTypeEnum.Single).FirstObject.NodeID;
-                            return URLHelper.ResolveUrl(string.Format("~/CMSModules/Content/CMSDesk/Edit/Edit.aspx?action=new&classid={0}&parentnodeid={1}&parentculture={2}", ClassID, NodeID, Culture));
-                        }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), ClassName, ParentNodeAlias, Culture));
+                            return SiteDomain + URLHelper.ResolveUrl(string.Format("~/CMSModules/Content/CMSDesk/Edit/Edit.aspx?action=new&classid={0}&parentnodeid={1}&parentculture={2}", ClassID, NodeID, Culture));
+                        }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), ClassName, ParentNodeAlias, Culture, SiteName));
                     }
                 }
             }

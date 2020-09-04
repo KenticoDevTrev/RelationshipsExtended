@@ -76,6 +76,32 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         }
     }
 
+    private string RelatedNodeSite
+    {
+        get
+        {
+            return ValidationHelper.GetString(GetValue("RelatedNodeSite"), "");
+        }
+        set
+        {
+            SetValue("RelatedNodeSite", value);
+        }
+    }
+
+    private string RelatedNodeSiteName
+    {
+        get
+        {
+            switch (RelatedNodeSite)
+            {
+                case "#currentsite":
+                    return SiteContext.CurrentSiteName;
+                default:
+                    return RelatedNodeSite;
+            }
+        }
+    }
+
     public int CurrentNodeID
     {
         get
@@ -255,6 +281,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         foreach (string Path in StartingPathArray)
         {
             docQuery.Path(Path, PathTypeEnum.Section);
+        }
+        if (!string.IsNullOrWhiteSpace(RelatedNodeSiteName))
+        {
+            docQuery.OnSite(RelatedNodeSiteName);
         }
         List<CMS.DocumentEngine.TreeNode> Nodes = docQuery.TypedResult.ToList();
 
