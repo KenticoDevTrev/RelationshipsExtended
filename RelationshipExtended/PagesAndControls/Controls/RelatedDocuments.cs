@@ -264,6 +264,34 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
         }
     }
 
+    public string RelatedNodeSite
+    {
+        get
+        {
+            return GetValue("RelatedNodeSite", "");
+        }
+        set
+        {
+            SetValue("RelatedNodeSite", value);
+        }
+    }
+
+
+    private string RelatedNodeSiteName
+    {
+        get
+        {
+            switch (RelatedNodeSite)
+            {
+                case "#currentsite":
+                    return SiteContext.CurrentSiteName;
+                default:
+                    return RelatedNodeSite;
+            }
+        }
+    }
+
+
 
     /// <summary>
     /// Gets or sets the document;.
@@ -419,11 +447,19 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
             int nodeId = TreeNode.NodeID;
 
             // Add relationship name condition
-            var condition = new WhereCondition().WhereIn("RelationshipNameID", new IDQuery<RelationshipNameInfo>().Where(GetRelationshipNameCondition()));
+            var condition = new WhereCondition()
+                .WhereIn("RelationshipNameID", new IDQuery<RelationshipNameInfo>().Where(GetRelationshipNameCondition()));
 
-            // Switch sides is disabled
-            condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId);
-            
+
+            // Switch sides is disabled	            // Switch sides is disabled
+            condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId); condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId);
+
+
+            if (!string.IsNullOrWhiteSpace(RelatedNodeSiteName))
+            {
+                condition.Where(string.Format("{0} in (Select NodeID from View_CMS_Tree_Joined where NodeSiteID = {1})", (DefaultSide ? "LeftNodeID" : "RightNodeID"), SiteInfoProvider.GetSiteID(RelatedNodeSiteName)));
+            }
+
 
             InitFilterVisibility();
 
@@ -465,6 +501,18 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
             {
                 ShowConfirmation(GetString("relationship.wasadded"));
             }
+        }
+
+        if (
+            (!string.IsNullOrWhiteSpace(RelatedNodeSiteName) && !RelatedNodeSiteName.Equals(SiteContext.CurrentSiteName, StringComparison.InvariantCultureIgnoreCase)
+            || (string.IsNullOrWhiteSpace(RelatedNodeSiteName) && SiteInfoProvider.GetSites().Count > 1))
+            )
+        {
+            ltrStyleHide.Visible = true;
+        }
+        else
+        {
+            ltrStyleHide.Visible = false;
         }
     }
 

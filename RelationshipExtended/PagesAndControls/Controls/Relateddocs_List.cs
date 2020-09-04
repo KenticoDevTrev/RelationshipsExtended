@@ -58,6 +58,18 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
             SetValue("BindOnPrimaryNodeOnly", value);
         }
     }
+    private string RelatedNodeSite
+    {
+        get
+        {
+            return ValidationHelper.GetString(GetValue("RelatedNodeSite"), "");
+        }
+        set
+        {
+            SetValue("RelatedNodeSite", value);
+            relatedDocuments.RelatedNodeSite = value;
+        }
+    }
 
     public int CurrentNodeID
     {
@@ -195,6 +207,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
         relatedDocuments.AllowedPageTypes = AllowedPageTypes;
         relatedDocuments.DisplayNameFormat = DisplayNameFormat;
         relatedDocuments.ToolTipFormat = ToolTipFormat;
+        relatedDocuments.RelatedNodeSite = RelatedNodeSite;
     }
 
 
