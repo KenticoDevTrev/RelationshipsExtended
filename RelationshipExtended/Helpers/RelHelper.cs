@@ -223,8 +223,8 @@ namespace RelationshipsExtended
         /// <summary>
         /// Checks for the Application Key for the given Guid which if present will indicate that a task needs to be generated for additional servers
         /// </summary>
-        /// <param name="nodeGUID">The Node Guid</param>
-        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID)
+        /// <param name="TaskEnumToUse">The task type that should be processed</param>
+        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID, TaskTypeEnum TaskEnumToUse = TaskTypeEnum.UpdateDocument)
         {
             try
             {
@@ -252,7 +252,7 @@ namespace RelationshipsExtended
                         {
                             NodeAliasPath = Node.NodeAliasPath,
                             CultureCode = Node.DocumentCulture,
-                            TaskType = TaskTypeEnum.UpdateDocument,
+                            TaskType = TaskEnumToUse,
                             Tree = Node.TreeProvider,
                             SiteName = Node.NodeSiteName,
                             RunAsynchronously = false,
