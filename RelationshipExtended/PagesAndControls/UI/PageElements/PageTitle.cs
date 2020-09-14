@@ -285,7 +285,7 @@ $cmsj(document).ready(function(){
 
     private void EnsureCloseButton()
     {
-        if (ShowCloseButton && (DeviceContext.CurrentDevice.IsMobile() || IsDialog))
+        if (ShowCloseButton && (DeviceContext.CurrentDevice.IsMobile || IsDialog))
         {
             pnlClose.Visible = true;
             btnClose.Style.Add(HtmlTextWriterStyle.Cursor, "pointer");

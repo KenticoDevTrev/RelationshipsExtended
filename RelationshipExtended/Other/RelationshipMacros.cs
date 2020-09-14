@@ -23,6 +23,7 @@ namespace RelationshipsExtended
         [MacroMethodParam(1, "ParentNodeAlias", typeof(string), "The parent node alias that the page will be inserted at.")]
         [MacroMethodParam(2, "CurrentCulture", typeof(string), "The document culture, will default to en-US if not provided.")]
         [MacroMethodParam(3, "CurrentSiteName", typeof(string), "The Site Name selection for the Related Node Site.")]
+
         public static object GetNewPageLink(EvaluationContext context, params object[] parameters)
         {
             try
@@ -350,7 +351,7 @@ namespace RelationshipsExtended
             }
             return RelHelper.GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, IdentType, CondType, ObjIDTableName);
         }
-
+        
     }
 
 }

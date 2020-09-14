@@ -209,7 +209,7 @@ namespace RelationshipsExtended
                                 break;
                         }
                         // Check if we need to generate a task for a server that isn't the origin server
-                        RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID, TaskTypeToUse);
+                        RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID); RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID, TaskTypeToUse);
                     }
                 }
                 else

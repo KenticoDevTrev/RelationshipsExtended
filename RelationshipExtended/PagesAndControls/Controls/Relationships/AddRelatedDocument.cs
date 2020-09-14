@@ -11,8 +11,8 @@ using CMS.Membership;
 using CMS.Relationships;
 using CMS.SiteProvider;
 using CMS.UIControls;
-using System.Web;
 using CMS.LicenseProvider;
+using System.Web;
 using RelationshipsExtended;
 
 public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relationships_AddRelatedDocument : CMSUserControl
@@ -408,9 +408,9 @@ function ClearDialogNodeId() {{
                     RelationshipInfoProvider.AddRelationship(selectedNodeId, currentNodeId, relationshipNameId);
                 }
 
+                // Log synchronization for single document
                 if (RelHelper.IsStagingEnabled())
                 {
-                    // Log synchronization for single document
                     TreeNode currentNode = node ?? tree.SelectSingleNode(currentNodeId);
                     DocumentSynchronizationHelper.LogDocumentChange(currentNode.NodeSiteName, currentNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, currentNode.TreeProvider);
                 }

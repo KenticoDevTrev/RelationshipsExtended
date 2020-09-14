@@ -291,6 +291,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
         }
     }
 
+
+
     /// <summary>
     /// Gets or sets the document;.
     /// </summary>
@@ -446,15 +448,18 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
 
             // Add relationship name condition
             var condition = new WhereCondition()
-                            .WhereIn("RelationshipNameID", new IDQuery<RelationshipNameInfo>().Where(GetRelationshipNameCondition()));
+                .WhereIn("RelationshipNameID", new IDQuery<RelationshipNameInfo>().Where(GetRelationshipNameCondition()));
 
-            // Switch sides is disabled
-            condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId);
+
+            // Switch sides is disabled	            // Switch sides is disabled
+            condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId); condition.WhereEquals(DefaultSide ? "RightNodeID" : "LeftNodeID", nodeId);
+
 
             if (!string.IsNullOrWhiteSpace(RelatedNodeSiteName))
             {
                 condition.Where(string.Format("{0} in (Select NodeID from View_CMS_Tree_Joined where NodeSiteID = {1})", (DefaultSide ? "LeftNodeID" : "RightNodeID"), SiteInfoProvider.GetSiteID(RelatedNodeSiteName)));
             }
+
 
             InitFilterVisibility();
 
@@ -653,13 +658,11 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 {
                     // Remove relationship
                     RelationshipInfoProvider.RemoveRelationship(relationshipId);
-
                     if (RelHelper.IsStagingEnabled())
                     {
                         // Log synchronization
                         DocumentSynchronizationHelper.LogDocumentChange(TreeNode.NodeSiteName, TreeNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, TreeProvider);
                     }
-
                     ShowConfirmation(GetString("relationship.wasdeleted"));
                     URLHelper.RefreshCurrentPage();
                 }

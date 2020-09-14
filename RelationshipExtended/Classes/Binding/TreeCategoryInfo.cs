@@ -25,21 +25,20 @@ namespace CMS
         {
             if (DataHelper.GetNotEmpty(SettingsKeyInfoProvider.GetValue(new SettingsKeyName("NodeCategoryStagingMode")), "WithDocument") == "WithDocument")
             {
-                return new ObjectTypeInfo(typeof(TreeCategoryInfoProvider), OBJECT_TYPE, "CMS.TreeCategory", "TreeCategoryID", null, null, null, null, null, null, null, null)
+                return new ObjectTypeInfo(typeof(TreeCategoryInfoProvider), OBJECT_TYPE, "CMS.TreeCategory", "TreeCategoryID", null, null, null, null, null, null, "NodeID", "cms.node")
                 {
                     ModuleName = "RelationshipsExtended",
                     TouchCacheDependencies = true,
-                    IsBinding = false,
+                    IsBinding = true,
                     DependsOn = new List<ObjectDependency>()
                     {
-                        new ObjectDependency("NodeID", "cms.node", ObjectDependencyEnum.Binding),
                         new ObjectDependency("CategoryID", "cms.category", ObjectDependencyEnum.Binding),
                     },
                             ImportExportSettings =
                     {
                         IsExportable = false
                     },
-                            LogEvents = false,
+                            LogEvents = true,
                             RequiredObject = false,
                             SynchronizationSettings =
                     {
