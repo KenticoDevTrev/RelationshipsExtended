@@ -1,5 +1,6 @@
 ﻿using CMS;
 using CMS.Base;
+using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.EventLog;
@@ -78,7 +79,7 @@ namespace RelationshipsExtended
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelationshipsExtended", "ErrorSettingForeignKeys", ex, additionalMessage: "Make sure the Query CMS.TreeCategory.EnsureForeignKey exists.  IGNORE if you just installed the module as this will run before the class installs on the first application start after installation.");
+                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "ErrorSettingForeignKeys", ex, additionalMessage: "Make sure the Query CMS.TreeCategory.EnsureForeignKey exists.  IGNORE if you just installed the module as this will run before the class installs on the first application start after installation.");
             }
 
             // Registers "CustomNamespace" into the macro engine
@@ -132,7 +133,7 @@ namespace RelationshipsExtended
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelExtended", "LogTaskAfterError", ex, additionalMessage: "For task " + e.Task.TaskDocumentID);
+                Service.Resolve<IEventLogService>().LogException("RelExtended", "LogTaskAfterError", ex, additionalMessage: "For task " + e.Task.TaskDocumentID);
             }
         }
 
@@ -214,7 +215,7 @@ namespace RelationshipsExtended
                 }
                 else
                 {
-                    EventLogProvider.LogEvent("E", "RelationshipExended", "No Node Table Found", eventDescription: "First Table in the incoming Staging Task did not contain the Node GUID, could not processes.");
+                    Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelationshipExended", "No Node Table Found", eventDescription: "First Table in the incoming Staging Task did not contain the Node GUID, could not processes.");
                 }
             }
         }
@@ -237,11 +238,11 @@ namespace RelationshipsExtended
         private void Relationship_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
         {
             RelationshipInfo RelationshipObj = (RelationshipInfo)e.Object;
-            RelationshipNameInfo RelationshipNameObj = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipObj.RelationshipNameId);
+            RelationshipNameInfo RelationshipNameObj = RelationshipNameInfo.Provider.Get(RelationshipObj.RelationshipNameId);
 
             if (IsCustomAdhocRelationshipName(RelationshipNameObj))
             {
-                TreeNode LeftNode = new DocumentQuery().WhereEquals("NodeID", RelationshipObj.LeftNodeId).FirstObject;
+                TreeNode LeftNode = new DocumentQuery().WhereEquals("NodeID", RelationshipObj.LeftNodeId).FirstOrDefault();
                 if (RelHelper.IsStagingEnabled(LeftNode.NodeSiteID))
                 {
                     DocumentSynchronizationHelper.LogDocumentChange(LeftNode.NodeSiteName, LeftNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, LeftNode.TreeProvider);
@@ -296,8 +297,8 @@ namespace RelationshipsExtended
         /// <param name="TaskType"></param>
         private void RelationshipNameSite_CreateStagingTask(RelationshipNameSiteInfo RelationshipSiteObj, TaskTypeEnum TaskType)
         {
-            List<ServerInfo> ActiveServers = ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).ToList();
-            RelationshipNameInfo RelationshipObj = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipSiteObj.RelationshipNameID);
+            List<ServerInfo> ActiveServers = ServerInfo.Provider.Get().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).ToList();
+            RelationshipNameInfo RelationshipObj = RelationshipNameInfo.Provider.Get(RelationshipSiteObj.RelationshipNameID);
             // If relationship obj is already gone, then the Site deletion thing is already handled with the deletion of the relationship name.
             if (RelationshipObj == null)
             {
@@ -330,7 +331,7 @@ namespace RelationshipsExtended
                     TaskTime = DateTime.Now,
                     TaskSiteID = SiteContext.CurrentSiteID
                 };
-                StagingTaskInfoProvider.SetTaskInfo(SiteTask);
+                StagingTaskInfo.Provider.Set(SiteTask);
 
                 foreach (ServerInfo ServerObj in ActiveServers)
                 {
@@ -341,13 +342,13 @@ namespace RelationshipsExtended
                         SynchronizationTaskID = SiteTask.TaskID,
                         SynchronizationServerID = ServerObj.ServerID
                     };
-                    SynchronizationInfoProvider.SetSynchronizationInfo(SyncSiteInfo);
+                    SynchronizationInfo.Provider.Set(SyncSiteInfo);
                 }
 
                 TaskGroupInfo TaskGroup = TaskGroupInfoProvider.GetUserTaskGroupInfo(MembershipContext.AuthenticatedUser.UserID);
                 if (TaskGroup != null)
                 {
-                    TaskGroupTaskInfoProvider.AddTaskGroupToTask(TaskGroup.TaskGroupID, SiteTask.TaskID);
+                    TaskGroupTaskInfo.Provider.Add(TaskGroup.TaskGroupID, SiteTask.TaskID);
                 }
             }
         }
@@ -359,7 +360,7 @@ namespace RelationshipsExtended
         /// <param name="TaskType"></param>
         private void RelationshipName_CreateStagingTask(RelationshipNameInfo RelationshipObj, TaskTypeEnum TaskType)
         {
-            List<ServerInfo> ActiveServers = ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).ToList();
+            List<ServerInfo> ActiveServers = ServerInfo.Provider.Get().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).ToList();
 
             if (IsCustomAdhocRelationshipName(RelationshipObj) && ActiveServers.Count > 0)
             {
@@ -387,7 +388,7 @@ namespace RelationshipsExtended
                     TaskData = Data,
                     TaskTime = DateTime.Now
                 };
-                StagingTaskInfoProvider.SetTaskInfo(Task);
+                StagingTaskInfo.Provider.Set(Task);
 
                 foreach (ServerInfo ServerObj in ActiveServers)
                 {
@@ -397,13 +398,13 @@ namespace RelationshipsExtended
                         SynchronizationTaskID = Task.TaskID,
                         SynchronizationServerID = ServerObj.ServerID
                     };
-                    SynchronizationInfoProvider.SetSynchronizationInfo(SyncInfo);
+                    SynchronizationInfo.Provider.Set(SyncInfo);
                 }
 
                 TaskGroupInfo TaskGroup = TaskGroupInfoProvider.GetUserTaskGroupInfo(MembershipContext.AuthenticatedUser.UserID);
                 if (TaskGroup != null)
                 {
-                    TaskGroupTaskInfoProvider.AddTaskGroupToTask(TaskGroup.TaskGroupID, Task.TaskID);
+                    TaskGroupTaskInfo.Provider.Add(TaskGroup.TaskGroupID, Task.TaskID);
                 }
             }
         }

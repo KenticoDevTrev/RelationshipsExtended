@@ -1,4 +1,5 @@
 ﻿using CMS.Base;
+using CMS.Core;
 using CMS.CustomTables;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
@@ -247,7 +248,7 @@ namespace RelationshipsExtended
                     // Add a catcher so it doesn't cause a loop in thinking this event is from another source and trigger the same logic of this thing.
                     CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, true);
 
-                    foreach (ServerInfo Server in ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
+                    foreach (ServerInfo Server in ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
                     {
                         DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
                         {
@@ -266,7 +267,7 @@ namespace RelationshipsExtended
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                Service.Resolve<IEventLogService>().LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
             }
         }
 
@@ -287,8 +288,8 @@ namespace RelationshipsExtended
                 // of just the first site, since rare that a multisite has staging on some but not all.
                 if (SiteContext.CurrentSite == null)
                 {
-                    SiteInfo Site = SiteInfoProvider.GetSiteInfo(SiteID);
-                    SiteContext.CurrentSite = Site ?? SiteInfoProvider.GetSites().FirstOrDefault();
+                    SiteInfo Site = SiteInfo.Provider.Get(SiteID);
+                    SiteContext.CurrentSite = Site ?? SiteInfo.Provider.Get().FirstOrDefault();
                 }
                 if (LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging))
                 {
@@ -296,13 +297,13 @@ namespace RelationshipsExtended
                 }
                 else
                 {
-                    //EventLogProvider.LogEvent("W", "RelHelper", "LicenseBase", eventDescription: "Site: " + SiteContext.CurrentSiteName + ", License " + LicenseHelper.CurrentEdition + ", feature: " + LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging).ToString());
+                    //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "LicenseBase", eventDescription: "Site: " + SiteContext.CurrentSiteName + ", License " + LicenseHelper.CurrentEdition + ", feature: " + LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging).ToString());
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
+                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
                 return false;
             }
         }
@@ -314,12 +315,12 @@ namespace RelationshipsExtended
         /// <param name="Configurations">The Configurations, one for each object binding you are including.</param>
         public static void UpdateTaskDataWithNodeBinding(StagingLogTaskEventArgs e, NodeBinding_DocumentLogTaskBefore_Configuration[] Configurations)
         {
-            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
 
-            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
             if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
             {
-                //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                 TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
                 if (IsStagingEnabled(Node.NodeSiteID))
                 {
@@ -331,7 +332,7 @@ namespace RelationshipsExtended
                         {
                             cs.CacheDependency = CacheHelper.GetCacheDependency("staging.server|all");
                         }
-                        return ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).Select(x => x.ServerName.ToLower()).ToArray();
+                        return ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).Select(x => x.ServerName.ToLower()).ToArray();
                     }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSite.SiteName), "GetServers"));
 
 
@@ -354,7 +355,7 @@ namespace RelationshipsExtended
                     }
                     catch (Exception ex)
                     {
-                        EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                        Service.Resolve<IEventLogService>().LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
                     }
 
                     // The Task Data is an XML version of a DataSet, so convert to DataSet, then we can add our table data.
@@ -366,11 +367,11 @@ namespace RelationshipsExtended
                     {
                         TranslationHelper NodeBoundObjectTableHelper = new TranslationHelper();
                         DataSet NodeBoundObjectData = SynchronizationHelper.GetObjectsData(OperationTypeEnum.Synchronization, Configuration.EmptyNodeBindingObj, string.Format(Configuration.NodeMatchStringFormat, Node.NodeID), null, true, false, NodeBoundObjectTableHelper);
-                        //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3.5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                        //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask3.5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
 
                         if (NodeBoundObjectTableHelper.TranslationTable != null && NodeBoundObjectTableHelper.TranslationTable.Rows.Count > 0)
                         {
-                            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask4", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask4", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                             NodeBoundObjectData.Tables.Add(NodeBoundObjectTableHelper.TranslationTable);
                         }
 
@@ -379,11 +380,11 @@ namespace RelationshipsExtended
                         NodeRegionObjectDataHolder.ReadXml(new StringReader(NodeBoundObjectData.GetXml()));
                         if (!DataHelper.DataSourceIsEmpty(NodeRegionObjectDataHolder) && NodeRegionObjectDataHolder.Tables.Count > 0)
                         {
-                            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                             DataHelper.TransferTables(DocumentDataSet, NodeRegionObjectDataHolder);
                         }
                     }
-                    //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask6", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                    //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask6", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                     // Convert it back to XML
                     DataSetXML = DocumentDataSet.GetXml();
                     e.Task.TaskData = DataSetXML;
@@ -456,11 +457,11 @@ namespace RelationshipsExtended
                         SiteContext.CurrentSite = Site;
                         MembershipContext.AuthenticatedUser = CacheHelper.Cache<CurrentUserInfo>(cs =>
                         {
-                            UserInfo User = UserInfoProvider.GetUserInfo(TaskOriginatorUserID);
+                            UserInfo User = UserInfo.Provider.Get(TaskOriginatorUserID);
                             CurrentUserInfo CurrentUserObj = null;
                             if (User != null)
                             {
-                                CurrentUserObj = new CurrentUserInfo(UserInfoProvider.GetUserInfo(TaskOriginatorUserID), true);
+                                CurrentUserObj = new CurrentUserInfo(UserInfo.Provider.Get(TaskOriginatorUserID), true);
                             }
                             else
                             {
@@ -555,7 +556,7 @@ namespace RelationshipsExtended
                         }
                         catch (Exception ex)
                         {
-                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
                         }
                     }
                 }
@@ -597,7 +598,7 @@ namespace RelationshipsExtended
                         }
                         catch (Exception ex)
                         {
-                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
                         }
                     }
                 }
@@ -691,7 +692,7 @@ namespace RelationshipsExtended
                         }
                         catch (Exception ex)
                         {
-                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
                         }
                     }
                 }
@@ -737,7 +738,7 @@ namespace RelationshipsExtended
                         }
                         catch (Exception ex)
                         {
-                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
                         }
                     }
                 }
@@ -768,7 +769,7 @@ namespace RelationshipsExtended
                     DocumentDataSet.ReadXml(new StringReader(DataSetXML));
                     DataTable BoundObjectTable = DocumentDataSet.Tables[0];
 
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstObject;
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
 
                     string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
                     ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
@@ -780,7 +781,7 @@ namespace RelationshipsExtended
                 }
                 catch (Exception ex)
                 {
-                    EventLogProvider.LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
+                    Service.Resolve<IEventLogService>().LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
                 }
             }
         }
@@ -801,7 +802,7 @@ namespace RelationshipsExtended
             DataTable ObjectTranslationTable = TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == "objecttranslation").FirstOrDefault();
             if (ObjectTranslationTable == null)
             {
-                EventLogProvider.LogEvent("E", "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
+                Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
                 return -1;
             }
             foreach (DataRow ItemDR in ObjectTranslationTable.Rows.Cast<DataRow>()
@@ -837,7 +838,7 @@ namespace RelationshipsExtended
                     }
                     catch (Exception ex)
                     {
-                        EventLogProvider.LogException("RelHelper.TranslateBindingTranslateID", "No Translation Found", ex, additionalMessage: "No Translation found.");
+                        Service.Resolve<IEventLogService>().LogException("RelHelper.TranslateBindingTranslateID", "No Translation Found", ex, additionalMessage: "No Translation found.");
                         return -1;
                     }
                 }
@@ -854,10 +855,10 @@ namespace RelationshipsExtended
         {
             return CacheHelper.Cache<int>(cs =>
             {
-                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstObject;
+                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstOrDefault();
                 while (NodeObj != null && NodeObj.NodeLinkedNodeID > 0)
                 {
-                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstObject;
+                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstOrDefault();
                 }
                 int PrimaryNodeID = (NodeObj != null ? NodeObj.NodeID : -1);
                 if (cs.Cached)
@@ -921,7 +922,7 @@ namespace RelationshipsExtended
         /// <returns>List of Category IDs</returns>
         private static IEnumerable<int> CategoryIdentitiesToIDs(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfoProvider.GetCategories().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").Select(x => x.CategoryID).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").Select(x => x.CategoryID).ToArray();
         }
 
         /// <summary>
@@ -931,7 +932,7 @@ namespace RelationshipsExtended
         /// <returns>List of Category GUIDs</returns>
         private static IEnumerable<Guid> CategoryIdentitiesToGUIDs(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfoProvider.GetCategories().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").Select(x => x.CategoryGUID).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").Select(x => x.CategoryGUID).ToArray();
         }
 
         /// <summary>
@@ -941,7 +942,7 @@ namespace RelationshipsExtended
         /// <returns>List of Category Code Names</returns>
         private static IEnumerable<string> CategoryIdentitiesToCodeNames(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfoProvider.GetCategories().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").Select(x => x.CategoryName).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").Select(x => x.CategoryName).ToArray();
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using CMS;
 using CMS.Base.Web.UI;
+using CMS.Core;
 using CMS.DataEngine;
 using CMS.EventLog;
 using CMS.Helpers;
@@ -164,7 +165,7 @@ namespace RelationshipsExtended
                     }
                     catch (Exception ex)
                     {
-                        EventLogProvider.LogException("OrderableBindingEditorUniSelectorExtender", "ActionRefreshError", ex, additionalMessage: "Something went wrong trying to detect if binding UI should be refreshed, please ensure both Binding Object and Bound Object types are properly set.");
+                        Service.Resolve<IEventLogService>().LogException("OrderableBindingEditorUniSelectorExtender", "ActionRefreshError", ex, additionalMessage: "Something went wrong trying to detect if binding UI should be refreshed, please ensure both Binding Object and Bound Object types are properly set.");
                     }
                     break;
                 case "custom_movedown":
@@ -179,7 +180,7 @@ namespace RelationshipsExtended
                     }
                     catch (Exception ex)
                     {
-                        EventLogProvider.LogException("OrderableBindingEditorUniSelectorExtender", "ActionRefreshError", ex, additionalMessage: "Something went wrong trying to detect if binding UI should be refreshed, please ensure both Binding Object and Bound Object types are properly set.");
+                        Service.Resolve<IEventLogService>().LogException("OrderableBindingEditorUniSelectorExtender", "ActionRefreshError", ex, additionalMessage: "Something went wrong trying to detect if binding UI should be refreshed, please ensure both Binding Object and Bound Object types are properly set.");
                     }
                     break;
             }

@@ -4,7 +4,6 @@ using System.Web.UI.WebControls;
 
 using CMS.Base.Web.UI;
 using CMS.DataEngine;
-using CMS.DeviceProfiles;
 using CMS.Helpers;
 using CMS.UIControls;
 
@@ -285,7 +284,7 @@ $cmsj(document).ready(function(){
 
     private void EnsureCloseButton()
     {
-        if (ShowCloseButton && (DeviceContext.CurrentDevice.IsMobile() || IsDialog))
+        if (ShowCloseButton && IsDialog)
         {
             pnlClose.Visible = true;
             btnClose.Style.Add(HtmlTextWriterStyle.Cursor, "pointer");

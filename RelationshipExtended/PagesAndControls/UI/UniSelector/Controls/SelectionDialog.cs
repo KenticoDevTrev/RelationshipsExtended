@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Web.UI;
 
 using CMS.Base.Web.UI;
+using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine.Web.UI;
 using CMS.EventLog;
@@ -956,7 +957,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_UniSelector_Co
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("UniSelector", "GETDATA", ex);
+                Service.Resolve<IEventLogService>().LogException("UniSelector", "GETDATA", ex);
 
                 uniGrid.ShowError(ex.Message);
             }

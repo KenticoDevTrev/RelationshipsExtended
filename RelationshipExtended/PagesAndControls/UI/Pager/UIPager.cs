@@ -3,6 +3,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 
 using CMS.Base.Web.UI;
+using CMS.Core;
 using CMS.DocumentEngine.Web.UI;
 using CMS.EventLog;
 using CMS.Helpers;
@@ -256,7 +257,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_UI_Pager_UIPager 
 
             if (!TryParsePageSizeOptions(PageSizeOptions, out pageSizeOptionsData))
             {
-                EventLogProvider.LogEvent(EventType.ERROR, "UIPager", "ParseCustomOptions", "Could not parse custom page size options: '" + PageSizeOptions + "'. Correct format is values separated by comma.");
+                Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "UIPager", "ParseCustomOptions", "Could not parse custom page size options: '" + PageSizeOptions + "'. Correct format is values separated by comma.");
                 TryParsePageSizeOptions(DEFAULT_PAGE_SIZE_OPTIONS, out pageSizeOptionsData);
             }
 

@@ -55,7 +55,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
         {
             if (!_IsAdhocRelationship.HasValue)
             {
-                _IsAdhocRelationship = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipName).RelationshipNameIsAdHoc;
+                _IsAdhocRelationship = RelationshipNameInfo.Provider.Get(RelationshipName).RelationshipNameIsAdHoc;
             }
             return _IsAdhocRelationship.Value;
         }
@@ -503,7 +503,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
 
         if (
             (!string.IsNullOrWhiteSpace(RelatedNodeSiteName) && !RelatedNodeSiteName.Equals(SiteContext.CurrentSiteName, StringComparison.InvariantCultureIgnoreCase)
-            || (string.IsNullOrWhiteSpace(RelatedNodeSiteName) && SiteInfoProvider.GetSites().Count > 1))
+            || (string.IsNullOrWhiteSpace(RelatedNodeSiteName) && SiteInfo.Provider.Get().Count > 1))
             )
         {
             ltrStyleHide.Visible = true;
@@ -1016,12 +1016,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
             // Left side
             if (currentNodeIsOnLeftSide)
             {
-                RelationshipInfoProvider.AddRelationship(TreeNode.NodeID, selectedNodeId, relationshipNameId);
+                RelationshipInfo.Provider.Add(TreeNode.NodeID, selectedNodeId, relationshipNameId);
             }
             // Right side
             else
             {
-                RelationshipInfoProvider.AddRelationship(selectedNodeId, TreeNode.NodeID, relationshipNameId);
+                RelationshipInfo.Provider.Add(selectedNodeId, TreeNode.NodeID, relationshipNameId);
             }
 
             if (RelHelper.IsStagingEnabled())
@@ -1062,7 +1062,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 Config.ContentStartingPath = StartingPath;
             }
 
-            string url = CMSDialogHelper.GetDialogUrl(Config, IsLiveSite, false, null, false);
+            string url = CMSDialogHelper.GetDialogUrl(Config, false, null, false);
 
             return string.Format("modalDialog('{0}', 'contentselectnode', '90%', '85%');", url);
         }
@@ -1104,7 +1104,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
     private int GetRelationshipNameId()
     {
         var relationshipName = UseAdHocRelationshipName ? RelationshipNameInfoProvider.GetAdHocRelationshipNameCodeName(TreeNode.ClassName, FieldInfo) : RelationshipName;
-        var relationshipNameInfo = RelationshipNameInfoProvider.GetRelationshipNameInfo(relationshipName);
+        var relationshipNameInfo = RelationshipNameInfo.Provider.Get(relationshipName);
 
         if (relationshipNameInfo == null)
         {
@@ -1117,7 +1117,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
 
     private int GetRelationshipCount()
     {
-        return RelationshipInfoProvider.GetRelationships()
+        return RelationshipInfo.Provider.Get()
                                        .WhereEquals("RelationshipNameID", GetRelationshipNameId())
                                        .WhereEquals("LeftNodeID", TreeNode.NodeID).Count;
     }

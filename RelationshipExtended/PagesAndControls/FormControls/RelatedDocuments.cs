@@ -712,12 +712,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
             // Left side
             if (currentNodeIsOnLeftSide)
             {
-                RelationshipInfoProvider.AddRelationship(TreeNode.NodeID, selectedNodeId, relationshipNameId);
+                RelationshipInfo.Provider.Add(TreeNode.NodeID, selectedNodeId, relationshipNameId);
             }
             // Right side
             else
             {
-                RelationshipInfoProvider.AddRelationship(selectedNodeId, TreeNode.NodeID, relationshipNameId);
+                RelationshipInfo.Provider.Add(selectedNodeId, TreeNode.NodeID, relationshipNameId);
             }
 
             if (RelHelper.IsStagingEnabled())
@@ -758,7 +758,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
                 Config.ContentStartingPath = StartingPath;
             }
 
-            string url = CMSDialogHelper.GetDialogUrl(Config, IsLiveSite, false, null, false);
+            string url = CMSDialogHelper.GetDialogUrl(Config, false, null, false);
 
             return string.Format("modalDialog('{0}', 'contentselectnode', '90%', '85%');", url);
         }
@@ -800,7 +800,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
     private int GetRelationshipNameId()
     {
         var relationshipName = UseAdHocRelationshipName ? RelationshipNameInfoProvider.GetAdHocRelationshipNameCodeName(TreeNode.ClassName, FieldInfo) : RelationshipName;
-        var relationshipNameInfo = RelationshipNameInfoProvider.GetRelationshipNameInfo(relationshipName);
+        var relationshipNameInfo = RelationshipNameInfo.Provider.Get(relationshipName);
 
         if (relationshipNameInfo == null)
         {
@@ -813,7 +813,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
 
     private int GetRelationshipCount()
     {
-        return RelationshipInfoProvider.GetRelationships().WhereEquals("RelationshipNameID", GetRelationshipNameId()).Count();
+        return RelationshipInfo.Provider.Get().WhereEquals("RelationshipNameID", GetRelationshipNameId()).Count();
     }
 
     #endregion

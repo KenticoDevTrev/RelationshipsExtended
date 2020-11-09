@@ -11,6 +11,7 @@ using CMS.SiteProvider;
 using RelationshipsExtended.Enums;
 using CMS.EventLog;
 using System.Linq;
+using CMS.Core;
 
 [assembly: RegisterExtension(typeof(RelationshipMacroMethods), typeof(RelationshipsExtendedMacroNamespace))]
 [assembly: RegisterExtension(typeof(RelHelperMacrosMethods), typeof(RelHelperMacroNamespace))]
@@ -41,7 +42,7 @@ namespace RelationshipsExtended
                     }
                     if(!string.IsNullOrWhiteSpace(SiteName) && !SiteName.Equals(SiteContext.CurrentSiteName, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        SiteDomain = (System.Web.HttpContext.Current.Request.IsSecureConnection ? "https://" : "http://") + SiteInfoProvider.GetSiteInfo(SiteName).DomainName.Trim('/');
+                        SiteDomain = (System.Web.HttpContext.Current.Request.IsSecureConnection ? "https://" : "http://") + SiteInfo.Provider.Get(SiteName).DomainName.Trim('/');
                     }
                     if (!string.IsNullOrWhiteSpace(ClassName) && !string.IsNullOrWhiteSpace(ParentNodeAlias))
                     {
@@ -56,7 +57,7 @@ namespace RelationshipsExtended
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelationshipMacros", "GetNewPageLinkError", ex);
+                Service.Resolve<IEventLogService>().LogException("RelationshipMacros", "GetNewPageLinkError", ex);
             }
             return "#";
         }
@@ -217,7 +218,7 @@ namespace RelationshipsExtended
             string RelationshipName = ValidationHelper.GetString(UIContext.Current.Data.GetValue("RelationshipName"), "");
             return CacheHelper.Cache<bool>(cs =>
             {
-                RelationshipNameInfo relationshipObj = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipName);
+                RelationshipNameInfo relationshipObj = RelationshipNameInfo.Provider.Get(RelationshipName);
 
                 if (relationshipObj != null && cs.Cached)
                 {

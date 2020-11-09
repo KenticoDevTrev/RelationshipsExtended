@@ -658,7 +658,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     {
                         DefaultValueWhereCondition = SqlHelper.AddWhereCondition(DefaultValueWhereCondition, string.Format("CategoryGUID in ('{0}')", string.Join("','", guidArray)), "OR");
                     }
-                    foreach (CategoryInfo catInfo in CategoryInfoProvider.GetCategories().Where(DefaultValueWhereCondition))
+                    foreach (CategoryInfo catInfo in CategoryInfo.Provider.Get().Where(DefaultValueWhereCondition))
                     {
                         CurrentCategories.Add(catInfo);
                     }
@@ -703,10 +703,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
         // If List, display all valid categories under the root.
 
         int RootCategoryID = 0;
-        var rootCategory = CategoryInfoProvider.GetCategoryInfo(RootCategory, SiteContext.CurrentSiteName);
+        var rootCategory = CategoryInfo.Provider.Get(RootCategory, SiteContext.CurrentSiteID);
         if (rootCategory == null && int.TryParse(RootCategory, out RootCategoryID))
         {
-            rootCategory = CategoryInfoProvider.GetCategoryInfo(RootCategoryID);
+            rootCategory = CategoryInfo.Provider.Get(RootCategoryID);
         }
 
 
@@ -984,7 +984,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
         }
         if (categoryID > 0)
         {
-            e.Node.Text = GetInputDataPrepend(CategoryInfoProvider.GetCategoryInfo(categoryID));
+            e.Node.Text = GetInputDataPrepend(CategoryInfo.Provider.Get(categoryID));
         }
     }
 
@@ -1079,21 +1079,21 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                 switch (FieldSaveModeVal)
                 {
                     case CategoryFieldSaveType.ID:
-                        catObject = CategoryInfoProvider.GetCategoryInfo(ValidationHelper.GetInteger(dr[JoinTableRightFieldName], 0));
+                        catObject = CategoryInfo.Provider.Get(ValidationHelper.GetInteger(dr[JoinTableRightFieldName], 0));
                         if (catObject != null)
                         {
                             DocumentCategoryIds.Add(catObject.CategoryID);
                         }
                         break;
                     case CategoryFieldSaveType.GUID:
-                        var ClassObject = CategoryInfoProvider.GetCategories().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstOrDefault();
+                        var ClassObject = CategoryInfo.Provider.Get().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstOrDefault();
                         if (ClassObject != null)
                         {
                             DocumentCategoryIds.Add(ValidationHelper.GetInteger(ClassObject["CategoryID"], 0));
                         }
                         break;
                     case CategoryFieldSaveType.CategoryName:
-                        catObject = CategoryInfoProvider.GetCategoryInfo(ValidationHelper.GetString(dr[JoinTableRightFieldName], ""), SiteContext.CurrentSiteName);
+                        catObject = CategoryInfo.Provider.Get(ValidationHelper.GetString(dr[JoinTableRightFieldName], ""), SiteContext.CurrentSiteID);
                         if (catObject != null)
                         {
                             DocumentCategoryIds.Add(catObject.CategoryID);
@@ -1114,14 +1114,14 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     if (JoinTableClassInfo.ClassIsCustomTable)
                     {
                         CustomTableItemProvider.GetItems(JoinTableClassInfo.ClassName).WhereEquals(JoinTableLeftFieldName, CurrentItemIdentification)
-                                    .WhereEquals(JoinTableRightFieldName, CategoryInfoProvider.GetCategoryInfo(DeselectId).GetValue(FieldSaveColumnName))
+                                    .WhereEquals(JoinTableRightFieldName, CategoryInfo.Provider.Get(DeselectId).GetValue(FieldSaveColumnName))
                                     .ToList().ForEach(x => ((CustomTableItem)x).Delete());
                     }
                     else
                     {
                         new ObjectQuery(JoinTableClassInfo.ClassName)
                             .WhereEquals(JoinTableLeftFieldName, CurrentItemIdentification)
-                            .WhereEquals(JoinTableRightFieldName, CategoryInfoProvider.GetCategoryInfo(DeselectId).GetValue(FieldSaveColumnName))
+                            .WhereEquals(JoinTableRightFieldName, CategoryInfo.Provider.Get(DeselectId).GetValue(FieldSaveColumnName))
                             .ToList().ForEach(x => x.Delete());
                     }
                 }
@@ -1133,7 +1133,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     if (JoinTableClassInfo.ClassIsCustomTable)
                     {
                         CustomTableItem newCustomTableItem = CustomTableItem.New(JoinTableName);
-                        SetBaseInfoItemValues(newCustomTableItem, CategoryInfoProvider.GetCategoryInfo(SelectId).GetValue(FieldSaveColumnName), JoinTableClassInfo.ClassName);
+                        SetBaseInfoItemValues(newCustomTableItem, CategoryInfo.Provider.Get(SelectId).GetValue(FieldSaveColumnName), JoinTableClassInfo.ClassName);
                         newCustomTableItem.Insert();
                     }
                     else
@@ -1154,7 +1154,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                             }
                         }
                         BaseInfo newJoinObj = ((BaseInfo)JoinTableClassFactory.Singleton);
-                        SetBaseInfoItemValues(newJoinObj, CategoryInfoProvider.GetCategoryInfo(SelectId).GetValue(FieldSaveColumnName), JoinTableClassInfo.ClassName);
+                        SetBaseInfoItemValues(newJoinObj, CategoryInfo.Provider.Get(SelectId).GetValue(FieldSaveColumnName), JoinTableClassInfo.ClassName);
                         InsertObjectHandler(newJoinObj);
                     }
                 }
@@ -1234,12 +1234,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             bool CategoriesChanged = false;
             foreach (int DeselectId in DeselectIds)
             {
-                DocumentCategoryInfoProvider.DeleteDocumentCategoryInfo(DocumentID, DeselectId);
+                DocumentCategoryInfo.Provider.Remove(DocumentID, DeselectId);
                 CategoriesChanged = true;
             }
             foreach (int SelectId in SelectIds)
             {
-                DocumentCategoryInfoProvider.AddDocumentToCategory(DocumentID, SelectId);
+                DocumentCategoryInfo.Provider.Add(DocumentID, SelectId);
                 CategoriesChanged = true;
             }
 
@@ -1248,7 +1248,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             {
                 TreeProvider tree = new TreeProvider(MembershipContext.AuthenticatedUser);
 
-                List<ServerInfo> targetServers = ServerInfoProvider.GetServers().Where(x => x.ServerSiteID == SiteContext.CurrentSiteID && x.ServerEnabled).ToList();
+                List<ServerInfo> targetServers = ServerInfo.Provider.Get().Where(x => x.ServerSiteID == SiteContext.CurrentSiteID && x.ServerEnabled).ToList();
                 foreach (ServerInfo targetServer in targetServers)
                 {
                     var docObj = DocumentHelper.GetDocument(DocumentID, tree);
@@ -1281,10 +1281,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
     {
         PossibleCategories = new List<CategoryInfo>();
         int RootCategoryID = 0;
-        var rootCategory = CategoryInfoProvider.GetCategoryInfo(RootCategory, SiteContext.CurrentSiteName);
+        var rootCategory = CategoryInfo.Provider.Get(RootCategory, SiteContext.CurrentSiteID);
         if (rootCategory == null && int.TryParse(RootCategory, out RootCategoryID))
         {
-            rootCategory = CategoryInfoProvider.GetCategoryInfo(RootCategoryID);
+            rootCategory = CategoryInfo.Provider.Get(RootCategoryID);
         }
 
         // Grab allowable Categories if user sets a WHERE

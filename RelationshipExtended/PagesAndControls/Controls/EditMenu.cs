@@ -517,7 +517,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
                 // Display action message
                 if (Step != null)
                 {
-                    WorkflowActionInfo action = WorkflowActionInfoProvider.GetWorkflowActionInfo(Step.StepActionID);
+                    WorkflowActionInfo action = WorkflowActionInfo.Provider.Get(Step.StepActionID);
                     string name = (action != null) ? action.ActionDisplayName : Step.StepDisplayName;
                     string str = (action != null) ? "workflow.actioninprogress" : "workflow.stepinprogress";
                     string text = string.Format(ResHelper.GetString(str, ResourceCulture), HTMLHelper.HTMLEncode(ResHelper.LocalizeString(name, ResourceCulture)));
@@ -797,7 +797,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
                                     transitions = WorkflowManager.GetStepTransitions(Step, WorkflowTransitionTypeEnum.Manual);
                                     if (transitions.Count > 0)
                                     {
-                                        WorkflowStepInfo s = WorkflowStepInfoProvider.GetWorkflowStepInfo(transitions[0].TransitionEndStepID);
+                                        WorkflowStepInfo s = WorkflowStepInfo.Provider.Get(transitions[0].TransitionEndStepID);
                                         if (!s.StepIsArchived)
                                         {
                                             // Publish text
@@ -898,7 +898,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
 
                                     if (transitions.Count > 0)
                                     {
-                                        WorkflowStepInfo s = WorkflowStepInfoProvider.GetWorkflowStepInfo(transitions[0].TransitionEndStepID);
+                                        WorkflowStepInfo s = WorkflowStepInfo.Provider.Get(transitions[0].TransitionEndStepID);
                                         if (s.StepIsArchived)
                                         {
                                             // Inform user
@@ -1073,7 +1073,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
         // Check workflow count
         if (allowed)
         {
-            allowed = WorkflowInfoProvider.GetWorkflows()
+            allowed = WorkflowInfo.Provider.Get()
                                           .WhereTrue("WorkflowEnabled")
                                           .Where(new WhereCondition().WhereNotEquals("WorkflowType", (int)WorkflowTypeEnum.Automation).Or().WhereNull("WorkflowType"))
                                           .Count > 0;

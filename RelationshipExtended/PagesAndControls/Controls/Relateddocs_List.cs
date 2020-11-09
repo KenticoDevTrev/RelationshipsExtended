@@ -226,12 +226,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
         {
             if (Node != null)
             {
-                bool enabled = true;
-
                 // Check modify permissions
                 if (!DocumentUIHelper.CheckDocumentPermissions(Node, PermissionsEnum.Modify))
                 {
-                    relatedDocuments.Enabled = enabled = false;
+                    relatedDocuments.Enabled = false;
                 }
             }
         }

@@ -477,7 +477,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
     protected void CustomUniSelector_OnSelectionChanged(object sender, EventArgs e)
     {
         string SelectedItems = ValidationHelper.GetString(((UniSelector)sender).Value, "");
-        int RelationshipNameID = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipName).RelationshipNameId;
+        int RelationshipNameID = RelationshipNameInfo.Provider.Get(RelationshipName).RelationshipNameId;
         int[] NodeIDs = SelectedItems.Split(";|,".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Select(x => ValidationHelper.GetInteger(x, -1)).ToArray();
         if (MaxRelationships > -1 && GetRelationshipCount() + NodeIDs.Length > MaxRelationships)
         {
@@ -491,11 +491,11 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
             {
                 if (ddlCurrentNodeDirection.SelectedValue == "LeftNode")
                 {
-                    RelationshipInfoProvider.AddRelationship(CurrentNodeID, NodeID, RelationshipNameID);
+                    RelationshipInfo.Provider.Add(CurrentNodeID, NodeID, RelationshipNameID);
                 }
                 else
                 {
-                    RelationshipInfoProvider.AddRelationship(NodeID, CurrentNodeID, RelationshipNameID);
+                    RelationshipInfo.Provider.Add(NodeID, CurrentNodeID, RelationshipNameID);
                 }
             }
         }
@@ -505,17 +505,17 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
     }
     private int GetRelationshipCount()
     {
-        int RelationshipNameID = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipName).RelationshipNameId;
+        int RelationshipNameID = RelationshipNameInfo.Provider.Get(RelationshipName).RelationshipNameId;
         if (AllowSwitchSides)
         {
-            return RelationshipInfoProvider.GetRelationships()
+            return RelationshipInfo.Provider.Get()
                                            .WhereEquals("RelationshipNameID", RelationshipNameID)
                                            .Where(string.Format("(LeftNodeID = {0} or RightNodeID = {0})", CurrentNodeID))
                                            .Count;
         }
         else
         {
-            return RelationshipInfoProvider.GetRelationships()
+            return RelationshipInfo.Provider.Get()
                                            .WhereEquals("RelationshipNameID", RelationshipNameID)
                                            .WhereEquals(DirectionMode == "LeftNode" ? "LeftNodeID" : "RightNodeID", CurrentNodeID)
                                            .Count;

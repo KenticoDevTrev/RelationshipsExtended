@@ -175,7 +175,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
         {
             return CacheHelper.Cache<bool>(cs =>
             {
-                bool IsAdHoc = RelationshipNameInfoProvider.GetRelationshipNameInfo(RelationshipName).RelationshipNameIsAdHoc;
+                bool IsAdHoc = RelationshipNameInfo.Provider.Get(RelationshipName).RelationshipNameIsAdHoc;
                 if (cs.Cached)
                 {
                     cs.CacheDependency = CacheHelper.GetCacheDependency("cms.relationshipname|byname|" + RelationshipName);
@@ -847,7 +847,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
         }
 
         var relationshipName = RelationshipName;
-        var relationshipNameInfo = RelationshipNameInfoProvider.GetRelationshipNameInfo(relationshipName);
+        var relationshipNameInfo = RelationshipNameInfo.Provider.Get(relationshipName);
 
         int relationshipNameId;
         if (relationshipNameInfo != null)
@@ -896,7 +896,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
                 }
                 else
                 {
-                    RelationshipInfoProvider.AddRelationship(TreeNode.NodeID, selectedNodeId, relationshipNameId);
+                    RelationshipInfo.Provider.Add(TreeNode.NodeID, selectedNodeId, relationshipNameId);
 
                     if (RelHelper.IsStagingEnabled())
                     {
@@ -924,7 +924,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
                 }
                 else
                 {
-                    RelationshipInfoProvider.AddRelationship(selectedNodeId, TreeNode.NodeID, relationshipNameId);
+                    RelationshipInfo.Provider.Add(selectedNodeId, TreeNode.NodeID, relationshipNameId);
 
                     if (RelHelper.IsStagingEnabled())
                     {
@@ -966,7 +966,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
                 Config.ContentStartingPath = StartingPath;
             }
 
-            string url = CMSDialogHelper.GetDialogUrl(Config, IsLiveSite, false, null, false);
+            string url = CMSDialogHelper.GetDialogUrl(Config, false, null, false);
 
             return string.Format("modalDialog('{0}', 'contentselectnode', '90%', '85%');", url);
         }
@@ -1007,7 +1007,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
     private int GetRelationshipNameId()
     {
         var relationshipName = RelationshipName;
-        var relationshipNameInfo = RelationshipNameInfoProvider.GetRelationshipNameInfo(relationshipName);
+        var relationshipNameInfo = RelationshipNameInfo.Provider.Get(relationshipName);
 
         if (relationshipNameInfo == null)
         {
@@ -1020,7 +1020,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
 
     private int GetRelationshipCount()
     {
-        return RelationshipInfoProvider.GetRelationships()
+        return RelationshipInfo.Provider.Get()
                                        .WhereEquals("RelationshipNameID", GetRelationshipNameId())
                                        .WhereEquals("LeftNodeID", TreeNode.NodeID).Count;
     }
