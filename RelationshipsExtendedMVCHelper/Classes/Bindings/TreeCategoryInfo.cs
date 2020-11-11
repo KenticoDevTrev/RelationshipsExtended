@@ -14,7 +14,7 @@ namespace CMS
     /// Data container class for <see cref="TreeCategoryInfo"/>.
     /// </summary>
     [Serializable]
-    public partial class TreeCategoryInfo : AbstractInfo<TreeCategoryInfo>
+    public partial class TreeCategoryInfo : AbstractInfo<TreeCategoryInfo, ITreeCategoryInfoProvider>
     {
         /// <summary>
         /// Object type.
@@ -94,7 +94,7 @@ namespace CMS
         /// <summary>
         /// Tree category ID
         /// </summary>
-		[DatabaseField]
+        [DatabaseField]
         public virtual int TreeCategoryID
         {
             get
@@ -111,7 +111,7 @@ namespace CMS
         /// <summary>
         /// Node ID
         /// </summary>
-		[DatabaseField]
+        [DatabaseField]
         public virtual int NodeID
         {
             get
@@ -128,7 +128,7 @@ namespace CMS
         /// <summary>
         /// Category ID
         /// </summary>
-		[DatabaseField]
+        [DatabaseField]
         public virtual int CategoryID
         {
             get
@@ -147,7 +147,7 @@ namespace CMS
         /// </summary>
         protected override void DeleteObject()
         {
-            TreeCategoryInfoProvider.DeleteTreeCategoryInfo(this);
+            Provider.Delete(this);
         }
 
 
@@ -156,7 +156,7 @@ namespace CMS
         /// </summary>
         protected override void SetObject()
         {
-            TreeCategoryInfoProvider.SetTreeCategoryInfo(this);
+            Provider.Set(this);
         }
 
 

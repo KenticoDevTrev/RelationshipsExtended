@@ -1,4 +1,7 @@
 ﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
 using CMS.DataEngine;
 
 namespace CMS
@@ -6,25 +9,18 @@ namespace CMS
     /// <summary>
     /// Class providing <see cref="TreeCategoryInfo"/> management.
     /// </summary>
-    public partial class TreeCategoryInfoProvider : AbstractInfoProvider<TreeCategoryInfo, TreeCategoryInfoProvider>
+    [ProviderInterface(typeof(ITreeCategoryInfoProvider))]
+    public partial class TreeCategoryInfoProvider : AbstractInfoProvider<TreeCategoryInfo, TreeCategoryInfoProvider>, ITreeCategoryInfoProvider
     {
         /// <summary>
-        /// Returns all <see cref="TreeCategoryInfo"/> bindings.
-        /// </summary>
-        public static ObjectQuery<TreeCategoryInfo> GetTreeCategories()
-        {
-            return ProviderObject.GetObjectQuery();
-        }
-
-
-        /// <summary>
-        /// Returns <see cref="TreeCategoryInfo"/> binding structure.
+        /// Gets an instance of the <see cref="TreeCategoryInfo"/> binding structure.
         /// </summary>
         /// <param name="nodeId">Node ID.</param>
-        /// <param name="categoryId">Content category ID.</param>  
-        public static TreeCategoryInfo GetTreeCategoryInfo(int nodeId, int categoryId)
+        /// <param name="categoryId">Content category ID.</param>
+        /// <returns>Returns an instance of <see cref="TreeCategoryInfo"/> corresponding to given identifiers or null.</returns>
+        public virtual TreeCategoryInfo Get(int nodeId, int categoryId)
         {
-            return ProviderObject.GetObjectQuery().TopN(1)
+            return GetObjectQuery().TopN(1)
                 .WhereEquals("NodeID", nodeId)
                 .WhereEquals("CategoryID", categoryId)
                 .FirstOrDefault();
@@ -32,22 +28,21 @@ namespace CMS
 
 
         /// <summary>
-        /// Sets specified <see cref="TreeCategoryInfo"/>.
+        /// Asynchronously gets an instance of the <see cref="TreeCategoryInfo"/> binding structure.
         /// </summary>
-        /// <param name="infoObj"><see cref="TreeCategoryInfo"/> to set.</param>
-        public static void SetTreeCategoryInfo(TreeCategoryInfo infoObj)
+        /// <param name="nodeId">Node ID.</param>
+        /// <param name="categoryId">Content category ID.</param>
+        /// <param name="cancellationToken">The cancellation instruction.</param>
+        /// <returns>Returns a task returning either an instance of <see cref="TreeCategoryInfo"/> corresponding to given identifiers or null.</returns>
+        public async virtual Task<TreeCategoryInfo> GetAsync(int nodeId, int categoryId, CancellationToken? cancellationToken = null)
         {
-            ProviderObject.SetInfo(infoObj);
-        }
+            var query = await GetObjectQuery().TopN(1)
+                .WhereEquals("NodeID", nodeId)
+                .WhereEquals("CategoryID", categoryId)
+                .GetEnumerableTypedResultAsync(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
 
-
-        /// <summary>
-        /// Deletes specified <see cref="TreeCategoryInfo"/> binding.
-        /// </summary>
-        /// <param name="infoObj"><see cref="TreeCategoryInfo"/> object.</param>
-        public static void DeleteTreeCategoryInfo(TreeCategoryInfo infoObj)
-        {
-            ProviderObject.DeleteInfo(infoObj);
+            return query.FirstOrDefault();
         }
 
 
@@ -55,13 +50,13 @@ namespace CMS
         /// Deletes <see cref="TreeCategoryInfo"/> binding.
         /// </summary>
         /// <param name="nodeId">Node ID.</param>
-        /// <param name="categoryId">Content category ID.</param>  
-        public static void RemoveTreeFromCategory(int nodeId, int categoryId)
+        /// <param name="categoryId">Content category ID.</param>
+        public virtual void Remove(int nodeId, int categoryId)
         {
-            var infoObj = GetTreeCategoryInfo(nodeId, categoryId);
+            var infoObj = Get(nodeId, categoryId);
             if (infoObj != null)
             {
-                DeleteTreeCategoryInfo(infoObj);
+                Delete(infoObj);
             }
         }
 
@@ -70,8 +65,8 @@ namespace CMS
         /// Creates <see cref="TreeCategoryInfo"/> binding.
         /// </summary>
         /// <param name="nodeId">Node ID.</param>
-        /// <param name="categoryId">Content category ID.</param>   
-        public static void AddTreeToCategory(int nodeId, int categoryId)
+        /// <param name="categoryId">Content category ID.</param>
+        public virtual void Add(int nodeId, int categoryId)
         {
             // Create new binding
             var infoObj = new TreeCategoryInfo();
@@ -79,7 +74,7 @@ namespace CMS
             infoObj.CategoryID = categoryId;
 
             // Save to the database
-            SetTreeCategoryInfo(infoObj);
+            Set(infoObj);
         }
     }
 }

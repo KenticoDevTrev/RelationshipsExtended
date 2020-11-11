@@ -1,4 +1,5 @@
 ﻿using CMS.Base;
+using CMS.Core;
 using CMS.CustomTables;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
@@ -11,14 +12,15 @@ using CMS.SiteProvider;
 using CMS.Synchronization;
 using CMS.Taxonomy;
 using RelationshipsExtended.Enums;
+using RelationshipsExtendedMVCCoreHelper.Internal;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Timers;
-using System.Web;
 using System.Xml;
 
 namespace RelationshipsExtended
@@ -38,7 +40,7 @@ namespace RelationshipsExtended
         {
             get
             {
-                return SiteContext.CurrentSiteName;
+                return Service.Resolve<ISiteService>().CurrentSite.SiteName;
             }
         }
 
@@ -49,7 +51,7 @@ namespace RelationshipsExtended
         {
             get
             {
-                return SiteContext.CurrentSiteID;
+                return Service.Resolve<ISiteService>().CurrentSite.SiteID;
             }
         }
 
@@ -98,7 +100,8 @@ namespace RelationshipsExtended
                     default:
                         return string.Format("(DocumentID in (Select DocumentID from CMS_DocumentCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs));
                     case ConditionType.All:
-                        return string.Format("(Select Count(*) from CMS_DocumentCategory where CMS_DocumentCategory.DocumentID = {0}.[DocumentID] and CategoryID in ({1})) = {2}", DocumentIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        DocumentIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(DocumentIDTableName, "");
+                        return string.Format("(Select Count(*) from CMS_DocumentCategory where CMS_DocumentCategory.DocumentID = [{0}].[DocumentID] and CategoryID in ({1})) = {2}", DocumentIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
                     case ConditionType.None:
                         return string.Format("(DocumentID not in (Select DocumentID from CMS_DocumentCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
                 }
@@ -128,7 +131,8 @@ namespace RelationshipsExtended
                     default:
                         return string.Format("(NodeID in (Select NodeID from CMS_TreeCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs));
                     case ConditionType.All:
-                        return string.Format("(Select Count(*) from CMS_TreeCategory where CMS_TreeCategory.NodeID = {0}.[NodeID] and CategoryID in ({1})) = {2}", NodeIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        NodeIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(NodeIDTableName, "");
+                        return string.Format("(Select Count(*) from CMS_TreeCategory where CMS_TreeCategory.NodeID = [{0}].[NodeID] and CategoryID in ({1})) = {2}", NodeIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
                     case ConditionType.None:
                         return string.Format("(NodeID not in (Select NodeID from CMS_TreeCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
                 }
@@ -192,7 +196,7 @@ namespace RelationshipsExtended
                     default:
                         return string.Format("({0} in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                     case ConditionType.All:
-                        return string.Format("(Select Count(*) from {0} where {0}.{1} = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? ObjectIDTableName + "." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
+                        return string.Format("(Select Count(*) from [{0}] where [{0}].[{1}] = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? ObjectIDTableName + "." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
                     case ConditionType.None:
                         return string.Format("({0} not in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                 }
@@ -255,11 +259,15 @@ namespace RelationshipsExtended
                 {
                     case ConditionType.Any:
                     default:
-                        return string.Format("({0} in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                        return string.Format("({0} in (Select {1} from [{2}] where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                     case ConditionType.All:
-                        return string.Format("(Select Count(*) from {0} where {0}.{1} = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? ObjectIDTableName + "." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
+                        if(!string.IsNullOrWhiteSpace(ObjectIDTableName))
+                        {
+                            ObjectIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(ObjectIDTableName, "");
+                        }
+                        return string.Format("(Select Count(*) from [{0}] where [{0}].{1} = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? "["+ObjectIDTableName + "]." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
                     case ConditionType.None:
-                        return string.Format("({0} not in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                        return string.Format("({0} not in (Select {1} from [{2}] where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                 }
             }, new CacheSettings(CacheMinutes, "GetBindingWhere", BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
         }
@@ -297,7 +305,7 @@ namespace RelationshipsExtended
                 }
                 catch (Exception ex)
                 {
-                    EventLogProvider.LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
+                    Service.Resolve<IEventLogService>().LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
                 }
             }
         }
@@ -315,8 +323,8 @@ namespace RelationshipsExtended
                 // of just the first site, since rare that a multisite has staging on some but not all.
                 if (SiteContext.CurrentSite == null)
                 {
-                    SiteInfo Site = SiteInfoProvider.GetSiteInfo(SiteID);
-                    SiteContext.CurrentSite = Site ?? SiteInfoProvider.GetSites().FirstOrDefault();
+                    SiteInfo Site = SiteInfo.Provider.Get(SiteID);
+                    SiteContext.CurrentSite = Site ?? SiteInfo.Provider.Get().FirstOrDefault();
                 }
                 if (LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging))
                 {
@@ -330,7 +338,7 @@ namespace RelationshipsExtended
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
+                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
                 return false;
             }
         }
@@ -361,7 +369,7 @@ namespace RelationshipsExtended
                     // Add a catcher so it doesn't cause a loop in thinking this event is from another source and trigger the same logic of this thing.
                     CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, true);
 
-                    foreach (ServerInfo Server in ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
+                    foreach (ServerInfo Server in ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
                     {
                         DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
                         {
@@ -380,7 +388,7 @@ namespace RelationshipsExtended
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                Service.Resolve<IEventLogService>().LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
             }
         }
         /// <summary>
@@ -407,7 +415,7 @@ namespace RelationshipsExtended
                         {
                             cs.CacheDependency = CacheHelper.GetCacheDependency("staging.server|all");
                         }
-                        return ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).Select(x => x.ServerName.ToLower()).ToArray();
+                        return ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).Select(x => x.ServerName.ToLower()).ToArray();
                     }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSite.SiteName), "GetServers"));
 
 
@@ -430,7 +438,7 @@ namespace RelationshipsExtended
                     }
                     catch (Exception ex)
                     {
-                        EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                        Service.Resolve<IEventLogService>().LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
                     }
 
                     // The Task Data is an XML version of a DataSet, so convert to DataSet, then we can add our table data.
@@ -466,7 +474,6 @@ namespace RelationshipsExtended
                 }
             }
         }
-
 
         /// <summary>
         /// Handles the NodeBinding's TypeInfo.Events.Insert, Update, and Delete events (update only needed for binding objects with more than just the NodeID and other ObjectRef, such as Binding with Ordering)
@@ -534,11 +541,11 @@ namespace RelationshipsExtended
                         SiteContext.CurrentSite = Site;
                         MembershipContext.AuthenticatedUser = CacheHelper.Cache<CurrentUserInfo>(cs =>
                         {
-                            UserInfo User = UserInfoProvider.GetUserInfo(TaskOriginatorUserID);
+                            UserInfo User = UserInfo.Provider.Get(TaskOriginatorUserID);
                             CurrentUserInfo CurrentUserObj = null;
                             if (User != null)
                             {
-                                CurrentUserObj = new CurrentUserInfo(UserInfoProvider.GetUserInfo(TaskOriginatorUserID), true);
+                                CurrentUserObj = new CurrentUserInfo(UserInfo.Provider.Get(TaskOriginatorUserID), true);
                             }
                             else
                             {
@@ -566,7 +573,6 @@ namespace RelationshipsExtended
                 }
             }
         }
-
 
         #endregion
 
@@ -638,7 +644,7 @@ namespace RelationshipsExtended
                         }
                         catch (Exception ex)
                         {
-                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
                         }
                     }
                 }
@@ -680,7 +686,7 @@ namespace RelationshipsExtended
                         }
                         catch (Exception ex)
                         {
-                            EventLogProvider.LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
                         }
                     }
                 }
@@ -701,7 +707,8 @@ namespace RelationshipsExtended
             DataTable ObjectTranslationTable = TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == "objecttranslation").FirstOrDefault();
             if (ObjectTranslationTable == null)
             {
-                EventLogProvider.LogEvent("E", "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
+                
+                   Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
                 return -1;
             }
             foreach (DataRow ItemDR in ObjectTranslationTable.Rows.Cast<DataRow>()
@@ -737,7 +744,7 @@ namespace RelationshipsExtended
                     }
                     catch (Exception ex)
                     {
-                        EventLogProvider.LogException("RelHelper.TranslateBindingTranslateID", "No Translation Found", ex, additionalMessage: "No Translation found.");
+                        Service.Resolve<IEventLogService>().LogException("RelHelper.TranslateBindingTranslateID", "No Translation Found", ex, additionalMessage: "No Translation found.");
                         return -1;
                     }
                 }
@@ -773,7 +780,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Ints, Guids, or CodeNames of the Categories</param>
         /// <returns>the Category identity where condition</returns>
-        private static string CategoryIdentitiesWhere(IEnumerable<object> CategoryIdentifications)
+        internal static string CategoryIdentitiesWhere(IEnumerable<object> CategoryIdentifications)
         {
             List<Guid> Guids = new List<Guid>();
             List<int> Ints = new List<int>();
@@ -819,9 +826,9 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Category IDs, Guids, or CodeNames</param>
         /// <returns>List of Category IDs</returns>
-        private static IEnumerable<int> CategoryIdentitiesToIDs(IEnumerable<object> CategoryIdentifications)
+        internal static IEnumerable<int> CategoryIdentitiesToIDs(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfoProvider.GetCategories().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").Select(x => x.CategoryID).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").Select(x => x.CategoryID).ToArray();
         }
 
         /// <summary>
@@ -829,9 +836,9 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Category IDs, Guids, or CodeNames</param>
         /// <returns>List of Category GUIDs</returns>
-        private static IEnumerable<Guid> CategoryIdentitiesToGUIDs(IEnumerable<object> CategoryIdentifications)
+        internal static IEnumerable<Guid> CategoryIdentitiesToGUIDs(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfoProvider.GetCategories().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").Select(x => x.CategoryGUID).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").Select(x => x.CategoryGUID).ToArray();
         }
 
         /// <summary>
@@ -839,9 +846,9 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Category IDs, Guids, or CodeNames</param>
         /// <returns>List of Category Code Names</returns>
-        private static IEnumerable<string> CategoryIdentitiesToCodeNames(IEnumerable<object> CategoryIdentifications)
+        internal static IEnumerable<string> CategoryIdentitiesToCodeNames(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfoProvider.GetCategories().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").Select(x => x.CategoryName).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").Select(x => x.CategoryName).ToArray();
         }
 
         /// <summary>
@@ -849,7 +856,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="ClassName">The Class Name</param>
         /// <returns>The Class Object Summary</returns>
-        private static ClassObjSummary GetClassObjSummary(string ClassName)
+        internal static ClassObjSummary GetClassObjSummary(string ClassName)
         {
             return CacheHelper.Cache<ClassObjSummary>(cs =>
             {
@@ -955,7 +962,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of Object IDs, Guids, or CodeNames</param>
         /// <returns>A list of the Object's IDs</returns>
-        private static IEnumerable<int> ObjectIdentitiesToIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        internal static IEnumerable<int> ObjectIdentitiesToIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
 
             switch (classObjSummary.ClassName.ToLower())
@@ -989,7 +996,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of Object IDs, Guids, or CodeNames</param>
         /// <returns>A list of the Object's GUIDs</returns>
-        private static IEnumerable<Guid> ObjectIdentitiesToGUIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        internal static IEnumerable<Guid> ObjectIdentitiesToGUIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
 
             switch (classObjSummary.ClassName.ToLower())
@@ -1023,7 +1030,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of Object IDs, Guids, or CodeNames</param>
         /// <returns>A list of the Object's Code Names</returns>
-        private static IEnumerable<string> ObjectIdentitiesToCodeNames(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        internal static IEnumerable<string> ObjectIdentitiesToCodeNames(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
             switch (classObjSummary.ClassName.ToLower())
             {
@@ -1057,7 +1064,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of IDs, Guids, or CodeNames</param>
         /// <returns>The WHERE condition to select the objects (ex MyObjectID in (1,2,3) )</returns>
-        private static string ObjectIdentitiesWhere(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        internal static string ObjectIdentitiesWhere(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
             List<Guid> Guids = new List<Guid>();
             List<int> Ints = new List<int>();
@@ -1103,7 +1110,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="Field">The Field Name (ex MyField, or My_Table.MyField)</param>
         /// <returns>The properly formatted FieldName</returns>
-        private static string GetBracketedColumnName(string Field)
+        internal static string GetBracketedColumnName(string Field)
         {
             string[] FieldSplit = Field.Split(".".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < FieldSplit.Length; i++)
