@@ -152,8 +152,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Binding\TreeCategoryInfo.cs" />
-    <Compile Include="Classes\Binding\TreeCategoryInfoProvider.cs" />
     <Compile Include="Classes\Extender\OrderableBindingEditorUniSelectorExtender.cs" />
     <Compile Include="Classes\Extender\RelationshipVertialTabExtended.cs" />
     <Compile Include="Classes\Interfaces\IBindingBaseInfo.cs" />
@@ -326,9 +324,16 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Classes\Base\" />
+    <Folder Include="Classes\Binding\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RelationshipsExtendedBase\RelationshipsExtendedBase.csproj">
+      <Project>{8d361906-acc8-4665-85b5-fe403e41c6c1}</Project>
+      <Name>RelationshipsExtendedBase</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

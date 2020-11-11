@@ -161,7 +161,7 @@ namespace RelationshipsExtended
                         int CategoryID = RelHelper.TranslateBindingTranslateID((int)NodeCategoryTable.Rows[0]["CategoryID"], e.TaskData, "cms.category");
                         if (NodeID > 0 && CategoryID > 0)
                         {
-                            TreeCategoryInfoProvider.RemoveTreeFromCategory(NodeID, CategoryID);
+                            TreeCategoryInfo.Provider.Remove(NodeID, CategoryID);
                         }
                     }
                 }
@@ -193,11 +193,11 @@ namespace RelationshipsExtended
                         List<int> NewNodeCategoryIDs = RelHelper.NewBoundObjectIDs(e, TreeCategoryInfo.OBJECT_TYPE, "NodeID", "CategoryID", CategoryInfo.TYPEINFO);
 
                         // Now handle categories, deleting categories not found, and adding ones that are not set yet.
-                        TreeCategoryInfoProvider.GetTreeCategories().WhereEquals("NodeID", NodeObj.NodeID).WhereNotIn("CategoryID", NewNodeCategoryIDs).ForEachObject(x => x.Delete());
-                        List<int> CurrentCategories = TreeCategoryInfoProvider.GetTreeCategories().WhereEquals("NodeID", NodeObj.NodeID).Select(x => x.CategoryID).ToList();
+                        TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).WhereNotIn("CategoryID", NewNodeCategoryIDs).ForEachObject(x => x.Delete());
+                        List<int> CurrentCategories = TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).Select(x => x.CategoryID).ToList();
                         foreach (int NewCategoryID in NewNodeCategoryIDs.Except(CurrentCategories))
                         {
-                            TreeCategoryInfoProvider.AddTreeToCategory(NodeObj.NodeID, NewCategoryID);
+                            TreeCategoryInfo.Provider.Add(NodeObj.NodeID, NewCategoryID);
                         }
                     }
                     if (RelHelper.IsStagingEnabled(NodeObj.NodeSiteID))

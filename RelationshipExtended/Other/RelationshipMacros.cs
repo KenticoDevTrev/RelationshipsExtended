@@ -29,6 +29,7 @@ namespace RelationshipsExtended
         {
             try
             {
+                
                 if (parameters.Length >= 2)
                 {
                     string ClassName = ValidationHelper.GetString(parameters[0], "");

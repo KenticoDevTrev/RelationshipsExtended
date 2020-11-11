@@ -8,6 +8,7 @@ using CMS.UIControls;
 using CMS.DocumentEngine;
 using CMS.Base;
 using RelationshipsExtended;
+using RelationshipsExtended.Interfaces;
 
 public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIControls_NodeBindingEditItem : CMSAbstractUIWebpart
 {
@@ -325,12 +326,19 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
     {
         var bindingTargetIdColumn = ObjectTypeManager.GetTypeInfo(TargetObjectType).IDColumn;
 
+        var BindingObject = ModuleManager.GetReadOnlyObject(BindingObjectType);
+
+        // Get the bound reference column if IBindingBaseInfo is implemented
+        if(BindingObject is IBindingBaseInfo BindingObjectInfo)
+        {
+            bindingTargetIdColumn = BindingObjectInfo.BoundObjectReferenceColumnName();
+        }
+
         // Get all items based on where condition
-        var targetIds = ModuleManager.GetReadOnlyObject(BindingObjectType)
-                                     .Generalized
+        var targetIds = BindingObject.Generalized
                                      .GetDataQuery(true, s => s.Where(WhereCondition).Column(bindingTargetIdColumn), false)
                                      .Select(row => row[bindingTargetIdColumn]);
-
+        
         return TextHelper.Join(";", targetIds);
     }
 
