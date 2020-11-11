@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{771CC0BF-5F7C-4019-9A07-2E0662B9689E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Demo</RootNamespace>
+    <AssemblyName>Demo</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CMS.Base">
+      <HintPath>..\Lib\CMS.Base.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.Core">
+      <HintPath>..\Lib\CMS.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.DataEngine">
+      <HintPath>..\Lib\CMS.DataEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.DocumentEngine, Version=13.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.DocumentEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.EventLog, Version=13.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.EventLog.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.Helpers">
+      <HintPath>..\Lib\CMS.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.Synchronization, Version=13.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.Synchronization.dll</HintPath>
+    </Reference>
+    <Reference Include="CMS.Taxonomy, Version=13.0.0.0, Culture=neutral, PublicKeyToken=834b12a258f213f9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\CMS.Taxonomy.dll</HintPath>
+    </Reference>
+    <Reference Include="RelationshipsExtended">
+      <HintPath>..\CMS\bin\RelationshipsExtended.dll</HintPath>
+    </Reference>
+    <Reference Include="RelationshipsExtendedBase">
+      <HintPath>..\CMS\bin\RelationshipsExtendedBase.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Classes\Base\BarInfo.cs" />
+    <Compile Include="Classes\Base\BarInfoProvider.cs" />
+    <Compile Include="Classes\Base\BazInfo.cs" />
+    <Compile Include="Classes\Base\BazInfoProvider.cs" />
+    <Compile Include="Classes\Base\IBazInfoProvider.cs" />
+    <Compile Include="Classes\NodeCategoryCustomTable\INodeRegionInfoProvider.cs" />
+    <Compile Include="Classes\NodeCategoryCustomTable\NodeRegionInfo.cs" />
+    <Compile Include="Classes\NodeCategoryCustomTable\NodeRegionInfoProvider.cs" />
+    <Compile Include="Classes\NodeCategoryCustomTable\NodeRegionInitializationModule.cs" />
+    <Compile Include="Classes\NodeObjectWithOrder\NodeFooInitializationModule.cs" />
+    <Compile Include="Classes\NodeObject\INodeBazInfoProvider.cs" />
+    <Compile Include="Classes\NodeObject\NodeBazInfo.cs" />
+    <Compile Include="Classes\NodeObject\NodeBazInfoProvider.cs" />
+    <Compile Include="Classes\NodeObject\NodeBazInitializationModule.cs" />
+    <Compile Include="Classes\ObjectObjectWithOrder\FooBarInfo.cs" />
+    <Compile Include="Classes\ObjectObjectWithOrder\FooBarInfoProvider.cs" />
+    <Compile Include="Classes\Base\FooInfo.cs" />
+    <Compile Include="Classes\Base\FooInfoProvider.cs" />
+    <Compile Include="Classes\Base\IBarInfoProvider.cs" />
+    <Compile Include="Classes\ObjectObjectWithOrder\IFooBarInfoProvider.cs" />
+    <Compile Include="Classes\Base\IFooInfoProvider.cs" />
+    <Compile Include="Classes\NodeObjectWithOrder\INodeFooInfoProvider.cs" />
+    <Compile Include="Classes\NodeObjectWithOrder\NodeFooInfo.cs" />
+    <Compile Include="Classes\NodeObjectWithOrder\NodeFooInfoProvider.cs" />
+    <Compile Include="Classes\ObjectCategory\FooCategoryInfo.cs" />
+    <Compile Include="Classes\ObjectCategory\FooCategoryInfoProvider.cs" />
+    <Compile Include="Classes\ObjectCategory\IFooCategoryInfoProvider.cs" />
+    <Compile Include="Classes\ObjectObject\FooBazInfo.cs" />
+    <Compile Include="Classes\ObjectObject\FooBazInfoProvider.cs" />
+    <Compile Include="Classes\ObjectObject\IFooBazInfoProvider.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
