@@ -9,6 +9,7 @@ using CMS.DocumentEngine;
 using CMS.Base;
 using RelationshipsExtended;
 using RelationshipsExtended.Interfaces;
+using RelationshipsExtended.Helpers;
 
 public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIControls_NodeBindingEditItem : CMSAbstractUIWebpart
 {

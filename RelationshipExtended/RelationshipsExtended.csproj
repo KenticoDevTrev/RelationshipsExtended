@@ -154,13 +154,6 @@
   <ItemGroup>
     <Compile Include="Classes\Extender\OrderableBindingEditorUniSelectorExtender.cs" />
     <Compile Include="Classes\Extender\RelationshipVertialTabExtended.cs" />
-    <Compile Include="Classes\Interfaces\IBindingBaseInfo.cs" />
-    <Compile Include="Classes\Interfaces\IOrderableBaseInfo.cs" />
-    <Compile Include="Helpers\RelHelper.cs" />
-    <Compile Include="Other\Enums.cs" />
-    <Compile Include="Other\Functions.cs" />
-    <Compile Include="Other\HashExtension.cs" />
-    <Compile Include="Other\RelationshipExtendedEnumsAndMacroEnumGenerator.cs" />
     <Compile Include="Other\RelationshipExtendedLoaderModule.cs" />
     <Compile Include="Other\RelationshipExtendedMacroNamespace.cs" />
     <Compile Include="Other\RelationshipMacros.cs" />
@@ -325,6 +318,7 @@
   <ItemGroup>
     <Folder Include="Classes\Base\" />
     <Folder Include="Classes\Binding\" />
+    <Folder Include="Helpers\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -22,6 +22,7 @@ using RelatedCategories;
 using CMS.PortalEngine.Web.UI;
 using RelationshipsExtended;
 using CMS.PortalEngine;
+using RelationshipsExtended.Helpers;
 
 public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedCategories : CMSAbstractWebPart
 {

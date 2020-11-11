@@ -12,6 +12,8 @@ using RelationshipsExtended.Enums;
 using RelationshipsExtended;
 using CMS.DocumentEngine;
 using TreeNode = CMS.DocumentEngine.TreeNode;
+using RelationshipsExtended.Helpers;
+
 public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_AdvancedManyToManySelector_AdvancedManyToManySelector : FormEngineUserControl
 {
 

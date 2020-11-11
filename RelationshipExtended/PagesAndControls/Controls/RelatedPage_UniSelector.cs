@@ -6,6 +6,7 @@ using CMS.MacroEngine;
 using CMS.Relationships;
 using CMS.UIControls;
 using RelationshipsExtended;
+using RelationshipsExtended.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;

@@ -9,9 +9,4 @@ namespace RelationshipsExtended
 
     }
 
-    [Extension(typeof(RelHelperMacrosMethods))]
-    public class RelHelperMacroNamespace : MacroNamespace<RelHelperMacroNamespace>
-    {
-
-    }
 }

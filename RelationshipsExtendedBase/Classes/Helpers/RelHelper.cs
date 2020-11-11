@@ -12,69 +12,19 @@ using CMS.SiteProvider;
 using CMS.Synchronization;
 using CMS.Taxonomy;
 using RelationshipsExtended.Enums;
-using RelationshipsExtendedMVCCoreHelper.Internal;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Timers;
+using System.Web;
 using System.Xml;
 
-namespace RelationshipsExtended
+namespace RelationshipsExtended.Helpers
 {
-    /// <summary>
-    /// Helper methods for generating Where Conditions for Relationships
-    /// </summary>
     public static class RelHelper
     {
-
-        #region "MVC Helpers"
-
-        /// <summary>
-        /// Gets the Current Site Name based on the request's Host (HttpContext.Current.Request.Host) and a match on the Presentation Url for the Sites Object in Kentico.  Returns an empty or null string if not found.
-        /// </summary>
-        public static string CurrentSiteName
-        {
-            get
-            {
-                return Service.Resolve<ISiteService>().CurrentSite.SiteName;
-            }
-        }
-
-        /// <summary>
-        /// Gets the Current Site ID based on the request's Host (HttpContext.Current.Request.Host) and a match on the Presentation Url for the Sites Object in Kentico.  -1 if not found.
-        /// </summary>
-        public static int CurrentSiteID
-        {
-            get
-            {
-                return Service.Resolve<ISiteService>().CurrentSite.SiteID;
-            }
-        }
-
-        /// <summary>
-        /// Cache minutes, tries to use the current site, otherwise if it can't find the current site then 30
-        /// </summary>
-        public static int CacheMinutes
-        {
-            get
-            {
-                if (!string.IsNullOrWhiteSpace(CurrentSiteName))
-                {
-                    return CacheHelper.CacheMinutes(CurrentSiteName);
-                }
-                else
-                {
-                    return 30;
-                }
-            }
-        }
-
-        #endregion
-
         #region "Where Condition Generators"
 
         /// <summary>
@@ -87,6 +37,7 @@ namespace RelationshipsExtended
         public static string GetDocumentCategoryWhere(IEnumerable<object> Values, ConditionType Condition = ConditionType.Any, string DocumentIDTableName = "CMS_Document")
         {
             IEnumerable<int> CategoryIDs = null;
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
             return CacheHelper.Cache<string>(cs =>
             {
                 CategoryIDs = CategoryIdentitiesToIDs(Values);
@@ -100,12 +51,11 @@ namespace RelationshipsExtended
                     default:
                         return string.Format("(DocumentID in (Select DocumentID from CMS_DocumentCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs));
                     case ConditionType.All:
-                        DocumentIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(DocumentIDTableName, "");
-                        return string.Format("(Select Count(*) from CMS_DocumentCategory where CMS_DocumentCategory.DocumentID = [{0}].[DocumentID] and CategoryID in ({1})) = {2}", DocumentIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        return string.Format("(Select Count(*) from CMS_DocumentCategory where CMS_DocumentCategory.DocumentID = {0}.[DocumentID] and CategoryID in ({1})) = {2}", DocumentIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
                     case ConditionType.None:
                         return string.Format("(DocumentID not in (Select DocumentID from CMS_DocumentCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
                 }
-            }, new CacheSettings(CacheMinutes, "GetDocumentCategoryWhere", string.Join("|", Values), Condition, DocumentIDTableName));
+            }, new CacheSettings((CacheWhere ? CacheHelper.CacheMinutes(SiteContext.CurrentSiteName) : 0), "GetDocumentCategoryWhere", string.Join("|", Values), Condition, DocumentIDTableName));
         }
 
         /// <summary>
@@ -118,6 +68,7 @@ namespace RelationshipsExtended
         public static string GetNodeCategoryWhere(IEnumerable<object> Values, ConditionType Condition = ConditionType.Any, string NodeIDTableName = "CMS_Tree")
         {
             IEnumerable<int> CategoryIDs = null;
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
             return CacheHelper.Cache<string>(cs =>
             {
                 CategoryIDs = CategoryIdentitiesToIDs(Values);
@@ -131,12 +82,11 @@ namespace RelationshipsExtended
                     default:
                         return string.Format("(NodeID in (Select NodeID from CMS_TreeCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs));
                     case ConditionType.All:
-                        NodeIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(NodeIDTableName, "");
-                        return string.Format("(Select Count(*) from CMS_TreeCategory where CMS_TreeCategory.NodeID = [{0}].[NodeID] and CategoryID in ({1})) = {2}", NodeIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        return string.Format("(Select Count(*) from CMS_TreeCategory where CMS_TreeCategory.NodeID = {0}.[NodeID] and CategoryID in ({1})) = {2}", NodeIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
                     case ConditionType.None:
                         return string.Format("(NodeID not in (Select NodeID from CMS_TreeCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
                 }
-            }, new CacheSettings(CacheMinutes, "GetNodeCategoryWhere", string.Join("|", Values), Condition, NodeIDTableName));
+            }, new CacheSettings((CacheWhere ? CacheHelper.CacheMinutes(SiteContext.CurrentSiteName) : 0), "GetNodeCategoryWhere", string.Join("|", Values), Condition, NodeIDTableName));
         }
 
         /// <summary>
@@ -156,6 +106,7 @@ namespace RelationshipsExtended
             LeftFieldName = GetBracketedColumnName(LeftFieldName);
             RightFieldName = GetBracketedColumnName(RightFieldName);
             ObjectIDFieldName = GetBracketedColumnName(ObjectIDFieldName);
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
             return CacheHelper.Cache<string>(cs =>
             {
                 // Find class table name
@@ -196,11 +147,11 @@ namespace RelationshipsExtended
                     default:
                         return string.Format("({0} in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                     case ConditionType.All:
-                        return string.Format("(Select Count(*) from [{0}] where [{0}].[{1}] = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? ObjectIDTableName + "." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
+                        return string.Format("(Select Count(*) from {0} where {0}.{1} = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? ObjectIDTableName + "." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
                     case ConditionType.None:
                         return string.Format("({0} not in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                 }
-            }, new CacheSettings(CacheMinutes, "GetBindingCategoryWhere", BindingClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
+            }, new CacheSettings((CacheWhere ? CacheHelper.CacheMinutes(SiteContext.CurrentSiteName) : 0), "GetBindingCategoryWhere", BindingClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
         }
 
         /// <summary>
@@ -221,6 +172,7 @@ namespace RelationshipsExtended
             LeftFieldName = GetBracketedColumnName(LeftFieldName);
             RightFieldName = GetBracketedColumnName(RightFieldName);
             ObjectIDFieldName = GetBracketedColumnName(ObjectIDFieldName);
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
             return CacheHelper.Cache<string>(cs =>
             {
                 // Find class table name
@@ -259,95 +211,21 @@ namespace RelationshipsExtended
                 {
                     case ConditionType.Any:
                     default:
-                        return string.Format("({0} in (Select {1} from [{2}] where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                        return string.Format("({0} in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                     case ConditionType.All:
-                        if(!string.IsNullOrWhiteSpace(ObjectIDTableName))
-                        {
-                            ObjectIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(ObjectIDTableName, "");
-                        }
-                        return string.Format("(Select Count(*) from [{0}] where [{0}].{1} = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? "["+ObjectIDTableName + "]." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
+                        return string.Format("(Select Count(*) from {0} where {0}.{1} = {2}{3} and {4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? ObjectIDTableName + "." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
                     case ConditionType.None:
-                        return string.Format("({0} not in (Select {1} from [{2}] where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                        return string.Format("({0} not in (Select {1} from {2} where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                 }
-            }, new CacheSettings(CacheMinutes, "GetBindingWhere", BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
-        }
-
-        /// <summary>
-        /// Used to convert the less-than-readable staging task into a more readable format (ex: Adding Foo "Foo1" to Node "/Home/MyPage"). Use this on the StagingEvents.LogTask.Before event
-        /// </summary>
-        /// <param name="e">The Staging Log Task Event Args that is passed during the StagingEvents.LogTask.Before event</param>
-        /// <param name="NodeBindingObjectType">The Node-Binding Class Name, ex: Demo.NodeFoo</param>
-        /// <param name="NodeBindingNodeIDField">The Column name of the Binding class that contains the NodeID, ex: "NodeID"</param>
-        /// <param name="NodeBindingObjectIDField">The column name of the Binding class that contains the other object's ID, ex: "FooID"</param>
-        /// <param name="BoundObjectDescription">Description of what the Bound object is.  ex: "Foo" or "Banner"</param>
-        /// <param name="BoundObjectTypeInfo">The TypeInfo of the Object that is bound to the Node, ex: FooInfo.TypeInfo</param>
-        public static void SetBetterBindingTaskTitle(StagingLogTaskEventArgs e, string NodeBindingObjectType, string NodeBindingNodeIDField, string NodeBindingObjectIDField, string BoundObjectDescription, ObjectTypeInfo BoundObjectTypeInfo)
-        {
-            if (e.Task.TaskObjectType.ToLower() == NodeBindingObjectType.ToLower())
-            {
-                try
-                {
-                    // The Task Data is an XML version of a DataSet, so convert to DataSet, then we can add our table data.
-                    string DataSetXML = e.Task.TaskData;
-                    DataSet DocumentDataSet = new DataSet();
-                    DocumentDataSet.ReadXml(new StringReader(DataSetXML));
-                    DataTable BoundObjectTable = DocumentDataSet.Tables[0];
-
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
-
-                    string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
-                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
-                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.GUIDColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.GUIDColumn : ColumnToGet;
-                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) ? BoundObjectTypeInfo.IDColumn : ColumnToGet;
-
-                    DataRow BoundObjectDR = ConnectionHelper.ExecuteQuery(BoundObjectTypeInfo.ObjectType + ".selectall", null, where: string.Format("{0} = {1}", BoundObjectTypeInfo.IDColumn, ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingObjectIDField], -1)), columns: ColumnToGet).Tables[0].Rows[0];
-                    e.Task.TaskTitle = string.Format("{0} {1} \"{2}\" {3} Node \"{4}\"", (e.Task.TaskType == TaskTypeEnum.CreateObject ? "Adding" : "Removing"), BoundObjectDescription, BoundObjectDR["BoundObjectDR"].ToString(), (e.Task.TaskType == TaskTypeEnum.CreateObject ? "to" : "from"), Node.NodeAliasPath);
-                }
-                catch (Exception ex)
-                {
-                    Service.Resolve<IEventLogService>().LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns true if Staging is eanbled for the current request, this uses the LicenseHelper.CurrentEdition (Ultimate or EMS = Staging enabled)
-        /// </summary>
-        /// <param name="SiteID">The SiteID of the task, if the SiteContext.CurrentSite is null, it will use this site</param>
-        /// <returns>True if staging is enabled</returns>
-        public static bool IsStagingEnabled(int SiteID = -1)
-        {
-            try
-            {
-                // Various checkts to make sure we have the SiteInfo, it is missing in context randomly it seems so this should allow us to do multiple checks with a fallback
-                // of just the first site, since rare that a multisite has staging on some but not all.
-                if (SiteContext.CurrentSite == null)
-                {
-                    SiteInfo Site = SiteInfo.Provider.Get(SiteID);
-                    SiteContext.CurrentSite = Site ?? SiteInfo.Provider.Get().FirstOrDefault();
-                }
-                if (LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging))
-                {
-                    return true;
-                }
-                else
-                {
-                    //EventLogProvider.LogEvent("W", "RelHelper", "LicenseBase", eventDescription: "Site: " + SiteContext.CurrentSiteName + ", License " + LicenseHelper.CurrentEdition + ", feature: " + LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging).ToString());
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
-                return false;
-            }
+            }, new CacheSettings((CacheWhere ? CacheHelper.CacheMinutes(SiteContext.CurrentSiteName) : 0), "GetBindingWhere", BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
         }
 
         /// <summary>
         /// Checks for the Application Key for the given Guid which if present will indicate that a task needs to be generated for additional servers
         /// </summary>
         /// <param name="nodeGUID">The Node Guid</param>
-        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID)
+        /// <param name="TaskEnumToUse">The task type that should be processed</param>
+        public static void CheckIfTaskCreationShouldOccur(Guid nodeGUID, TaskTypeEnum TaskEnumToUse = TaskTypeEnum.UpdateDocument)
         {
             try
             {
@@ -375,7 +253,7 @@ namespace RelationshipsExtended
                         {
                             NodeAliasPath = Node.NodeAliasPath,
                             CultureCode = Node.DocumentCulture,
-                            TaskType = TaskTypeEnum.UpdateDocument,
+                            TaskType = TaskEnumToUse,
                             Tree = Node.TreeProvider,
                             SiteName = Node.NodeSiteName,
                             RunAsynchronously = false,
@@ -391,6 +269,44 @@ namespace RelationshipsExtended
                 Service.Resolve<IEventLogService>().LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
             }
         }
+
+        #endregion
+
+        #region "Staging Task Helpers"
+
+        /// <summary>
+        /// Returns true if Staging is eanbled for the current request, this uses the LicenseHelper.CurrentEdition (Ultimate or EMS = Staging enabled)
+        /// </summary>
+        /// <param name="SiteID">The SiteID of the task, if the SiteContext.CurrentSite is null, it will use this site</param>
+        /// <returns>True if staging is enabled</returns>
+        public static bool IsStagingEnabled(int SiteID = -1)
+        {
+            try
+            {
+                // Various checkts to make sure we have the SiteInfo, it is missing in context randomly it seems so this should allow us to do multiple checks with a fallback
+                // of just the first site, since rare that a multisite has staging on some but not all.
+                if (SiteContext.CurrentSite == null)
+                {
+                    SiteInfo Site = SiteInfo.Provider.Get(SiteID);
+                    SiteContext.CurrentSite = Site ?? SiteInfo.Provider.Get().FirstOrDefault();
+                }
+                if (LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging))
+                {
+                    return true;
+                }
+                else
+                {
+                    //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "LicenseBase", eventDescription: "Site: " + SiteContext.CurrentSiteName + ", License " + LicenseHelper.CurrentEdition + ", feature: " + LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging).ToString());
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
+                return false;
+            }
+        }
+
         /// <summary>
         /// Called on the Document.LogTask.Before, updates the Task's TaskData to include the provided Node-Bound objects
         /// </summary>
@@ -398,12 +314,12 @@ namespace RelationshipsExtended
         /// <param name="Configurations">The Configurations, one for each object binding you are including.</param>
         public static void UpdateTaskDataWithNodeBinding(StagingLogTaskEventArgs e, NodeBinding_DocumentLogTaskBefore_Configuration[] Configurations)
         {
-            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
 
-            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
             if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
             {
-                //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                 TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
                 if (IsStagingEnabled(Node.NodeSiteID))
                 {
@@ -450,11 +366,11 @@ namespace RelationshipsExtended
                     {
                         TranslationHelper NodeBoundObjectTableHelper = new TranslationHelper();
                         DataSet NodeBoundObjectData = SynchronizationHelper.GetObjectsData(OperationTypeEnum.Synchronization, Configuration.EmptyNodeBindingObj, string.Format(Configuration.NodeMatchStringFormat, Node.NodeID), null, true, false, NodeBoundObjectTableHelper);
-                        //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3.5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                        //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask3.5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
 
                         if (NodeBoundObjectTableHelper.TranslationTable != null && NodeBoundObjectTableHelper.TranslationTable.Rows.Count > 0)
                         {
-                            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask4", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask4", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                             NodeBoundObjectData.Tables.Add(NodeBoundObjectTableHelper.TranslationTable);
                         }
 
@@ -463,11 +379,11 @@ namespace RelationshipsExtended
                         NodeRegionObjectDataHolder.ReadXml(new StringReader(NodeBoundObjectData.GetXml()));
                         if (!DataHelper.DataSourceIsEmpty(NodeRegionObjectDataHolder) && NodeRegionObjectDataHolder.Tables.Count > 0)
                         {
-                            //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                            //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                             DataHelper.TransferTables(DocumentDataSet, NodeRegionObjectDataHolder);
                         }
                     }
-                    //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask6", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                    //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask6", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                     // Convert it back to XML
                     DataSetXML = DocumentDataSet.GetXml();
                     e.Task.TaskData = DataSetXML;
@@ -489,7 +405,6 @@ namespace RelationshipsExtended
             {
                 return;
             }
-            
             // If no ID given, use the Current User, when the Log Document Task is called it's in a separate thread so there is no Membership Context
             if (TaskOriginatorUserID <= 0)
             {
@@ -573,10 +488,6 @@ namespace RelationshipsExtended
                 }
             }
         }
-
-        #endregion
-
-        #region "Internal Helpers"
 
         /// <summary>
         /// Handles the Translation of the Bound ObjectIDs and returns a list of all the ObjectIDs that the Node should be bound to.
@@ -694,6 +605,189 @@ namespace RelationshipsExtended
             return NewBoundIDs;
         }
 
+        /// <summary>
+        /// Handles the Translation of the Bound ObjectIDs and returns an ordered list of all the ObjectIDs that the Node should be bound to.  Once Additions/Deletions made, then bound object's order should be set to the order in the list.
+        /// </summary>
+        /// <param name="e">The StagingSynchronizationEventArgs</param>
+        /// <param name="NodeBindingObjectClassName">The ClassName of the Node-Binding object (ex "cms.TreeCategory"</param>
+        /// <param name="NodeIDReferenceField">The NodeID reference field for your Node-Binding object (ex "NodeID")</param>
+        /// <param name="BoundObjectIDReferenceField">The Bound ObjectID reference field for your Node-Binding Object (ex "CategoryID")</param>
+        /// <param name="BoundObjectOrderField">The Bound Object's Order Field (ex "NodeCategoryOrder")</param>
+        /// <param name="BoundObjectTypeInfo">The TypeInfo of the object that the Node is bound to (ex new CategoryInfo().TypeInfo)</param>
+        /// <returns>The List of all the New Object IDs that the node should be bound to.</returns>
+        public static List<int> NewOrderedBoundObjectIDs(StagingSynchronizationEventArgs e, string NodeBindingObjectClassName, string NodeIDReferenceField, string BoundObjectIDReferenceField, string BoundObjectOrderField, ObjectTypeInfo BoundObjectTypeInfo)
+        {
+            string NodeBindingObjectClassNameTableName = NodeBindingObjectClassName.ToLower().Replace(".", "_");
+            string BoundObjectClassNameTableName = BoundObjectTypeInfo.ObjectType.ToLower().Replace(".", "_");
+            // Get the Tree Category table.
+            DataTable NodeBoundTable = e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == NodeBindingObjectClassNameTableName).FirstOrDefault();
+
+            // Node has no Bindings, return empty list.
+            if (NodeBoundTable == null)
+            {
+                return new List<int>();
+            }
+
+            // Build translation from Category data
+            List<int> NewBoundIDs = new List<int>();
+            List<int> TaskBoundIDs = new List<int>();
+            Dictionary<int, int> OldBoundIDToOrder = new Dictionary<int, int>();
+            Dictionary<int, int> NewBoundIDToOrder = new Dictionary<int, int>();
+            foreach (DataRow NodeBoundDR in NodeBoundTable.Rows)
+            {
+                NodeBoundTable.Rows.Cast<DataRow>().Select(x => ValidationHelper.GetInteger(x[BoundObjectIDReferenceField], 0)).ToList();
+                int BoundObjectID = ValidationHelper.GetInteger(NodeBoundDR[BoundObjectIDReferenceField], 0);
+                if (BoundObjectID > 0)
+                {
+                    TaskBoundIDs.Add(BoundObjectID);
+                    if (!OldBoundIDToOrder.ContainsKey(BoundObjectID))
+                    {
+                        OldBoundIDToOrder.Add(BoundObjectID, ValidationHelper.GetInteger(NodeBoundDR[BoundObjectOrderField], 1));
+                    }
+                }
+            }
+
+            TaskBoundIDs = TaskBoundIDs.Distinct().ToList();
+
+            // Go through the Bound object tables which we'll use to gather the fields to translate the IDs from old env to new.
+            foreach (DataTable BoundObjectTable in e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == BoundObjectClassNameTableName))
+            {
+                bool ContainsGuidColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.GUIDColumn);
+                bool ContainsCodeNameColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.CodeNameColumn);
+                bool ContainsSiteIDColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.SiteIDColumn);
+                foreach (DataRow BoundObjectDR in BoundObjectTable.Rows)
+                {
+                    int ObjectID = ValidationHelper.GetInteger(BoundObjectDR[BoundObjectTypeInfo.IDColumn], 0);
+                    if (TaskBoundIDs.Contains(ObjectID))
+                    {
+                        GetIDParameters ObjectParams = new GetIDParameters();
+                        if (ContainsGuidColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.GUIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        {
+                            ObjectParams.Guid = ValidationHelper.GetGuid(BoundObjectDR[BoundObjectTypeInfo.GUIDColumn], Guid.Empty);
+                        }
+                        if (ContainsCodeNameColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.CodeColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        {
+                            ObjectParams.CodeName = ValidationHelper.GetString(BoundObjectDR[BoundObjectTypeInfo.CodeColumn], "");
+                        }
+                        if (ContainsSiteIDColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.SiteIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        {
+                            int SiteID = ValidationHelper.GetInteger(BoundObjectDR[BoundObjectTypeInfo.SiteIDColumn], -1);
+                            if (SiteID > 0)
+                            {
+                                ObjectParams.SiteId = SiteID;
+                            }
+                        }
+                        try
+                        {
+                            int NewID = TranslationHelper.GetIDFromDB(ObjectParams, BoundObjectTypeInfo.ObjectType);
+                            if (NewID > 0)
+                            {
+                                NewBoundIDs.Add(NewID);
+                                if (!NewBoundIDToOrder.ContainsKey(NewID))
+                                {
+                                    NewBoundIDToOrder.Add(NewID, OldBoundIDToOrder[ObjectID]);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                        }
+                    }
+                }
+            }
+            // Also check ObjectTranslations
+            foreach (DataTable ObjectTranslationTable in e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == "objecttranslation" && x.Columns.Contains("ClassName")))
+            {
+                foreach (DataRow ObjectTranslationDR in ObjectTranslationTable.Rows.Cast<DataRow>().Where(x => ((string)x["ClassName"]).ToLower() == BoundObjectClassNameTableName))
+                {
+                    int ID = ValidationHelper.GetInteger(ObjectTranslationDR["ID"], 0);
+                    if (TaskBoundIDs.Contains(ID))
+                    {
+                        GetIDParameters GetIDParams = new GetIDParameters();
+                        Guid GuidVal = ValidationHelper.GetGuid(ObjectTranslationDR["GUID"], Guid.Empty);
+                        string CodeName = ValidationHelper.GetString(ObjectTranslationDR["CodeName"], "");
+                        string SiteName = ValidationHelper.GetString(ObjectTranslationDR["SiteName"], "");
+                        if (GuidVal != Guid.Empty)
+                        {
+                            GetIDParams.Guid = GuidVal;
+                        }
+                        if (!string.IsNullOrWhiteSpace(CodeName))
+                        {
+                            GetIDParams.CodeName = CodeName;
+                        }
+                        if (!string.IsNullOrWhiteSpace(SiteName))
+                        {
+                            GetIDParams.SiteId = CacheHelper.Cache<int>(cs =>
+                            {
+                                return SiteInfoProvider.GetSiteID(SiteName);
+                            }, new CacheSettings(CacheHelper.CacheMinutes(SiteName), "NewBoundObjectIDsSiteName", SiteName));
+                        }
+                        try
+                        {
+                            int NewID = TranslationHelper.GetIDFromDB(GetIDParams, BoundObjectTypeInfo.ObjectType);
+                            if (NewID > 0)
+                            {
+                                NewBoundIDs.Add(NewID);
+                                if (!NewBoundIDToOrder.ContainsKey(NewID))
+                                {
+                                    NewBoundIDToOrder.Add(NewID, OldBoundIDToOrder[ID]);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Service.Resolve<IEventLogService>().LogException("RelationshipExended", "No Bound Object Found", ex, additionalMessage: string.Format("No Bound object of type [{0}] could be found in the new system that matched the incoming [{1}].", BoundObjectTypeInfo.ObjectType, NodeBindingObjectClassName));
+                        }
+                    }
+                }
+            }
+
+            // Return the list ordered by the Proper Order
+            return NewBoundIDs.OrderBy(x => NewBoundIDToOrder[x]).ToList();
+        }
+
+        /// <summary>
+        /// Used to convert the less-than-readable staging task into a more readable format (ex: Adding Foo "Foo1" to Node "/Home/MyPage"). Use this on the StagingEvents.LogTask.Before event
+        /// </summary>
+        /// <param name="e">The Staging Log Task Event Args that is passed during the StagingEvents.LogTask.Before event</param>
+        /// <param name="NodeBindingObjectType">The Node-Binding Class Name, ex: Demo.NodeFoo</param>
+        /// <param name="NodeBindingNodeIDField">The Column name of the Binding class that contains the NodeID, ex: "NodeID"</param>
+        /// <param name="NodeBindingObjectIDField">The column name of the Binding class that contains the other object's ID, ex: "FooID"</param>
+        /// <param name="BoundObjectDescription">Description of what the Bound object is.  ex: "Foo" or "Banner"</param>
+        /// <param name="BoundObjectTypeInfo">The TypeInfo of the Object that is bound to the Node, ex: FooInfo.TypeInfo</param>
+        public static void SetBetterBindingTaskTitle(StagingLogTaskEventArgs e, string NodeBindingObjectType, string NodeBindingNodeIDField, string NodeBindingObjectIDField, string BoundObjectDescription, ObjectTypeInfo BoundObjectTypeInfo)
+        {
+            if (e.Task.TaskObjectType.ToLower() == NodeBindingObjectType.ToLower())
+            {
+                try
+                {
+                    // The Task Data is an XML version of a DataSet, so convert to DataSet, then we can add our table data.
+                    string DataSetXML = e.Task.TaskData;
+                    DataSet DocumentDataSet = new DataSet();
+                    DocumentDataSet.ReadXml(new StringReader(DataSetXML));
+                    DataTable BoundObjectTable = DocumentDataSet.Tables[0];
+
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
+
+                    string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
+                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
+                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.GUIDColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.GUIDColumn : ColumnToGet;
+                    ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) ? BoundObjectTypeInfo.IDColumn : ColumnToGet;
+
+                    DataRow BoundObjectDR = ConnectionHelper.ExecuteQuery(BoundObjectTypeInfo.ObjectType + ".selectall", null, where: string.Format("{0} = {1}", BoundObjectTypeInfo.IDColumn, ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingObjectIDField], -1)), columns: ColumnToGet).Tables[0].Rows[0];
+                    e.Task.TaskTitle = string.Format("{0} {1} \"{2}\" {3} Node \"{4}\"", (e.Task.TaskType == TaskTypeEnum.CreateObject ? "Adding" : "Removing"), BoundObjectDescription, BoundObjectDR["BoundObjectDR"].ToString(), (e.Task.TaskType == TaskTypeEnum.CreateObject ? "to" : "from"), Node.NodeAliasPath);
+                }
+                catch (Exception ex)
+                {
+                    Service.Resolve<IEventLogService>().LogException("RelationshipHelper", "SetBetterBindingTaskTitleError", ex, additionalMessage: string.Format("For NodeBindingObjectType {0} with Object Reference Field {1} and Node Field {2}", NodeBindingObjectType, NodeBindingObjectIDField, NodeBindingNodeIDField));
+                }
+            }
+        }
+
+        #endregion
+
+        #region "public Helpers"
 
         /// <summary>
         /// Helper to take IDs coming in and translate them for the new system.
@@ -707,8 +801,7 @@ namespace RelationshipsExtended
             DataTable ObjectTranslationTable = TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == "objecttranslation").FirstOrDefault();
             if (ObjectTranslationTable == null)
             {
-                
-                   Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
+                Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelHelper.TranslateBindingTranslateID", "NoObjectTranslationTable", "Could not find an ObjectTranslation table in the Task Data, please make sure to only call this with a task that has an ObjectTranslation table");
                 return -1;
             }
             foreach (DataRow ItemDR in ObjectTranslationTable.Rows.Cast<DataRow>()
@@ -772,7 +865,7 @@ namespace RelationshipsExtended
                     cs.CacheDependency = CacheHelper.GetCacheDependency(new string[] { "nodeid|" + NodeID, "nodeid|" + PrimaryNodeID });
                 }
                 return PrimaryNodeID;
-            }, new CacheSettings(CacheMinutes, "GetPrimaryNodeID", NodeID));
+            }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), "GetPrimaryNodeID", NodeID));
         }
 
         /// <summary>
@@ -780,7 +873,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Ints, Guids, or CodeNames of the Categories</param>
         /// <returns>the Category identity where condition</returns>
-        internal static string CategoryIdentitiesWhere(IEnumerable<object> CategoryIdentifications)
+        public static string CategoryIdentitiesWhere(IEnumerable<object> CategoryIdentifications)
         {
             List<Guid> Guids = new List<Guid>();
             List<int> Ints = new List<int>();
@@ -815,7 +908,7 @@ namespace RelationshipsExtended
             }
             if (Strings.Count > 0)
             {
-                WhereCondition = SqlHelper.AddWhereCondition(WhereCondition, string.Format("(CategoryName in ('{0}') and (CategorySiteID is null or CategorySiteID = {1}))", string.Join("','", Strings.ToArray()), CurrentSiteID), "OR");
+                WhereCondition = SqlHelper.AddWhereCondition(WhereCondition, string.Format("(CategoryName in ('{0}') and (CategorySiteID is null or CategorySiteID = {1}))", string.Join("','", Strings.ToArray()), SiteContext.CurrentSiteID), "OR");
             }
             return (!string.IsNullOrWhiteSpace(WhereCondition) ? WhereCondition : "(1=0)");
 
@@ -826,7 +919,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Category IDs, Guids, or CodeNames</param>
         /// <returns>List of Category IDs</returns>
-        internal static IEnumerable<int> CategoryIdentitiesToIDs(IEnumerable<object> CategoryIdentifications)
+        public static IEnumerable<int> CategoryIdentitiesToIDs(IEnumerable<object> CategoryIdentifications)
         {
             return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").Select(x => x.CategoryID).ToArray();
         }
@@ -836,7 +929,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Category IDs, Guids, or CodeNames</param>
         /// <returns>List of Category GUIDs</returns>
-        internal static IEnumerable<Guid> CategoryIdentitiesToGUIDs(IEnumerable<object> CategoryIdentifications)
+        public static IEnumerable<Guid> CategoryIdentitiesToGUIDs(IEnumerable<object> CategoryIdentifications)
         {
             return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").Select(x => x.CategoryGUID).ToArray();
         }
@@ -846,7 +939,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="CategoryIdentifications">List of Category IDs, Guids, or CodeNames</param>
         /// <returns>List of Category Code Names</returns>
-        internal static IEnumerable<string> CategoryIdentitiesToCodeNames(IEnumerable<object> CategoryIdentifications)
+        public static IEnumerable<string> CategoryIdentitiesToCodeNames(IEnumerable<object> CategoryIdentifications)
         {
             return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").Select(x => x.CategoryName).ToArray();
         }
@@ -856,7 +949,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="ClassName">The Class Name</param>
         /// <returns>The Class Object Summary</returns>
-        internal static ClassObjSummary GetClassObjSummary(string ClassName)
+        public static ClassObjSummary GetClassObjSummary(string ClassName)
         {
             return CacheHelper.Cache<ClassObjSummary>(cs =>
             {
@@ -953,7 +1046,7 @@ namespace RelationshipsExtended
                     cs.CacheDependency = CacheHelper.GetCacheDependency("cms.class|byname|" + ClassName);
                 }
                 return summaryObj;
-            }, new CacheSettings(CacheMinutes, "GetClassObjSummary", ClassName));
+            }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), "GetClassObjSummary", ClassName));
         }
 
         /// <summary>
@@ -962,7 +1055,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of Object IDs, Guids, or CodeNames</param>
         /// <returns>A list of the Object's IDs</returns>
-        internal static IEnumerable<int> ObjectIdentitiesToIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        public static IEnumerable<int> ObjectIdentitiesToIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
 
             switch (classObjSummary.ClassName.ToLower())
@@ -996,7 +1089,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of Object IDs, Guids, or CodeNames</param>
         /// <returns>A list of the Object's GUIDs</returns>
-        internal static IEnumerable<Guid> ObjectIdentitiesToGUIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        public static IEnumerable<Guid> ObjectIdentitiesToGUIDs(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
 
             switch (classObjSummary.ClassName.ToLower())
@@ -1030,7 +1123,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of Object IDs, Guids, or CodeNames</param>
         /// <returns>A list of the Object's Code Names</returns>
-        internal static IEnumerable<string> ObjectIdentitiesToCodeNames(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        public static IEnumerable<string> ObjectIdentitiesToCodeNames(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
             switch (classObjSummary.ClassName.ToLower())
             {
@@ -1064,7 +1157,7 @@ namespace RelationshipsExtended
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of IDs, Guids, or CodeNames</param>
         /// <returns>The WHERE condition to select the objects (ex MyObjectID in (1,2,3) )</returns>
-        internal static string ObjectIdentitiesWhere(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        public static string ObjectIdentitiesWhere(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
             List<Guid> Guids = new List<Guid>();
             List<int> Ints = new List<int>();
@@ -1100,7 +1193,7 @@ namespace RelationshipsExtended
             }
             if (Strings.Count > 0 && !string.IsNullOrWhiteSpace(classObjSummary.CodeNameColumn))
             {
-                WhereCondition = SqlHelper.AddWhereCondition(WhereCondition, string.Format("({0} in ('{1}'))", classObjSummary.CodeNameColumn, string.Join("','", Strings.ToArray()), CurrentSiteID), "OR");
+                WhereCondition = SqlHelper.AddWhereCondition(WhereCondition, string.Format("({0} in ('{1}'))", classObjSummary.CodeNameColumn, string.Join("','", Strings.ToArray()), SiteContext.CurrentSiteID), "OR");
             }
             return (!string.IsNullOrWhiteSpace(WhereCondition) ? WhereCondition : "(1=0)");
         }
@@ -1110,7 +1203,7 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="Field">The Field Name (ex MyField, or My_Table.MyField)</param>
         /// <returns>The properly formatted FieldName</returns>
-        internal static string GetBracketedColumnName(string Field)
+        public static string GetBracketedColumnName(string Field)
         {
             string[] FieldSplit = Field.Split(".".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < FieldSplit.Length; i++)
@@ -1121,44 +1214,5 @@ namespace RelationshipsExtended
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Internal use only, creates a summary of a Class for processing
-    /// </summary>
-    public class ClassObjSummary
-    {
-        public string ClassName;
-        public string TableName;
-        public string IDColumn;
-        public string GUIDColumn;
-        public string CodeNameColumn;
-        public bool ClassIsDocumentType;
-        public bool ClassIsCustomTable;
-        public bool ClassIsForm;
-
-        public ClassObjSummary(string ClassName)
-        {
-            this.ClassName = ClassName;
-        }
-    }
-
-    /// <summary>
-    /// Used in the RelHelper.UpdateTaskDataWithNodeBinding, pass this to allow the method to automatically find and attach the Bound data to the TaskData
-    /// </summary>
-    public class NodeBinding_DocumentLogTaskBefore_Configuration
-    {
-        public BaseInfo EmptyNodeBindingObj;
-        public string NodeMatchStringFormat;
-        /// <summary>
-        /// Provides the needed information for the Document.LogTask.Before to properly append Node-bound objects to the Document update task.
-        /// </summary>
-        /// <param name="EmptyNodeBindingObj">An empty instance of your Binding Class Info (ex new NodeItemsInfo())</param>
-        /// <param name="NodeMatchStringFormat">ex "NodeID = {0}" if your binding table has 'NodeID' as it's reference field. Used in a String.Format() to create the Where condition to find the related objects. </param>
-        public NodeBinding_DocumentLogTaskBefore_Configuration(BaseInfo EmptyNodeBindingObj, string NodeMatchStringFormat)
-        {
-            this.EmptyNodeBindingObj = EmptyNodeBindingObj;
-            this.NodeMatchStringFormat = NodeMatchStringFormat;
-        }
     }
 }

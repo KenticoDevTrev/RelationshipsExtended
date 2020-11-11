@@ -8,4 +8,8 @@
     <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\RelationshipsExtendedBase\RelationshipsExtendedBase.csproj" />
+  </ItemGroup>
+
 </Project>

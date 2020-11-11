@@ -1,19 +1,18 @@
-﻿using RelationshipsExtended;
-using System;
-using RelationshipsExtended.Enums;
-using CMS.MacroEngine;
-using CMS;
+﻿using CMS;
 using CMS.Helpers;
+using CMS.MacroEngine;
+using RelationshipsExtended;
+using System;
 using CMS.DataEngine;
+using RelationshipsExtended.Enums;
+using RelationshipsExtended.Helpers;
 
 [assembly: RegisterExtension(typeof(RelHelperMacrosMethods), typeof(RelHelperMacroNamespace))]
 namespace RelationshipsExtended
 {
-    /// <summary>
-    /// Macro methods for RelHelper
-    /// </summary>
     public class RelHelperMacrosMethods : MacroMethodContainer
     {
+
         [MacroMethod(typeof(string), "Returns a full where condition (for Document Category Relationships) to be used in filtering (ex repeaters).  If no categories provided or none found, returns 1=1", 1)]
         [MacroMethodParam(0, "Values", typeof(string), "| , or ; seperated list of category values (IDs, GUIDs, or CodeNames)")]
         [MacroMethodParam(1, "ConditionType", typeof(Enums.ConditionType), "RelEnums.ConditionType of what type of condition to generate.  Default is 'Any'")]

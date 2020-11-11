@@ -16,6 +16,7 @@ using CMS.Relationships;
 using CMS.SiteProvider;
 using CMS.UIControls;
 using RelationshipsExtended;
+using RelationshipsExtended.Helpers;
 using Action = CMS.UIControls.UniGridConfig.Action;
 using MessageTypeEnum = CMS.Base.Web.UI.MessageTypeEnum;
 using TreeNode = CMS.DocumentEngine.TreeNode;

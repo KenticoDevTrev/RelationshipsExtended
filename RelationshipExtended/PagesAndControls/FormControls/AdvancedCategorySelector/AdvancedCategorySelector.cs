@@ -19,6 +19,7 @@ using CMS.Base.Web.UI;
 using RelationshipsExtended.Enums;
 using RelationshipsExtended;
 using System.Web;
+using RelationshipsExtended.Helpers;
 
 public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_AdvancedCategorySelector_AdvancedCategorySelector : FormEngineUserControl
 {

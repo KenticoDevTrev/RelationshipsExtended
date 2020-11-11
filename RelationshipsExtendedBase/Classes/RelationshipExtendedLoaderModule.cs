@@ -3,7 +3,7 @@ using CMS.Base;
 using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
-using CMS.EventLog;
+using CMS.FormEngine;
 using CMS.Helpers;
 using CMS.MacroEngine;
 using CMS.Membership;
@@ -13,38 +13,28 @@ using CMS.Synchronization;
 using CMS.Taxonomy;
 using RelationshipsExtended;
 using RelationshipsExtended.Enums;
-using RelationshipsExtendedMVCCoreHelper.Internal;
+using RelationshipsExtended.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-[assembly: RegisterModule(typeof(RelationshipsExtendedLoaderModule))]
+[assembly: RegisterModule(typeof(RelationshipsExtendedLoaderModuleBase))]
 namespace RelationshipsExtended
 {
-    /// <summary>
-    /// Adds Macros to engine
-    /// </summary>
-    public class RelationshipsExtendedLoaderModule : Module
+
+    public class RelationshipsExtendedLoaderModuleBase : Module
     {
-        /// <summary>
-        /// Initializer
-        /// </summary>
-        public RelationshipsExtendedLoaderModule()
-                : base("RelationshipsExtendedLoaderModule")
+        public RelationshipsExtendedLoaderModuleBase()
+                : base("RelationshipsExtendedLoaderModuleBase")
         {
         }
 
-        /// <summary>
-        /// Contains initialization code that is executed when the application starts
-        /// </summary>
+
+        // Contains initialization code that is executed when the application starts
         protected override void OnInit()
         {
             base.OnInit();
-
-            // Registers "CustomNamespace" into the macro engine
-            MacroContext.GlobalResolver.SetNamedSourceData("RelHelper", RelHelperMacroNamespace.Instance);
-            MacroContext.GlobalResolver.SetNamedSourceData("RelEnums", EnumMacroEvaluator.EnumMacroObjects());
 
             // Custom Relationship Name logging since adhoc is disabled in staging by default (since usually tied to page type)
             RelationshipNameInfo.TYPEINFO.Events.Insert.After += RelationshipName_Insert_After;
@@ -89,6 +79,156 @@ namespace RelationshipsExtended
                 Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "ErrorSettingForeignKeys", ex, additionalMessage: "Make sure the Query CMS.TreeCategory.EnsureForeignKey exists.  IGNORE if you just installed the module as this will run before the class installs on the first application start after installation.");
             }
 
+            // Registers "CustomNamespace" into the macro engine
+            MacroContext.GlobalResolver.SetNamedSourceData("RelHelper", RelHelperMacroNamespace.Instance);
+            MacroContext.GlobalResolver.SetNamedSourceData("RelEnums", EnumMacroEvaluator.EnumMacroObjects());
+
+            /* Check to make sure the 2 forms exist */
+            if (AlternativeFormInfoProvider.GetAlternativeFormInfo("cms.relationshipname.NewForm") == null)
+            {
+                int ClassID = DataClassInfoProvider.GetDataClassInfo("cms.relationshipname").ClassID;
+                AlternativeFormInfo RelationshipNewForm = new AlternativeFormInfo()
+                {
+                    FormClassID = ClassID,
+                    FormName = "NewForm",
+                    FormDisplayName = "New Form",
+                    FormDefinition = "<form version=\"2\"><field column=\"RelationshipNameID\" guid=\"47839bd6-f19c-4cfd-b67f-1ca754694d46\" /><field column=\"RelationshipDisplayName\" guid=\"6515b190-003a-44b6-b541-8814760de218\" /><field column=\"RelationshipName\" guid=\"42221f4a-30fa-47a6-bc80-3f99ee81f8a5\" /><field column=\"RelationshipAllowedObjects\" guid=\"2a02c9d5-f0f9-4a19-be8d-9a007f4464ac\" /><field column=\"RelationshipNameIsAdHoc\" guid=\"f1d3667d-77eb-47de-9ad0-5f22ad63e082\" visible=\"true\"><settings><controlname>CheckBoxControl</controlname></settings><properties><fieldcaption>Relationship Is AdHoc (Sortable)</fieldcaption><fielddescription>Must be true if you wish to use sorting.</fielddescription></properties></field><field column=\"RelationshipGUID\" guid=\"03ad948a-2bb7-44b2-b580-b05abf3a2a8b\" /><field column=\"RelationshipLastModified\" guid=\"ea7edf35-ed86-4cef-91c5-7bfdde27c389\" /><field column=\"ReltionshipSite\" guid=\"a733ba02-3675-481a-b586-b87c49e23268\" /></form>",
+                    FormHideNewParentFields = false,
+                    FormIsCustom = true
+                };
+                AlternativeFormInfoProvider.SetAlternativeFormInfo(RelationshipNewForm);
+            }
+            if (AlternativeFormInfoProvider.GetAlternativeFormInfo("cms.relationshipname.EditForm") == null)
+            {
+                int ClassID = DataClassInfoProvider.GetDataClassInfo("cms.relationshipname").ClassID;
+                AlternativeFormInfo RelationshipNewForm = new AlternativeFormInfo()
+                {
+                    FormClassID = ClassID,
+                    FormName = "EditForm",
+                    FormDisplayName = "Edit Form",
+                    FormDefinition = "<form version=\"2\"><field column=\"RelationshipNameID\" guid=\"47839bd6-f19c-4cfd-b67f-1ca754694d46\" /><field column=\"RelationshipDisplayName\" guid=\"6515b190-003a-44b6-b541-8814760de218\" /><field column=\"RelationshipName\" guid=\"42221f4a-30fa-47a6-bc80-3f99ee81f8a5\" /><field column=\"RelationshipAllowedObjects\" guid=\"2a02c9d5-f0f9-4a19-be8d-9a007f4464ac\" /><field column=\"RelationshipNameIsAdHoc\" guid=\"f1d3667d-77eb-47de-9ad0-5f22ad63e082\" visible=\"true\"><settings><controlname>CheckBoxControl</controlname></settings><properties><fieldcaption>Relationship Is AdHoc (Sortable)</fieldcaption><fielddescription>Must be true if you wish to use sorting.</fielddescription></properties></field><field column=\"RelationshipGUID\" guid=\"03ad948a-2bb7-44b2-b580-b05abf3a2a8b\" /><field column=\"RelationshipLastModified\" guid=\"ea7edf35-ed86-4cef-91c5-7bfdde27c389\" /><field column=\"ReltionshipSite\" guid=\"a733ba02-3675-481a-b586-b87c49e23268\" /></form>",
+                    FormHideNewParentFields = false,
+                    FormIsCustom = true
+                };
+                AlternativeFormInfoProvider.SetAlternativeFormInfo(RelationshipNewForm);
+            }
+        }
+
+        private void LogTask_After(object sender, StagingLogTaskEventArgs e)
+        {
+            try
+            {
+                if (e.Task.TaskDocumentID > 0 && CallContext.GetData("DeleteTasks") != null)
+                {
+                    TreeNode Node = DocumentHelper.GetDocument(e.Task.TaskDocumentID, null);
+                    if (((List<int>)CallContext.GetData("DeleteTasks")).Contains(Node.NodeID) && (DateTime.Now - e.Task.TaskTime).TotalSeconds < 10)
+                    {
+                        e.Task.Delete();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Service.Resolve<IEventLogService>().LogException("RelExtended", "LogTaskAfterError", ex, additionalMessage: "For task " + e.Task.TaskDocumentID);
+            }
+        }
+
+        /// <summary>
+        /// Handle the Removal of Node Categories when not bound to the document, since binding to the Nodes don't seem to operate right.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void NonBindingNodeDocument_ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
+        {
+            if (e.TaskType == TaskTypeEnum.DeleteObject)
+            {
+                // Don't want to trigger updates as we set the data in the database, so we won't log synchronziations
+                using (new CMSActionContext()
+                {
+                    LogSynchronization = false,
+                    LogIntegration = false
+                })
+                {
+                    if (e.ObjectType.ToLower() == "cms.treecategory")
+                    {
+                        DataTable NodeCategoryTable = e.TaskData.Tables[0];
+                        // Translate tables
+                        int NodeID = RelHelper.TranslateBindingTranslateID((int)NodeCategoryTable.Rows[0]["NodeID"], e.TaskData, "cms.node");
+                        int CategoryID = RelHelper.TranslateBindingTranslateID((int)NodeCategoryTable.Rows[0]["CategoryID"], e.TaskData, "cms.category");
+                        if (NodeID > 0 && CategoryID > 0)
+                        {
+                            TreeCategoryInfo.Provider.Remove(NodeID, CategoryID);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void NonBindingLogTask_Before(object sender, StagingLogTaskEventArgs e)
+        {
+            RelHelper.SetBetterBindingTaskTitle(e, TreeCategoryInfo.OBJECT_TYPE, "NodeID", "CategoryID", "Category", CategoryInfo.TYPEINFO);
+        }
+
+        private void ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
+        {
+            if (e.TaskType == TaskTypeEnum.UpdateDocument || e.TaskType == TaskTypeEnum.CreateDocument || e.TaskType == TaskTypeEnum.MoveDocument || e.TaskType == TaskTypeEnum.PublishDocument || e.TaskType == TaskTypeEnum.ArchiveDocument)
+            {
+                // Seems the first table is always the node's table, the table name dose change by the document page type.
+                DataTable NodeTable = e.TaskData.Tables[0];
+                if (NodeTable != null && NodeTable.Columns.Contains("NodeGuid"))
+                {
+                    // Don't want to trigger updates as we set the data in the database, so we won't log synchronziations
+                    TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeGUID", NodeTable.Rows[0]["NodeGuid"]).FirstOrDefault();
+
+                    using (new CMSActionContext()
+                    {
+                        LogSynchronization = false,
+                        LogIntegration = false
+                    })
+                    {
+                        List<int> NewNodeCategoryIDs = RelHelper.NewBoundObjectIDs(e, TreeCategoryInfo.OBJECT_TYPE, "NodeID", "CategoryID", CategoryInfo.TYPEINFO);
+
+                        // Now handle categories, deleting categories not found, and adding ones that are not set yet.
+                        TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).WhereNotIn("CategoryID", NewNodeCategoryIDs).ForEachObject(x => x.Delete());
+                        List<int> CurrentCategories = TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).Select(x => x.CategoryID).ToList();
+                        foreach (int NewCategoryID in NewNodeCategoryIDs.Except(CurrentCategories))
+                        {
+                            TreeCategoryInfo.Provider.Add(NodeObj.NodeID, NewCategoryID);
+                        }
+                    }
+                    if (RelHelper.IsStagingEnabled(NodeObj.NodeSiteID))
+                    {
+                        TaskTypeEnum TaskTypeToUse = e.TaskType;
+                        switch (e.TaskType)
+                        {
+                            case TaskTypeEnum.MoveDocument:
+                                TaskTypeToUse = TaskTypeEnum.UpdateDocument;
+                                break;
+                        }
+                        // Check if we need to generate a task for a server that isn't the origin server
+                        RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID, TaskTypeToUse);
+                    }
+                }
+                else
+                {
+                    Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelationshipExended", "No Node Table Found", eventDescription: "First Table in the incoming Staging Task did not contain the Node GUID, could not processes.");
+                }
+            }
+        }
+
+        private void LogTask_Before(object sender, StagingLogTaskEventArgs e)
+        {
+            RelHelper.UpdateTaskDataWithNodeBinding(e, new NodeBinding_DocumentLogTaskBefore_Configuration[]
+            {
+                    new NodeBinding_DocumentLogTaskBefore_Configuration(
+                        new TreeCategoryInfo(),
+                        "NodeID = {0}")
+            });
+        }
+
+        private void TreeCategory_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
+        {
+            RelHelper.HandleNodeBindingInsertUpdateDeleteEvent(((TreeCategoryInfo)e.Object).NodeID, TreeCategoryInfo.OBJECT_TYPE);
         }
 
         private void Relationship_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
@@ -281,118 +421,6 @@ namespace RelationshipsExtended
                 return true;
             }
             return ValidationHelper.GetGuid(RelationshipNameObj.RelationshipName.Split('_')[1], Guid.Empty) == Guid.Empty;
-        }
-
-
-        private void LogTask_After(object sender, StagingLogTaskEventArgs e)
-        {
-            try
-            {
-                if (e.Task.TaskDocumentID > 0 && CallContext.GetData("DeleteTasks") != null)
-                {
-                    TreeNode Node = DocumentHelper.GetDocument(e.Task.TaskDocumentID, null);
-                    if (((List<int>)CallContext.GetData("DeleteTasks")).Contains(Node.NodeID) && (DateTime.Now - e.Task.TaskTime).TotalSeconds < 10)
-                    {
-                        e.Task.Delete();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Service.Resolve<IEventLogService>().LogException("RelExtended", "LogTaskAfterError", ex, additionalMessage: "For task " + e.Task.TaskDocumentID);
-            }
-        }
-
-
-        /// <summary>
-        /// Handle the Removal of Node Categories when not bound to the document, since binding to the Nodes don't seem to operate right.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void NonBindingNodeDocument_ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
-        {
-            if (e.TaskType == TaskTypeEnum.DeleteObject)
-            {
-                // Don't want to trigger updates as we set the data in the database, so we won't log synchronziations
-                using (new CMSActionContext()
-                {
-                    LogSynchronization = false,
-                    LogIntegration = false
-                })
-                {
-                    if (e.ObjectType.ToLower() == "cms.treecategory")
-                    {
-                        DataTable NodeCategoryTable = e.TaskData.Tables[0];
-                        // Translate tables
-                        int NodeID = RelHelper.TranslateBindingTranslateID((int)NodeCategoryTable.Rows[0]["NodeID"], e.TaskData, "cms.node");
-                        int CategoryID = RelHelper.TranslateBindingTranslateID((int)NodeCategoryTable.Rows[0]["CategoryID"], e.TaskData, "cms.category");
-                        if (NodeID > 0 && CategoryID > 0)
-                        {
-                            TreeCategoryInfo.Provider.Remove(NodeID, CategoryID);
-                        }
-                    }
-                }
-            }
-        }
-
-        private void NonBindingLogTask_Before(object sender, StagingLogTaskEventArgs e)
-        {
-            RelHelper.SetBetterBindingTaskTitle(e, TreeCategoryInfo.OBJECT_TYPE, "NodeID", "CategoryID", "Category", CategoryInfo.TYPEINFO);
-        }
-
-        private void ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
-        {
-            if (e.TaskType == TaskTypeEnum.UpdateDocument)
-            {
-                // Seems the first table is always the node's table, the table name dose change by the document page type.
-                DataTable NodeTable = e.TaskData.Tables[0];
-                if (NodeTable != null && NodeTable.Columns.Contains("NodeGuid"))
-                {
-                    // Don't want to trigger updates as we set the data in the database, so we won't log synchronziations
-                    TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeGUID", NodeTable.Rows[0]["NodeGuid"]).FirstOrDefault();
-
-                    using (new CMSActionContext()
-                    {
-                        LogSynchronization = false,
-                        LogIntegration = false
-                    })
-                    {
-                        List<int> NewNodeCategoryIDs = RelHelper.NewBoundObjectIDs(e, TreeCategoryInfo.OBJECT_TYPE, "NodeID", "CategoryID", CategoryInfo.TYPEINFO);
-
-                        // Now handle categories, deleting categories not found, and adding ones that are not set yet.
-                        TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).WhereNotIn("CategoryID", NewNodeCategoryIDs).ForEachObject(x => x.Delete());
-                        List<int> CurrentCategories = TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).Select(x => x.CategoryID).ToList();
-                        foreach (int NewCategoryID in NewNodeCategoryIDs.Except(CurrentCategories))
-                        {
-                            TreeCategoryInfo.Provider.Add(NodeObj.NodeID, NewCategoryID);
-                        }
-                    }
-                    if (RelHelper.IsStagingEnabled(NodeObj.NodeSiteID))
-                    {
-                        // Check if we need to generate a task for a server that isn't the origin server
-                        RelHelper.CheckIfTaskCreationShouldOccur(NodeObj.NodeGUID);
-                    }
-                }
-                else
-                {
-                    Service.Resolve<IEventLogService>().LogEvent(EventTypeEnum.Error, "RelationshipExended", "No Node Table Found", eventDescription: "First Table in the incoming Staging Task did not contain the Node GUID, could not processes.");
-                }
-            }
-        }
-
-        private void LogTask_Before(object sender, StagingLogTaskEventArgs e)
-        {
-            RelHelper.UpdateTaskDataWithNodeBinding(e, new NodeBinding_DocumentLogTaskBefore_Configuration[]
-            {
-                    new NodeBinding_DocumentLogTaskBefore_Configuration(
-                        new TreeCategoryInfo(),
-                        "NodeID = {0}")
-            });
-        }
-
-        private void TreeCategory_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
-        {
-            RelHelper.HandleNodeBindingInsertUpdateDeleteEvent(((TreeCategoryInfo)e.Object).NodeID, TreeCategoryInfo.OBJECT_TYPE);
         }
     }
 

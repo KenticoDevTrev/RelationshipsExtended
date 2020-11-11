@@ -7,6 +7,7 @@ using CMS.Relationships;
 using CMS.SiteProvider;
 using CMS.UIControls;
 using RelationshipsExtended;
+using RelationshipsExtended.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;

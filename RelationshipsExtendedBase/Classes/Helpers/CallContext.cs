@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading;
 
-namespace RelationshipsExtendedMVCCoreHelper.Internal
+namespace RelationshipsExtended.Helpers
 {
     /// <summary>
     /// Provides a way to set contextual data that flows with the call and 
