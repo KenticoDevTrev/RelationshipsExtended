@@ -332,7 +332,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
         // Get the bound reference column if IBindingBaseInfo is implemented
         if(BindingObject is IBindingBaseInfo BindingObjectInfo)
         {
-            bindingTargetIdColumn = BindingObjectInfo.BoundObjectReferenceColumnName();
+            bindingTargetIdColumn = BindingObjectInfo.ChildObjectReferenceColumnName();
         }
 
         // Get all items based on where condition

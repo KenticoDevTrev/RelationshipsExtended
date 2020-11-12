@@ -960,6 +960,7 @@ namespace RelationshipsExtended.Helpers
                     summaryObj.ClassIsCustomTable = ClassObj.ClassIsCustomTable;
                     summaryObj.ClassIsDocumentType = ClassObj.ClassIsDocumentType;
                     summaryObj.ClassIsForm = ClassObj.ClassIsForm;
+                    summaryObj.TableName = ClassObj.ClassTableName;
                 }
                 else
                 {

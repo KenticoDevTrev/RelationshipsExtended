@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using CMS;
 using CMS.DataEngine;
 using CMS.Helpers;
+using RelationshipsExtended.Interfaces;
+using RelationshipsExtended.Enums;
+using CMS.Taxonomy;
+using CMS.DocumentEngine;
 
 [assembly: RegisterObjectType(typeof(TreeCategoryInfo), TreeCategoryInfo.OBJECT_TYPE)]
 
@@ -15,7 +19,7 @@ namespace CMS
     /// Data container class for <see cref="TreeCategoryInfo"/>.
     /// </summary>
     [Serializable]
-    public partial class TreeCategoryInfo : AbstractInfo<TreeCategoryInfo, ITreeCategoryInfoProvider>
+    public partial class TreeCategoryInfo : AbstractInfo<TreeCategoryInfo, ITreeCategoryInfoProvider>, IBindingInfo
     {
         /// <summary>
         /// Object type.
@@ -119,6 +123,53 @@ namespace CMS
         protected override void SetObject()
         {
             Provider.Set(this);
+        }
+
+        public string ParentClassReferenceColumn()
+        {
+            return nameof(TreeNode.NodeID);
+        }
+
+        public string ChildClassReferenceColumn()
+        {
+            return nameof(CategoryInfo.CategoryID);
+        }
+
+        public IdentityType ParentReferenceType()
+        {
+            return IdentityType.ID;
+        }
+
+        public IdentityType ChildReferenceType()
+        {
+            return IdentityType.ID;
+        }
+
+        public string ParentClassName()
+        {
+            return "cms.node";
+        }
+
+        public string ChildClassName()
+        {
+            return CategoryInfo.OBJECT_TYPE;
+        }
+
+        public string BindingTableName()
+        {
+            return "View_TreeCategory_Bindable";
+        }
+
+        public string ParentObjectReferenceColumnName()
+        {
+            // Not using normal "NodeID" as can't be bound due to same field name, so using View_TreeCategory_Bindable's variation of it
+            return "TreeCategoryNodeID";
+        }
+
+        public string ChildObjectReferenceColumnName()
+        {
+            // Not using normal "NodeID" as can't be bound due to same field name, so using View_TreeCategory_Bindable's variation of it
+            return "TreeCategoryCategoryID";
         }
 
 

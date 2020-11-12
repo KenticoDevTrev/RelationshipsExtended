@@ -72,7 +72,9 @@ namespace RelationshipsExtended
             // Also make sure that the foreign key exists for the class
             try
             {
-                ConnectionHelper.ExecuteQuery("CMS.TreeCategory.EnsureForeignKeys", null);
+                if(DataClassInfoProvider.GetDataClassInfo("CMS.TreeCategory") != null) { 
+                    ConnectionHelper.ExecuteQuery("CMS.TreeCategory.EnsureForeignKeys", null);
+                }
             }
             catch (Exception ex)
             {

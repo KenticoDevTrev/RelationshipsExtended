@@ -11,4 +11,7 @@ namespace RelationshipsExtended.Enums
     public enum SaveType { ToField, ToCategory, Both, BothNode, ToJoinTable };
     public enum CategoryFieldSaveType { ID, GUID, CategoryName };
 
+    public enum BindingQueryType { GetChildrenByParent, GetChildrenByParentOrdered, GetParentsByChild}
+
+    public enum BindingConditionType { FilterParentsByChildren, FilterChildrenByParents }
 }

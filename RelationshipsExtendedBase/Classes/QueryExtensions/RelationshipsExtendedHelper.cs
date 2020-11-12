@@ -4,6 +4,7 @@ using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.Helpers;
 using CMS.Relationships;
+using CMS.Taxonomy;
 using RelationshipsExtended.Enums;
 using RelationshipsExtended.Helpers;
 using RelationshipsExtended.Interfaces;
@@ -336,6 +337,269 @@ namespace RelationshipsExtended
 
         #endregion
 
+        #region "Custom Relationships with IBindingInfo"
+
+        /// <summary>
+        /// Filters documents by those in relationship to the given object using a custom binding class.
+        /// </summary>        
+        /// <example>You want to grab Nodes that are related to a Bar object using the binding table Demo_BarNode</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectNode"/>
+        /// <param name="BindingClass">The Binding Class Code Name Ex: Demo.BarNode</param>
+        /// <param name="PrimaryClass">The primary class you are binding to Ex: Demo.Bar</param>
+        /// <param name="InRelationshipWithValue">The value of the primary class that is used for the relationship lookup. Ex: 'BarA'</param>
+        /// <param name="ObjectIDFieldName">The Field Name of object that matches the binding table's Left Field value. Ex: BarID</param>
+        /// <param name="LeftFieldName">The Field Name of the binding class that contains the Document identity value. Ex: BarNodeNodeID (from Demo.BarNode)</param>
+        /// <param name="RightFieldName">The Field Name of the binding class that contains the related objects's identity value.  Ex: BarNodeBarID (from Demo.BarNode)</param>
+        /// <param name="OrderColumn">The Order column name, if empty then will not order</param>
+        /// <param name="OrderAsc">If the ordering should be done Ascending or Descending</param>
+        /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the Node, default is ID</param>
+        /// <returns></returns>
+        public DocumentQuery InCustomRelationshipWithOrder(DocumentQuery baseQuery, IBindingInfo BindingClass, BindingQueryType BindingType, object InRelationshipWithValue, bool OrderAsc)
+        {
+            switch(BindingType)
+            {
+                case BindingQueryType.GetChildrenByParent:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    break;
+                case BindingQueryType.GetChildrenByParentOrdered:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    if(BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    {
+                        string OrderColumn = info.TypeInfo.OrderColumn;
+                        if (OrderAsc)
+                        {
+                            baseQuery.OrderBy(OrderColumn);
+                        }
+                        else
+                        {
+                            baseQuery.OrderByDescending(OrderColumn);
+                        }
+                    }
+                    break;
+                case BindingQueryType.GetParentsByChild:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
+                    break;
+            }
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Filters documents by those in relationship to the given object using a custom binding class.
+        /// </summary>    
+        /// <example>You want to grab Nodes that are related to a Bar object using the binding table Demo_BarNode</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectNode"/>
+        /// <param name="BindingClass">The Binding Class Code Name Ex: Demo.BarNode</param>
+        /// <param name="PrimaryClass">The primary class you are binding to Ex: Demo.Bar</param>
+        /// <param name="InRelationshipWithValue">The value of the primary class that is used for the relationship lookup. Ex: 'BarA'</param>
+        /// <param name="ObjectIDFieldName">The Field Name of object that matches the binding table's Left Field value. Ex: BarID</param>
+        /// <param name="LeftFieldName">The Field Name of the binding class that contains the Document identity value. Ex: BarNodeNodeID (from Demo.BarNode)</param>
+        /// <param name="RightFieldName">The Field Name of the binding class that contains the related objects's identity value.  Ex: BarNodeBarID (from Demo.BarNode)</param>
+        /// <param name="OrderColumn">The Order column name, if empty then will not order</param>
+        /// <param name="OrderAsc">If the ordering should be done Ascending or Descending</param>
+        /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the Node, default is ID</param>
+        public DocumentQuery<TDocument> InCustomRelationshipWithOrder<TDocument>(DocumentQuery<TDocument> baseQuery, IBindingInfo BindingClass, BindingQueryType BindingType, object InRelationshipWithValue, bool OrderAsc) where TDocument : TreeNode, new()
+        {
+            switch (BindingType)
+            {
+                case BindingQueryType.GetChildrenByParent:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    break;
+                case BindingQueryType.GetChildrenByParentOrdered:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    {
+                        string OrderColumn = info.TypeInfo.OrderColumn;
+                        if (OrderAsc)
+                        {
+                            baseQuery.OrderBy(OrderColumn);
+                        }
+                        else
+                        {
+                            baseQuery.OrderByDescending(OrderColumn);
+                        }
+                    }
+                    break;
+                case BindingQueryType.GetParentsByChild:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
+                    break;
+            }
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Filters documents by those in relationship to the given object using a custom binding class.
+        /// </summary>    
+        /// <example>You want to grab Nodes that are related to a Bar object using the binding table Demo_BarNode</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectNode"/>
+        /// <param name="BindingClass">The Binding Class Code Name Ex: Demo.BarNode</param>
+        /// <param name="PrimaryClass">The primary class you are binding to Ex: Demo.Bar</param>
+        /// <param name="InRelationshipWithValue">The value of the primary class that is used for the relationship lookup. Ex: 'BarA'</param>
+        /// <param name="ObjectIDFieldName">The Field Name of object that matches the binding table's Left Field value. Ex: BarID</param>
+        /// <param name="LeftFieldName">The Field Name of the binding class that contains the Document identity value. Ex: BarNodeNodeID (from Demo.BarNode)</param>
+        /// <param name="RightFieldName">The Field Name of the binding class that contains the related objects's identity value.  Ex: BarNodeBarID (from Demo.BarNode)</param>
+        /// <param name="OrderColumn">The Order column name, if empty then will not order</param>
+        /// <param name="OrderAsc">If the ordering should be done Ascending or Descending</param>
+        /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the Node, default is ID</param>
+        public MultiDocumentQuery InCustomRelationshipWithOrder(MultiDocumentQuery baseQuery, IBindingInfo BindingClass, BindingQueryType BindingType, object InRelationshipWithValue, bool OrderAsc)
+        {
+            switch (BindingType)
+            {
+                case BindingQueryType.GetChildrenByParent:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    break;
+                case BindingQueryType.GetChildrenByParentOrdered:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    {
+                        string OrderColumn = info.TypeInfo.OrderColumn;
+                        if (OrderAsc)
+                        {
+                            baseQuery.OrderBy(OrderColumn);
+                        }
+                        else
+                        {
+                            baseQuery.OrderByDescending(OrderColumn);
+                        }
+                    }
+                    break;
+                case BindingQueryType.GetParentsByChild:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
+                    break;
+            }
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Filters objects by those in relationship to the given other object using a custom binding class.
+        /// </summary>        
+        /// <example>If you are Querying Bar's that are related to the given Foo object (Demo.FooBar)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectObjectWithOrder"/>
+        /// <param name="BindingClass">The Binding Class Code Name Ex: Demo.FooBar</param>
+        /// <param name="PrimaryClass">The primary class you are binding to Ex: Demo.Foo</param>
+        /// <param name="InRelationshipWithValue">The value of the primary class that is used for the relationship lookup. Ex: 'FooA'</param>
+        /// <param name="ObjectIDFieldName">The Field Name of object that matches the binding table's Left Field value. Ex: FooID</param>
+        /// <param name="LeftFieldName">The Field Name of the binding class that contains the the primary class's identity value. Ex: FooBarFooID (from Demo.FooBar)</param>
+        /// <param name="RightFieldName">The Field Name of the binding class that contains the related objects's identity value.  Ex: FooBarBarID (from Demo.FooBar)</param>
+        /// <param name="OrderColumn">The Order column name, if empty then will not order. Ex: FooBarOrder</param>
+        /// <param name="OrderAsc">If the ordering should be done Ascending or Descending</param>
+        /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the Node, default is ID</param>
+        public ObjectQuery InCustomRelationshipWithOrder(ObjectQuery baseQuery, IBindingInfo BindingClass, BindingQueryType BindingType, object InRelationshipWithValue, bool OrderAsc)
+        {
+            switch (BindingType)
+            {
+                case BindingQueryType.GetChildrenByParent:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    break;
+                case BindingQueryType.GetChildrenByParentOrdered:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    {
+                        string OrderColumn = info.TypeInfo.OrderColumn;
+                        if (OrderAsc)
+                        {
+                            baseQuery.OrderBy(OrderColumn);
+                        }
+                        else
+                        {
+                            baseQuery.OrderByDescending(OrderColumn);
+                        }
+                    }
+                    break;
+                case BindingQueryType.GetParentsByChild:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
+                    break;
+            }
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Filters objects by those in relationship to the given other object using a custom binding class.
+        /// </summary>        
+        /// <example>If you are Querying Bar's that are related to the given Foo object (Demo.FooBar)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectObjectWithOrder"/>
+        /// <param name="BindingClass">The Binding Class Code Name Ex: Demo.FooBar</param>
+        /// <param name="PrimaryClass">The primary class you are binding to Ex: Demo.Foo</param>
+        /// <param name="InRelationshipWithValue">The value of the primary class that is used for the relationship lookup. Ex: 'FooA'</param>
+        /// <param name="ObjectIDFieldName">The Field Name of object that matches the binding table's Left Field value. Ex: FooID</param>
+        /// <param name="LeftFieldName">The Field Name of the binding class that contains the the primary class's identity value. Ex: FooBarFooID (from Demo.FooBar)</param>
+        /// <param name="RightFieldName">The Field Name of the binding class that contains the related objects's identity value.  Ex: FooBarBarID (from Demo.FooBar)</param>
+        /// <param name="OrderColumn">The Order column name, if empty then will not order. Ex: FooBarOrder</param>
+        /// <param name="OrderAsc">If the ordering should be done Ascending or Descending</param>
+        /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the Node, default is ID</param>
+        public ObjectQuery<TObject> InCustomRelationshipWithOrder<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo BindingClass, BindingQueryType BindingType, object InRelationshipWithValue, bool OrderAsc) where TObject : BaseInfo, new()
+        {
+            switch (BindingType)
+            {
+                case BindingQueryType.GetChildrenByParent:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    break;
+                case BindingQueryType.GetChildrenByParentOrdered:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    {
+                        string OrderColumn = info.TypeInfo.OrderColumn;
+                        if (OrderAsc)
+                        {
+                            baseQuery.OrderBy(OrderColumn);
+                        }
+                        else
+                        {
+                            baseQuery.OrderByDescending(OrderColumn);
+                        }
+                    }
+                    break;
+                case BindingQueryType.GetParentsByChild:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
+                    break;
+            }
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Filters objects by those in relationship to the given other object using a custom binding class.
+        /// </summary>        
+        /// <example>If you are Querying Bar's that are related to the given Foo object (Demo.FooBar)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectObjectWithOrder"/>
+        /// <param name="BindingClass">The Binding Class Code Name Ex: Demo.FooBar</param>
+        /// <param name="PrimaryClass">The primary class you are binding to Ex: Demo.Foo</param>
+        /// <param name="InRelationshipWithValue">The value of the primary class that is used for the relationship lookup. Ex: 'FooA'</param>
+        /// <param name="ObjectIDFieldName">The Field Name of object that matches the binding table's Left Field value. Ex: FooID</param>
+        /// <param name="LeftFieldName">The Field Name of the binding class that contains the the primary class's identity value. Ex: FooBarFooID (from Demo.FooBar)</param>
+        /// <param name="RightFieldName">The Field Name of the binding class that contains the related objects's identity value.  Ex: FooBarBarID (from Demo.FooBar)</param>
+        /// <param name="OrderColumn">The Order column name, if empty then will not order. Ex: FooBarOrder</param>
+        /// <param name="OrderAsc">If the ordering should be done Ascending or Descending</param>
+        /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the Node, default is ID</param>
+        public MultiObjectQuery InCustomRelationshipWithOrder(MultiObjectQuery baseQuery, IBindingInfo BindingClass, BindingQueryType BindingType, object InRelationshipWithValue, bool OrderAsc)
+        {
+            switch (BindingType)
+            {
+                case BindingQueryType.GetChildrenByParent:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    break;
+                case BindingQueryType.GetChildrenByParentOrdered:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
+                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    {
+                        string OrderColumn = info.TypeInfo.OrderColumn;
+                        if (OrderAsc)
+                        {
+                            baseQuery.OrderBy(OrderColumn);
+                        }
+                        else
+                        {
+                            baseQuery.OrderByDescending(OrderColumn);
+                        }
+                    }
+                    break;
+                case BindingQueryType.GetParentsByChild:
+                    baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
+                    break;
+            }
+            return baseQuery;
+        }
+
+        #endregion
+
         #region "Document Category Filter"
 
         /// <summary>
@@ -534,6 +798,100 @@ namespace RelationshipsExtended
 
         #endregion
 
+        #region "Binding Category Filter with IBindingInfo"
+
+        /// <summary>
+        /// Adds Category Condition (with custom Binding table) to the document query.  If no categories given or none found of the given Values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>If you are retrieving documents that are related to 'region' categories stored in a custom binding table (Demo.NodeRegion)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/NodeCategoryCustomTable"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new NodeRegionInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public DocumentQuery BindingCategoryCondition(DocumentQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingCategoryWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Category Condition (with custom Binding table) to the document query.  If no categories given or none found of the given Values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>If you are retrieving documents that are related to 'region' categories stored in a custom binding table (Demo.NodeRegion)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/NodeCategoryCustomTable"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new NodeRegionInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public DocumentQuery<TDocument> BindingCategoryCondition<TDocument>(DocumentQuery<TDocument> baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any) where TDocument : TreeNode, new()
+        {
+            baseQuery.Where(GetBindingCategoryWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Category Condition (with custom Binding table) to the document query.  If no categories given or none found of the given Values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>If you are retrieving documents that are related to 'region' categories stored in a custom binding table (Demo.NodeRegion)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/NodeCategoryCustomTable"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new NodeRegionInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public MultiDocumentQuery BindingCategoryCondition(MultiDocumentQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingCategoryWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Category Condition (with custom Binding table) to the object query.  If no categories given or none found of the given Values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>If you are retrieving Foo objects that are related to categories stored in a custom binding table (Demo.FooCategory)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectCategory"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new FooCategoryInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public ObjectQuery BindingCategoryCondition(ObjectQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingCategoryWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Category Condition (with custom Binding table) to the object query.  If no categories given or none found of the given Values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>If you are retrieving Foo objects that are related to categories stored in a custom binding table (Demo.FooCategory)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectCategory"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new FooCategoryInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public ObjectQuery<TObject> BindingCategoryCondition<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any) where TObject : BaseInfo, new()
+        {
+            baseQuery.Where(GetBindingCategoryWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Category Condition (with custom Binding table) to the object query.  If no categories given or none found of the given Values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>If you are retrieving Foo objects that are related to categories stored in a custom binding table (Demo.FooCategory)</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectCategory"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new FooCategoryInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public MultiObjectQuery BindingCategoryCondition(MultiObjectQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingCategoryWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        #endregion
+
         #region "Custom Binding Filter"
 
         /// <summary>
@@ -550,7 +908,7 @@ namespace RelationshipsExtended
         /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the category, default is ID</param>
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_NodeBaz</param>
-        public DocumentQuery BindingCondition(DocumentQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
+        public DocumentQuery BindingCondition(DocumentQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
         {
             baseQuery.Where(GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, Identity, Condition, ObjectIDTableName));
             return baseQuery;
@@ -570,7 +928,7 @@ namespace RelationshipsExtended
         /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the category, default is ID</param>
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_NodeBaz</param>
-        public DocumentQuery<TDocument> BindingCondition<TDocument>(DocumentQuery<TDocument> baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null) where TDocument : TreeNode, new()
+        public DocumentQuery<TDocument> BindingCondition<TDocument>(DocumentQuery<TDocument> baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null) where TDocument : TreeNode, new()
         {
             baseQuery.Where(GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, Identity, Condition, ObjectIDTableName));
             return baseQuery;
@@ -590,7 +948,7 @@ namespace RelationshipsExtended
         /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the category, default is ID</param>
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_NodeBaz</param>
-        public MultiDocumentQuery BindingCondition(MultiDocumentQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
+        public MultiDocumentQuery BindingCondition(MultiDocumentQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
         {
             baseQuery.Where(GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, Identity, Condition, ObjectIDTableName));
             return baseQuery;
@@ -610,7 +968,7 @@ namespace RelationshipsExtended
         /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the category, default is ID</param>
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_FooBaz</param>
-        public ObjectQuery BindingCondition(ObjectQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
+        public ObjectQuery BindingCondition(ObjectQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
         {
             baseQuery.Where(GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, Identity, Condition, ObjectIDTableName));
             return baseQuery;
@@ -630,7 +988,7 @@ namespace RelationshipsExtended
         /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the category, default is ID</param>
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_FooBaz</param>
-        public ObjectQuery<TObject> BindingCondition<TObject>(ObjectQuery<TObject> baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null) where TObject : BaseInfo, new()
+        public ObjectQuery<TObject> BindingCondition<TObject>(ObjectQuery<TObject> baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null) where TObject : BaseInfo, new()
         {
             baseQuery.Where(GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, Identity, Condition, ObjectIDTableName));
             return baseQuery;
@@ -650,9 +1008,103 @@ namespace RelationshipsExtended
         /// <param name="Identity">RelEnums.IdentityType of what value is stored in the binding table for the category, default is ID</param>
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_FooBaz</param>
-        public MultiObjectQuery BindingCondition(MultiObjectQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
+        public MultiObjectQuery BindingCondition(MultiObjectQuery baseQuery, string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
         {
             baseQuery.Where(GetBindingWhere(BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, Values, Identity, Condition, ObjectIDTableName));
+            return baseQuery;
+        }
+
+        #endregion
+
+        #region "Custom Binding Filter with IBindingInfo"
+
+        /// <summary>
+        /// Adds Binding Condition to the document query.  If no values given or none found of the given values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>You want to find Nodes that have some of the given Baz values in their relationship table Demo_NodeBaz</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/NodeObject"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new NodeBazInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public DocumentQuery BindingCondition(DocumentQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Binding Condition to the document query.  If no values given or none found of the given values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>You want to find Nodes that have some of the given Baz values in their relationship table Demo_NodeBaz</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/NodeObject"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new NodeBazInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public DocumentQuery<TDocument> BindingCondition<TDocument>(DocumentQuery<TDocument> baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any) where TDocument : TreeNode, new()
+        {
+            baseQuery.Where(GetBindingWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Binding Condition to the document query.  If no values given or none found of the given values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>You want to find Nodes that have some of the given Baz values in their relationship table Demo_NodeBaz</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/NodeObject"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new NodeBazInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public MultiDocumentQuery BindingCondition(MultiDocumentQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Binding Condition to the object query.  If no values given or none found of the given values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>You want to find Foos that have some of the given Baz values in their relationship table Demo_FooBaz</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectObject"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new FooBazInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public ObjectQuery BindingCondition(ObjectQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Binding Condition to the object query.  If no values given or none found of the given values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>You want to find Foos that have some of the given Baz values in their relationship table Demo_FooBaz</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectObject"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new FooBazInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public ObjectQuery<TObject> BindingCondition<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any) where TObject : BaseInfo, new()
+        {
+            baseQuery.Where(GetBindingWhere(BindingClass, BindingCondition, Values, Condition));
+            return baseQuery;
+        }
+
+        /// <summary>
+        /// Adds Binding Condition to the object query.  If no values given or none found of the given values, will not apply a true condition (1=1).
+        /// </summary>
+        /// <example>You want to find Foos that have some of the given Baz values in their relationship table Demo_FooBaz</example>
+        /// <see cref="https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo/Demo/Classes/ObjectObject"/>
+        /// <param name="BindingClass">An instance of the Binding Class (ex: new FooBazInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        public MultiObjectQuery BindingCondition(MultiObjectQuery baseQuery, IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            baseQuery.Where(GetBindingWhere(BindingClass, BindingCondition, Values, Condition));
             return baseQuery;
         }
 
@@ -799,7 +1251,7 @@ namespace RelationshipsExtended
         /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
         /// <param name="ObjectIDTableName">The Table Name/Alias where the ObjectIDFieldName belongs. Only needed for the 'All' Condition and if the ObjectIDField and LeftFieldName are the same. Ex: Demo_FooBar</param>
         /// <returns>The Where Condition, If no object values provided or none found, returns 1=1</returns>
-        public string GetBindingWhere(string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<string> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
+        public string GetBindingWhere(string BindingClass, string ObjectClass, string ObjectIDFieldName, string LeftFieldName, string RightFieldName, IEnumerable<object> Values, IdentityType Identity = IdentityType.ID, ConditionType Condition = ConditionType.Any, string ObjectIDTableName = null)
         {
             LeftFieldName = RelHelper.GetBracketedColumnName(LeftFieldName);
             RightFieldName = RelHelper.GetBracketedColumnName(RightFieldName);
@@ -853,6 +1305,186 @@ namespace RelationshipsExtended
                         return string.Format("({0} not in (Select {1} from [{2}] where {3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
                 }
             }, new CacheSettings(CacheMinutes, "GetBindingWhere", BindingClass, ObjectClass, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition, ObjectIDTableName));
+        }
+
+        /// <summary>
+        /// Returns a full where condition (for Binding tables that bind an object to Categories) to be used in filtering (ex repeaters).  For property examples we will use Demo.Foo, CMS.Category, and Demo.FooCategory  
+        /// </summary>
+        /// <param name="BindingClass">The Binding Class (ex new FooCategoryInfo())</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        /// <returns>The Where Condition, If no categories provided or none found, returns 1=1</returns>
+        public string GetBindingCategoryWhere(IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            string LeftFieldName;
+            string RightFieldName;
+            string ObjectIDFieldName;
+            IdentityType Identity;
+            string ObjectClassName;
+            switch(BindingCondition)
+            {
+                case BindingConditionType.FilterParentsByChildren:
+                default:
+                    LeftFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName());
+                    RightFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName());
+                    ObjectIDFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn());
+                    ObjectClassName = BindingClass.ParentClassName();
+                    Identity = BindingClass.ChildReferenceType();
+                    break;
+                case BindingConditionType.FilterChildrenByParents:
+                    LeftFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName());
+                    RightFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName());;
+                    ObjectIDFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn());
+                    ObjectClassName = BindingClass.ChildClassName();
+                    Identity = BindingClass.ParentReferenceType();
+                    break;
+            }
+            return CacheHelper.Cache<string>(cs =>
+            {
+                string WhereInValue = "";
+                string TableName = BindingClass.BindingTableName();
+                int Count = 0;
+                // If reference field is 
+                if (ObjectClassName.Equals(CategoryInfo.OBJECT_TYPE, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    switch (Identity)
+                    {
+                        case IdentityType.ID:
+                            IEnumerable<int> CategoryIDs = RelHelper.CategoryIdentitiesToIDs(Values);
+                            WhereInValue = string.Join(",", CategoryIDs);
+                            Count = CategoryIDs.Count();
+                            break;
+                        case IdentityType.Guid:
+                            IEnumerable<Guid> CategoryGUIDs = RelHelper.CategoryIdentitiesToGUIDs(Values);
+                            WhereInValue = "'" + string.Join("','", CategoryGUIDs) + "'";
+                            Count = CategoryGUIDs.Count();
+                            break;
+                        case IdentityType.CodeName:
+                            IEnumerable<string> CategoryCodeNames = RelHelper.CategoryIdentitiesToCodeNames(Values);
+                            WhereInValue = "'" + string.Join("','", CategoryCodeNames) + "'";
+                            Count = CategoryCodeNames.Count();
+                            break;
+                    }
+                } else
+                {
+                    var Summary = new ClassObjSummary(ObjectClassName);
+                    switch (Identity)
+                    {
+                        case IdentityType.ID:
+                            IEnumerable<int> CategoryIDs = RelHelper.ObjectIdentitiesToIDs(Summary, Values);
+                            WhereInValue = string.Join(",", CategoryIDs);
+                            Count = CategoryIDs.Count();
+                            break;
+                        case IdentityType.Guid:
+                            IEnumerable<Guid> CategoryGUIDs = RelHelper.ObjectIdentitiesToGUIDs(Summary, Values);
+                            WhereInValue = "'" + string.Join("','", CategoryGUIDs) + "'";
+                            Count = CategoryGUIDs.Count();
+                            break;
+                        case IdentityType.CodeName:
+                            IEnumerable<string> CategoryCodeNames = RelHelper.ObjectIdentitiesToCodeNames(Summary, Values);
+                            WhereInValue = "'" + string.Join("','", CategoryCodeNames) + "'";
+                            Count = CategoryCodeNames.Count();
+                            break;
+                    }
+                }
+                if (Count == 0)
+                {
+                    return "(1=1)";
+                }
+                switch (Condition)
+                {
+                    case ConditionType.Any:
+                    default:
+                        return string.Format("({0} in (Select REBT.{1} from {2} REBT where REBT.{3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                    case ConditionType.All:
+                        string ObjectIDTableName = new ClassObjSummary(ObjectClassName).TableName;
+                        return string.Format("(Select Count(*) from [{0}] REBT where REBT.[{1}] = {2}{3} and REBT.{4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? "["+ObjectIDTableName + "]." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
+                    case ConditionType.None:
+                        return string.Format("({0} not in (Select REBT.{1} from {2} REBT where REBT.{3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                }
+            }, new CacheSettings(CacheMinutes, "GetBindingCategoryWhere", BindingClass.GetType().FullName, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition));
+        }
+
+        /// <summary>
+        /// Returns a full where condition (for Binding Tables that bind on any object) to be used in filtering (ex repeaters).  For property exampples, we will assume Demo.Foo, Demo.Bar, and Demo.FooBar
+        /// </summary>
+        /// <param name="BindingClass">The Binding Class Code Name.  Ex: Demo.FooBar</param>
+        /// <param name="BindingCondition">The type of Condition filtering to be done.  Use FilterParentsByChildren for Where conditions on the Parent, passing Child values, and FilterChildrenByParents on the Child type, passing Parent values </param>
+        /// <param name="Values">list of object values (int IDs, GUIDs, or string CodeNames)</param>
+        /// <param name="Condition">RelEnums.ConditionType of what type of condition to generate.</param>
+        /// <returns>The Where Condition, If no object values provided or none found, returns 1=1</returns>
+        public string GetBindingWhere(IBindingInfo BindingClass, BindingConditionType BindingCondition, IEnumerable<object> Values, ConditionType Condition = ConditionType.Any)
+        {
+            string LeftFieldName;
+            string RightFieldName;
+            string ObjectIDFieldName;
+            IdentityType Identity;
+            string ObjectClassName;
+            switch (BindingCondition)
+            {
+                case BindingConditionType.FilterParentsByChildren:
+                default:
+                    LeftFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName());
+                    RightFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName());
+                    ObjectIDFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn());
+                    ObjectClassName = BindingClass.ParentClassName();
+                    Identity = BindingClass.ChildReferenceType();
+                    break;
+                case BindingConditionType.FilterChildrenByParents:
+                    LeftFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName());
+                    RightFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName()); ;
+                    ObjectIDFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn());
+                    ObjectClassName = BindingClass.ChildClassName();
+                    Identity = BindingClass.ParentReferenceType();
+                    break;
+            }
+            return CacheHelper.Cache<string>(cs =>
+            {
+                // Find class table name
+                
+                ClassObjSummary classObjSummary = RelHelper.GetClassObjSummary(ObjectClassName);
+
+                string WhereInValue = "";
+                string TableName = BindingClass.BindingTableName();
+                int Count = 0;
+                switch (Identity)
+                {
+                    case IdentityType.ID:
+                        IEnumerable<int> ObjectIDs = RelHelper.ObjectIdentitiesToIDs(classObjSummary, Values);
+                        WhereInValue = (ObjectIDs.Count() > 0 ? string.Join(",", ObjectIDs) : "''");
+                        Count = ObjectIDs.Count();
+                        break;
+                    case IdentityType.Guid:
+                        IEnumerable<Guid> ObjectGUIDs = RelHelper.ObjectIdentitiesToGUIDs(classObjSummary, Values);
+                        WhereInValue = "'" + string.Join("','", ObjectGUIDs) + "'";
+                        Count = ObjectGUIDs.Count();
+                        break;
+                    case IdentityType.CodeName:
+                        IEnumerable<string> ObjectCodeNames = RelHelper.ObjectIdentitiesToCodeNames(classObjSummary, Values);
+                        WhereInValue = "'" + string.Join("','", ObjectCodeNames) + "'";
+                        Count = ObjectCodeNames.Count();
+                        break;
+                }
+
+                // If no related object IDs found, then completely ignore.
+                if (Count == 0)
+                {
+                    return "(1=1)";
+                }
+
+                switch (Condition)
+                {
+                    case ConditionType.Any:
+                    default:
+                        return string.Format("({0} in (Select REBT.{1} from {2} REBT where REBT.{3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                    case ConditionType.All:
+                        string ObjectIDTableName = classObjSummary.TableName;
+                        return string.Format("(Select Count(*) from [{0}] REBT where REBT.[{1}] = {2}{3} and REBT.{4} in ({5})) = {6}", TableName, LeftFieldName, (!string.IsNullOrWhiteSpace(ObjectIDTableName) ? "[" + ObjectIDTableName + "]." : ""), ObjectIDFieldName, RightFieldName, WhereInValue, Count);
+                    case ConditionType.None:
+                        return string.Format("({0} not in (Select REBT.{1} from {2} REBT where REBT.{3} in ({4})))", ObjectIDFieldName, LeftFieldName, TableName, RightFieldName, WhereInValue);
+                }
+            }, new CacheSettings(CacheMinutes, "GetBindingWhere", BindingClass.GetType().FullName, ObjectClassName, ObjectIDFieldName, LeftFieldName, RightFieldName, string.Join("|", Values), Identity, Condition));
         }
 
 
@@ -1012,6 +1644,7 @@ namespace RelationshipsExtended
                 return Relationship?.RelationshipNameId;
             }, new CacheSettings(1440, "RelExtendedGetRelationshipNameID", RelationshipName));
         }
+
 
         /// <summary>
         /// Gets the Current Site Name based on the request's Host (HttpContext.Current.Request.Host) and a match on the Presentation Url for the Sites Object in Kentico.  Returns an empty or null string if not found.

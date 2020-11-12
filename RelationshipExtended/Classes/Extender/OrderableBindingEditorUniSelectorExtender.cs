@@ -125,7 +125,7 @@ namespace RelationshipsExtended
             var BindingObjectSingleton = BindingObjectFactory.Singleton;
             var BindingObj = new ObjectQuery(BindingObjectType)
                            .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName(), CorrectObjectID)
-                           .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName(), actionArgument).FirstOrDefault();
+                           .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName(), actionArgument).FirstOrDefault();
 
             var ObjectFactory = new InfoObjectFactory(ObjectType);
             var ObjectSingleton = (ObjectFactory != null && ObjectFactory.Singleton != null ? ObjectFactory.Singleton : null);
@@ -147,7 +147,7 @@ namespace RelationshipsExtended
                                 int NewPosition = ValidationHelper.GetInteger(Values[2], 0);
                                 BindingObj = new ObjectQuery(BindingObjectType)
                                     .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName(), CorrectObjectID)
-                                    .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName(), ObjectID).FirstOrDefault();
+                                    .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName(), ObjectID).FirstOrDefault();
                                 ((IOrderableBaseInfo)BindingObj).SetObjectOrderRelative(NewPosition - OrigPosition);
                             }
                         }
@@ -314,7 +314,7 @@ namespace RelationshipsExtended
             var ObjectSingleton = (ObjectFactory != null && ObjectFactory.Singleton != null ? ObjectFactory.Singleton : null);
 
             string ParentObjectReference = ((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName();
-            string BoundObjectReference = ((IBindingBaseInfo)BindingObjectSingleton).BoundObjectReferenceColumnName();
+            string BoundObjectReference = ((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName();
             string ObjectIDColumn = ((BaseInfo)ObjectSingleton).TypeInfo.IDColumn;
             string OrderColumn = ((BaseInfo)BindingObjectSingleton).TypeInfo.OrderColumn;
             string DisplayNameColumn = ((BaseInfo)BindingObjectSingleton).TypeInfo.DisplayNameColumn;
