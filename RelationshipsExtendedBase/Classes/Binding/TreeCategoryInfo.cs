@@ -172,6 +172,11 @@ namespace CMS
             return "TreeCategoryCategoryID";
         }
 
+        public string OrderColumn()
+        {
+            return null;
+        }
+
 
         /// <summary>
         /// Constructor for de-serialization.

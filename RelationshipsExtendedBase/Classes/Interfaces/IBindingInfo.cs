@@ -2,6 +2,9 @@
 
 namespace RelationshipsExtended.Interfaces
 {
+    /// <summary>
+    /// Contains reference methods for Binding info objects, when defined allows for simpler execution of the Query Extensions
+    /// </summary>
     public interface IBindingInfo : IBindingBaseInfo
     {
         /// <summary>
@@ -45,5 +48,11 @@ namespace RelationshipsExtended.Interfaces
         /// </summary>
         /// <returns></returns>
         string BindingTableName();
+
+        /// <summary>
+        /// The order column for the child references, return empty or null if it is not ordable.
+        /// </summary>
+        /// <returns></returns>
+        string OrderColumn();
     }
 }

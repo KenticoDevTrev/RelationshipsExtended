@@ -363,16 +363,15 @@ namespace RelationshipsExtended
                     break;
                 case BindingQueryType.GetChildrenByParentOrdered:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
-                    if(BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    if(!string.IsNullOrWhiteSpace(BindingClass.OrderColumn()))
                     {
-                        string OrderColumn = info.TypeInfo.OrderColumn;
                         if (OrderAsc)
                         {
-                            baseQuery.OrderBy(OrderColumn);
+                            baseQuery.OrderBy(BindingClass.OrderColumn());
                         }
                         else
                         {
-                            baseQuery.OrderByDescending(OrderColumn);
+                            baseQuery.OrderByDescending(BindingClass.OrderColumn());
                         }
                     }
                     break;
@@ -406,16 +405,15 @@ namespace RelationshipsExtended
                     break;
                 case BindingQueryType.GetChildrenByParentOrdered:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
-                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    if (!string.IsNullOrWhiteSpace(BindingClass.OrderColumn()))
                     {
-                        string OrderColumn = info.TypeInfo.OrderColumn;
                         if (OrderAsc)
                         {
-                            baseQuery.OrderBy(OrderColumn);
+                            baseQuery.OrderBy(BindingClass.OrderColumn());
                         }
                         else
                         {
-                            baseQuery.OrderByDescending(OrderColumn);
+                            baseQuery.OrderByDescending(BindingClass.OrderColumn());
                         }
                     }
                     break;
@@ -449,18 +447,18 @@ namespace RelationshipsExtended
                     break;
                 case BindingQueryType.GetChildrenByParentOrdered:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
-                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    if (!string.IsNullOrWhiteSpace(BindingClass.OrderColumn()))
                     {
-                        string OrderColumn = info.TypeInfo.OrderColumn;
                         if (OrderAsc)
                         {
-                            baseQuery.OrderBy(OrderColumn);
+                            baseQuery.OrderBy(BindingClass.OrderColumn());
                         }
                         else
                         {
-                            baseQuery.OrderByDescending(OrderColumn);
+                            baseQuery.OrderByDescending(BindingClass.OrderColumn());
                         }
                     }
+                    break;
                     break;
                 case BindingQueryType.GetParentsByChild:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
@@ -492,16 +490,15 @@ namespace RelationshipsExtended
                     break;
                 case BindingQueryType.GetChildrenByParentOrdered:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
-                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    if (!string.IsNullOrWhiteSpace(BindingClass.OrderColumn()))
                     {
-                        string OrderColumn = info.TypeInfo.OrderColumn;
                         if (OrderAsc)
                         {
-                            baseQuery.OrderBy(OrderColumn);
+                            baseQuery.OrderBy(BindingClass.OrderColumn());
                         }
                         else
                         {
-                            baseQuery.OrderByDescending(OrderColumn);
+                            baseQuery.OrderByDescending(BindingClass.OrderColumn());
                         }
                     }
                     break;
@@ -535,16 +532,15 @@ namespace RelationshipsExtended
                     break;
                 case BindingQueryType.GetChildrenByParentOrdered:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
-                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    if (!string.IsNullOrWhiteSpace(BindingClass.OrderColumn()))
                     {
-                        string OrderColumn = info.TypeInfo.OrderColumn;
                         if (OrderAsc)
                         {
-                            baseQuery.OrderBy(OrderColumn);
+                            baseQuery.OrderBy(BindingClass.OrderColumn());
                         }
                         else
                         {
-                            baseQuery.OrderByDescending(OrderColumn);
+                            baseQuery.OrderByDescending(BindingClass.OrderColumn());
                         }
                     }
                     break;
@@ -578,16 +574,15 @@ namespace RelationshipsExtended
                     break;
                 case BindingQueryType.GetChildrenByParentOrdered:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName())}").WhereEquals(BindingClass.ParentObjectReferenceColumnName(), GetLookupValue(BindingClass.ParentClassName(), InRelationshipWithValue, BindingClass.ParentReferenceType()))));
-                    if (BindingClass is BaseInfo info && !string.IsNullOrWhiteSpace(DataHelper.GetNotEmpty(info.TypeInfo.OrderColumn, "").Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                    if (!string.IsNullOrWhiteSpace(BindingClass.OrderColumn()))
                     {
-                        string OrderColumn = info.TypeInfo.OrderColumn;
                         if (OrderAsc)
                         {
-                            baseQuery.OrderBy(OrderColumn);
+                            baseQuery.OrderBy(BindingClass.OrderColumn());
                         }
                         else
                         {
-                            baseQuery.OrderByDescending(OrderColumn);
+                            baseQuery.OrderByDescending(BindingClass.OrderColumn());
                         }
                     }
                     break;
