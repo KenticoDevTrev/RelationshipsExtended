@@ -14,6 +14,7 @@ using CMS.Taxonomy;
 using RelationshipsExtended;
 using RelationshipsExtended.Enums;
 using RelationshipsExtended.Helpers;
+using RelationshipsExtended.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -30,11 +31,11 @@ namespace RelationshipsExtended
         {
         }
 
-
         // Contains initialization code that is executed when the application starts
         protected override void OnInit()
         {
             base.OnInit();
+
 
             // Custom Relationship Name logging since adhoc is disabled in staging by default (since usually tied to page type)
             RelationshipNameInfo.TYPEINFO.Events.Insert.After += RelationshipName_Insert_After;

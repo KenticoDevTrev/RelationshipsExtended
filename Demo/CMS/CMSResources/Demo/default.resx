@@ -120,6 +120,9 @@
   <data name="ObjectType.demo_bar" xml:space="preserve">
     <value>Bar</value>
   </data>
+  <data name="ObjectType.demo_barnode" xml:space="preserve">
+    <value>Bar Nodes</value>
+  </data>
   <data name="ObjectType.demo_baz" xml:space="preserve">
     <value>Baz</value>
   </data>

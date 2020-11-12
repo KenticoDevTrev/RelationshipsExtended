@@ -1,0 +1,68 @@
+﻿@model BlankSite.ViewModels.TestReverseViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<html>
+<body>
+    <h1>Test Results</h1>
+    <h2>Pages with Banner1</h2>
+    <ul>
+        @foreach (var TestingPage in Model.Banner1Pages)
+        {
+            <li>@TestingPage.DocumentName</li>
+        }
+    </ul>
+    <h2>Pages with Mobile Categor</h2>
+    <ul>
+        @foreach (var TestingPage in Model.MobilePages)
+        {
+            <li>@TestingPage.DocumentName</li>
+        }
+    </ul>
+    <h2>Pages with Eastern or Western US Categories</h2>
+    <ul>
+        @foreach (var TestingPage in Model.WesternUSOrEasternUSPages)
+        {
+            <li>@TestingPage.DocumentName</li>
+        }
+    </ul>
+    <h2>Pages with Foo A</h2>
+    <ul>
+        @foreach (var TestingPage in Model.FooAPages)
+        {
+            <li>@TestingPage.DocumentName</li>
+        }
+    </ul>
+    <h2>Pages with Baz A</h2>
+    <ul>
+        @foreach (var TestingPage in Model.BazAPages)
+        {
+            <li>@TestingPage.DocumentName</li>
+        }
+    </ul>
+    <h2>Foos with Bar A</h2>
+    <ul>
+        @foreach (var Foo in Model.BarAFoos)
+        {
+            <li>@Foo.FooName</li>
+        }
+    </ul>
+    <h2>Foos with Baz A</h2>
+    <ul>
+        @foreach (var Foo in Model.BazAFoos)
+        {
+            <li>@Foo.FooName</li>
+        }
+    </ul>
+    <h2>Foos with Blah category</h2>
+    <ul>
+        @foreach (var Foo in Model.BlahCategoryFoos)
+        {
+            <li>@Foo.FooName</li>
+        }
+    </ul>
+</body>
+</html>

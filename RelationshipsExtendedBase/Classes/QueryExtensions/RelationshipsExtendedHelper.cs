@@ -1128,12 +1128,12 @@ namespace RelationshipsExtended
                 {
                     case ConditionType.Any:
                     default:
-                        return string.Format("(DocumentID in (Select DocumentID from CMS_DocumentCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs));
+                        return string.Format("(DocumentID in (Select DC.DocumentID from CMS_DocumentCategory DC where DC.CategoryID in ({0})))", string.Join(",", CategoryIDs));
                     case ConditionType.All:
                         DocumentIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(DocumentIDTableName, "");
-                        return string.Format("(Select Count(*) from CMS_DocumentCategory where CMS_DocumentCategory.DocumentID = [{0}].[DocumentID] and CategoryID in ({1})) = {2}", DocumentIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        return string.Format("(Select Count(*) from CMS_DocumentCategory DC where DC.DocumentID = [{0}].[DocumentID] and DC.CategoryID in ({1})) = {2}", DocumentIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
                     case ConditionType.None:
-                        return string.Format("(DocumentID not in (Select DocumentID from CMS_DocumentCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        return string.Format("(DocumentID not in (Select DC.DocumentID from CMS_DocumentCategory DC where DC.CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
                 }
             }, new CacheSettings(CacheMinutes, "GetDocumentCategoryWhere", string.Join("|", Values), Condition, DocumentIDTableName));
         }
@@ -1159,12 +1159,12 @@ namespace RelationshipsExtended
                 {
                     case ConditionType.Any:
                     default:
-                        return string.Format("(NodeID in (Select NodeID from CMS_TreeCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs));
+                        return string.Format("(NodeID in (Select TC.NodeID from CMS_TreeCategory TC where TC.CategoryID in ({0})))", string.Join(",", CategoryIDs));
                     case ConditionType.All:
                         NodeIDTableName = new Regex("[^a-zA-Z0-9 _-]").Replace(NodeIDTableName, "");
-                        return string.Format("(Select Count(*) from CMS_TreeCategory where CMS_TreeCategory.NodeID = [{0}].[NodeID] and CategoryID in ({1})) = {2}", NodeIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        return string.Format("(Select Count(*) from CMS_TreeCategory TC where TC.NodeID = [{0}].[NodeID] and TC.CategoryID in ({1})) = {2}", NodeIDTableName, string.Join(",", CategoryIDs), CategoryIDs.Count());
                     case ConditionType.None:
-                        return string.Format("(NodeID not in (Select NodeID from CMS_TreeCategory where CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
+                        return string.Format("(NodeID not in (Select TC.NodeID from CMS_TreeCategory TC where TC.CategoryID in ({0})))", string.Join(",", CategoryIDs), CategoryIDs.Count());
                 }
             }, new CacheSettings(CacheMinutes, "GetNodeCategoryWhere", string.Join("|", Values), Condition, NodeIDTableName));
         }
@@ -1324,14 +1324,14 @@ namespace RelationshipsExtended
                     LeftFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName());
                     RightFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName());
                     ObjectIDFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn());
-                    ObjectClassName = BindingClass.ParentClassName();
+                    ObjectClassName = BindingClass.ChildClassName();
                     Identity = BindingClass.ChildReferenceType();
                     break;
                 case BindingConditionType.FilterChildrenByParents:
                     LeftFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildObjectReferenceColumnName());
                     RightFieldName = RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName());;
                     ObjectIDFieldName = RelHelper.GetBracketedColumnName(BindingClass.ChildClassReferenceColumn());
-                    ObjectClassName = BindingClass.ChildClassName();
+                    ObjectClassName = BindingClass.ParentClassName();
                     Identity = BindingClass.ParentReferenceType();
                     break;
             }

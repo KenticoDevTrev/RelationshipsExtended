@@ -8,6 +8,7 @@ using CMS.Synchronization;
 using CMS.Taxonomy;
 using Demo;
 using RelationshipsExtended;
+using RelationshipsExtended.Helpers;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;

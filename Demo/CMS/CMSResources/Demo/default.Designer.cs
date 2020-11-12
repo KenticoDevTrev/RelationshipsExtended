@@ -70,6 +70,15 @@ namespace CMSApp.CMSResources.Demo {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bar Nodes.
+        /// </summary>
+        internal static string ObjectType_demo_barnode {
+            get {
+                return ResourceManager.GetString("ObjectType.demo_barnode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Baz.
         /// </summary>
         internal static string ObjectType_demo_baz {

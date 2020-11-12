@@ -62,9 +62,6 @@
     <Reference Include="RelationshipsExtended">
       <HintPath>..\CMS\bin\RelationshipsExtended.dll</HintPath>
     </Reference>
-    <Reference Include="RelationshipsExtendedBase">
-      <HintPath>..\CMS\bin\RelationshipsExtendedBase.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -89,6 +86,9 @@
     <Compile Include="Classes\NodeObject\NodeBazInfo.cs" />
     <Compile Include="Classes\NodeObject\NodeBazInfoProvider.cs" />
     <Compile Include="Classes\NodeObject\NodeBazInitializationModule.cs" />
+    <Compile Include="Classes\ObjectNode\BarNodeInfo.cs" />
+    <Compile Include="Classes\ObjectNode\BarNodeInfoProvider.cs" />
+    <Compile Include="Classes\ObjectNode\IBarNodeInfoProvider.cs" />
     <Compile Include="Classes\ObjectObjectWithOrder\FooBarInfo.cs" />
     <Compile Include="Classes\ObjectObjectWithOrder\FooBarInfoProvider.cs" />
     <Compile Include="Classes\Base\FooInfo.cs" />
@@ -107,6 +107,11 @@
     <Compile Include="Classes\ObjectObject\IFooBazInfoProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="H:\Web\KenticoRepositories\RelationshipsExtended\RelationshipsExtendedBase\RelationshipsExtendedBase.csproj">
+      <Project>{8d361906-acc8-4665-85b5-fe403e41c6c1}</Project>
+      <Name>RelationshipsExtendedBase</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

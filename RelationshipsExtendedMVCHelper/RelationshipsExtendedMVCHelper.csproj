@@ -2,14 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>13.0.1</Version>
+    <PackageProjectUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</PackageProjectUrl>
+    <PackageIconUrl>https://www.kentico.com/icons/icon-48x48.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
+    <RepositoryType>GIT</RepositoryType>
+    <PackageTags>Kentico, Xperience, Relationships, MVC, Core</PackageTags>
+    <Description>The MVC Helper for the Kentico RelationshipsExtended module, provides DocumentQuery and ObjectQuery extensions and IBindingInfo interface to easily create and leverage relationships within Kentico</Description>
+    <Copyright>Heartland Business Systems</Copyright>
+    <Authors>Trevor Fayas</Authors>
+    <Company>Heartland Business Systems</Company>
+    <PackageReleaseNotes>Initial Release for the helper</PackageReleaseNotes>
+    <PackageId>RelationshipsExtended.MVC.Standard</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\RelationshipsExtendedBase\RelationshipsExtendedBase.csproj" />
+    <PackageReference Include="RelationshipsExtended.Base" Version="13.0.1" />
   </ItemGroup>
 
 </Project>

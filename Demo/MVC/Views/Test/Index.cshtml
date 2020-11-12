@@ -1,0 +1,60 @@
+﻿@model BlankSite.ViewModels.TestViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<html>
+<body>
+    <h1>Test Results</h1>
+    <h2>Banners</h2>
+    <ul>
+        @foreach (var banner in Model.Banners)
+        {
+            <li>@banner.BannerName</li>
+        }
+    </ul>
+    <h2>Categories</h2>
+    <ul>
+        @foreach (var category in Model.Categories)
+        {
+            <li>@category.CategoryDisplayName</li>
+        }
+    </ul>
+    <h2>Regions</h2>
+    <ul>
+        @foreach (var category in Model.Regions)
+        {
+            <li>@category.CategoryDisplayName</li>
+        }
+    </ul>
+    <h2>Foos</h2>
+    <ul>
+        @foreach (var foo in Model.Foos)
+        {
+        <li>
+            @foo.FooName
+            <ul>
+                @foreach (var foobar in Model.FooBars[foo.FooID])
+                {
+                    <li>@foobar.BarName</li>
+                }
+            </ul>
+            <ul>
+                @foreach (var foobaz in Model.FooBazs[foo.FooID])
+                {
+                    <li>@foobaz.BazName</li>
+                }
+            </ul>
+            <ul>
+                @foreach (var foocategory in Model.FooCategories[foo.FooID])
+                {
+                    <li>@foocategory.CategoryDisplayName</li>
+                }
+            </ul>
+        </li>
+        }
+    </ul>
+</body>
+</html>

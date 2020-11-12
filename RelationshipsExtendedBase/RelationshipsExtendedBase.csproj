@@ -5,11 +5,21 @@
     <AssemblyName>RelationshipsExtendedBase</AssemblyName>
     <RootNamespace>RelationshipsExtended</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>13.0.0</Version>
-    <Description>Base of the Relationships Extended module, just contains classes used in both systems.</Description>
+    <Version>13.0.1</Version>
+    <Description>This is the Base module that contains libraries and interfaces used both in the Admin and MVC Site.</Description>
     <Authors>Trevor Fayas</Authors>
     <Company>Heartland Business Systems</Company>
     <Product>RelationshipsExtended</Product>
+    <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
+    <PackageIcon>icon-48x48.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</PackageProjectUrl>
+    <RepositoryType>GIT</RepositoryType>
+    <PackageTags>Kentico, Xperience, Relationships</PackageTags>
+    <Copyright>Heartland Business Systems 2020</Copyright>
+    <PackageId>RelationshipsExtended.Base</PackageId>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIconUrl>https://www.kentico.com/icons/icon-48x48.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +28,13 @@
 
   <ItemGroup>
     <Folder Include="Classes\QueryExtensions\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\tfayas\Desktop\icon-48x48.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
