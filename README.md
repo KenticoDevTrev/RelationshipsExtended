@@ -11,6 +11,7 @@ This tool extends Kentico by allowing support and management tools for 6 Relatio
 * Node to Object binding without Ordering
 
 # Installation
+# Admin
 * Open your Kentico Solution and right click on the CMS Project, and select "Manage NuGet Packages..."
 * Search for RelationshipsExtended and select the major version that mathces your Kentico version (ex 10.0.0 = Kentico 10, 11.0.0 = Kentico 11, etc)
 * After your NuGet package finishes installing, run your Keintico site.  Ignore the Event Log Error for the RelationshipsExtended ErrorSettingForeignKeys as that always happens on the first start up.
@@ -18,7 +19,21 @@ This tool extends Kentico by allowing support and management tools for 6 Relatio
 * Also go to System -> Macros -> Signatures and resign your macros.
 
 # MVC
-If you are using Kentico 12 MVC or Kentico 13 MVC (.Net or .Net Core) you should also install the `RelationshipsExtendedMVCHelper` NuGet package with the matching version on your MVC site, this will provide you with TreeCategory and AdHoc relationship support and event hooks that the Admin (Mother) also contain, so any adjustments in code will also work properly with staging and such.  Separate installation instructions can be found on that nuget package.
+If you are using Kentico 12 MVC or Kentico 13 MVC (.Net or .Net Core) you should also install the `RelationshipsExtended.MVC.Standard` for Kentico 13, or `RelationshipsExtendedMVCHelper` for Kentico 12 NuGet package. 
+
+Lastly hook up RelationshipsExtendedHelper as the implementation for IRelationshipsExtendedHelper.
+
+For MVC.Net Core, add to the Startup.cs's ConfigureServices
+`services.AddSingleton(typeof(IRelationshipExtendedHelper), typeof(RelationshipsExtendedHelper));`
+
+For MVC.Net Framework, you will have to use your own IoC, such as AutoFac
+```csharp
+// builder is of type ContainerBuilder
+builder.RegisterType(typeof(RelationshipsExtendedHelper)).As(typeof(IRelationshipExtendedHelper));
+```
+
+This will provide you with TreeCategory, DocumentQuery/ObjectQuery extensions, and AdHoc relationship support and event hooks that the Admin (Mother) also contain, so any adjustments in code will also work properly with staging and such.
+
 
 # Documentation
 If you are new to the tool, you have two options for learning how to use this.
@@ -35,6 +50,8 @@ The following Extension methods have been added to all ObjectQuery and DocumentQ
 * BindingCondition: Filter items based on a Binding table
 * InCustomRelationshipWithOrder: Show objects related through a custom binding table with ordering support
 * InRelationWithOrder: Show related Pages with order support (Available in Kentico 10-13)
+
+You can see some samples [check this MVC Controller](https://github.com/KenticoDevTrev/RelationshipsExtended/blob/master/Demo/MVC/Controller/TestController.cs)
 
 # Contributions, bug fixes and License
 Feel free to Fork and submit pull requests to contribute.
