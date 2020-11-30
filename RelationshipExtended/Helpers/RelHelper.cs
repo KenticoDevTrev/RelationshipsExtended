@@ -2,6 +2,7 @@
 using CMS.CustomTables;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
+using CMS.DocumentEngine.Internal;
 using CMS.EventLog;
 using CMS.Helpers;
 using CMS.LicenseProvider;
@@ -237,7 +238,9 @@ namespace RelationshipsExtended
                     // Destroy any delete task items
                     if (CallContext.GetData("DeleteTasks") != null)
                     {
-                        ((List<int>)CallContext.GetData("DeleteTasks")).Remove(Node.NodeID);
+                        var DeleteTasks = ((List<Tuple<int, DateTime>>)CallContext.GetData("DeleteTasks"));
+                        DeleteTasks.RemoveAll(x => x.Item1 == Node.NodeID);
+                        CallContext.SetData("DeleteTasks", DeleteTasks);
                     }
                     string[] ServersToSendTo = (string[])CallContext.GetData("UpdateAfterProcesses_" + nodeGUID);
 
@@ -249,6 +252,7 @@ namespace RelationshipsExtended
 
                     foreach (ServerInfo Server in ServerInfoProvider.GetServers().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
                     {
+
                         DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
                         {
                             NodeAliasPath = Node.NodeAliasPath,
@@ -262,6 +266,7 @@ namespace RelationshipsExtended
                         });
                     }
                     CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, null);
+
                 }
             }
             catch (Exception ex)
@@ -346,9 +351,9 @@ namespace RelationshipsExtended
                             CallContext.SetData("UpdateAfterProcesses_" + Node.NodeGUID, StagingServers.Except(TaskServers).ToArray());
                             if (CallContext.GetData("DeleteTasks") == null)
                             {
-                                CallContext.SetData("DeleteTasks", new List<int>());
+                                CallContext.SetData("DeleteTasks", new List<Tuple<int, DateTime>>());
                             }
-                            ((List<int>)CallContext.GetData("DeleteTasks")).Add(Node.NodeID);
+                            ((List<Tuple<int, DateTime>>)CallContext.GetData("DeleteTasks")).Add(new Tuple<int, DateTime>(e.Task.TaskNodeID, DateTime.Now));
                             return;
                         }
                     }
@@ -383,6 +388,70 @@ namespace RelationshipsExtended
                             DataHelper.TransferTables(DocumentDataSet, NodeRegionObjectDataHolder);
                         }
                     }
+
+
+                    // If contains relationships and the data set does not contain relationships, then add them manually
+                    /*
+                    if(ValidationHelper.GetBoolean(SettingsKeyInfoProvider.GetValue("IncludeRelationshipsOnPublish", e.Task.TaskSiteID), false) && !DocumentDataSet.Tables.Cast<DataTable>().Any(x => x.TableName.Equals("CMS_Relationship", StringComparison.InvariantCultureIgnoreCase)))
+                    {
+                        // Get relationships
+                        TranslationHelper NodeRelationshipTranslationHelper = new TranslationHelper();
+
+                        DataSet relationshipsDS = RelationshipInfoProvider.GetRelationships(e.Task.TaskNodeID, true, true, null, 0, "LeftNodeID, LeftNodeGUID, RelationshipName, RelationshipNameID, RightNodeID, RightNodeGUID, RelationshipCustomData, RelationshipOrder");
+                        if (!DataHelper.DataSourceIsEmpty(relationshipsDS))
+                        {
+                            DataTable relationShipsTable = relationshipsDS.Tables[0];
+
+                            // Ensure translation records
+                            foreach (DataRow dr in relationShipsTable.Rows)
+                            {
+                                int leftNodeId = ValidationHelper.GetInteger(dr["LeftNodeID"], 0);
+                                int rightNodeId = ValidationHelper.GetInteger(dr["RightNodeID"], 0);
+                                Guid leftNodeGuid = ValidationHelper.GetGuid(dr["LeftNodeGUID"], Guid.Empty);
+                                Guid rightNodeGuid = ValidationHelper.GetGuid(dr["RightNodeGUID"], Guid.Empty);
+                                int nodeToRegister = leftNodeId;
+                                Guid guidToRegister = leftNodeGuid;
+                                if (nodeToRegister == e.Task.TaskNodeID)
+                                {
+                                    nodeToRegister = rightNodeId;
+                                    guidToRegister = rightNodeGuid;
+                                }
+                                if ((nodeToRegister != e.Task.TaskNodeID))
+                                {
+                                    NodeRelationshipTranslationHelper.RegisterRecord(nodeToRegister, new TranslationParameters(DocumentNodeDataInfo.OBJECT_TYPE) { Guid = guidToRegister, SiteName = SiteInfoProvider.GetSiteName(e.Task.TaskSiteID) });
+                                }
+                            }
+
+                            // EnsureRegisterRecordsEvents
+                            if (ColumnsTranslationEvents.RegisterRecords.IsBound)
+                            {
+                                foreach (DataRow row in relationShipsTable.Rows)
+                                {
+                                    ColumnsTranslationEvents.RegisterRecords.StartEvent(NodeRelationshipTranslationHelper, RelationshipInfo.OBJECT_TYPE, new DataRowContainer(row));
+                                }
+                            }                            
+
+                            relationshipsDS.Tables.Clear();
+                            relationShipsTable.TableName = "CMS_RelationShip";
+
+                            // Add relationships translation table
+                            relationshipsDS.Tables.Add(relationShipsTable);
+                            relationshipsDS.Tables.Add(NodeRelationshipTranslationHelper.TranslationTable);
+                            
+                            // Convert to basic dataset (string only)
+                            DataSet MergeableDataSet = new DataSet();
+                            MergeableDataSet.ReadXml(new StringReader(relationshipsDS.GetXml()));
+
+                            // Add to Main Document Data Set
+                            if (!DataHelper.DataSourceIsEmpty(MergeableDataSet) && MergeableDataSet.Tables.Count > 0)
+                            {
+                                //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask5", eventDescription: "NodeID: " + e.Task.TaskNodeID);
+                                DataHelper.TransferTables(DocumentDataSet, MergeableDataSet);
+                            }
+                        }
+                    }
+                    */
+
                     //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask6", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                     // Convert it back to XML
                     DataSetXML = DocumentDataSet.GetXml();
