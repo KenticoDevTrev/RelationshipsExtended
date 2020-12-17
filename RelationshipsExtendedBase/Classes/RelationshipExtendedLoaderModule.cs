@@ -124,7 +124,7 @@ namespace RelationshipsExtended
                 if (e.Task.TaskDocumentID > 0 && CallContext.GetData("DeleteTasks") != null)
                 {
                     TreeNode Node = DocumentHelper.GetDocument(e.Task.TaskDocumentID, null);
-                    if (((List<int>)CallContext.GetData("DeleteTasks")).Contains(Node.NodeID) && (DateTime.Now - e.Task.TaskTime).TotalSeconds < 10)
+                    if (((List<Tuple<int, DateTime>>)CallContext.GetData("DeleteTasks")).Any(x => x.Item1 == e.Task.TaskNodeID && x.Item2 > e.Task.TaskTime) && (DateTime.Now - e.Task.TaskTime).TotalSeconds < 10)
                     {
                         e.Task.Delete();
                     }

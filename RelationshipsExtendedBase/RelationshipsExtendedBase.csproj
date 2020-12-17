@@ -5,7 +5,7 @@
     <AssemblyName>RelationshipsExtendedBase</AssemblyName>
     <RootNamespace>RelationshipsExtended</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>13.0.1</Version>
+    <Version>13.0.2</Version>
     <Description>This is the Base module that contains libraries and interfaces used both in the Admin and MVC Site.</Description>
     <Authors>Trevor Fayas</Authors>
     <Company>Heartland Business Systems</Company>
@@ -17,9 +17,10 @@
     <PackageTags>Kentico, Xperience, Relationships</PackageTags>
     <Copyright>Heartland Business Systems 2020</Copyright>
     <PackageId>RelationshipsExtended.Base</PackageId>
-    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed bug with Publish Document tasks not being created for non-origin servers.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageIconUrl>https://www.kentico.com/icons/icon-48x48.png</PackageIconUrl>
+    <FileVersion>13.0.2.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

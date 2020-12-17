@@ -237,7 +237,9 @@ namespace RelationshipsExtended.Helpers
                     // Destroy any delete task items
                     if (CallContext.GetData("DeleteTasks") != null)
                     {
-                        ((List<int>)CallContext.GetData("DeleteTasks")).Remove(Node.NodeID);
+                        var DeleteTasks = ((List<Tuple<int, DateTime>>)CallContext.GetData("DeleteTasks"));
+                        DeleteTasks.RemoveAll(x => x.Item1 == Node.NodeID);
+                        CallContext.SetData("DeleteTasks", DeleteTasks);
                     }
                     string[] ServersToSendTo = (string[])CallContext.GetData("UpdateAfterProcesses_" + nodeGUID);
 
@@ -249,6 +251,7 @@ namespace RelationshipsExtended.Helpers
 
                     foreach (ServerInfo Server in ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
                     {
+
                         DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
                         {
                             NodeAliasPath = Node.NodeAliasPath,
@@ -262,11 +265,12 @@ namespace RelationshipsExtended.Helpers
                         });
                     }
                     CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, null);
+
                 }
             }
             catch (Exception ex)
             {
-                Service.Resolve<IEventLogService>().LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
             }
         }
 
@@ -346,9 +350,9 @@ namespace RelationshipsExtended.Helpers
                             CallContext.SetData("UpdateAfterProcesses_" + Node.NodeGUID, StagingServers.Except(TaskServers).ToArray());
                             if (CallContext.GetData("DeleteTasks") == null)
                             {
-                                CallContext.SetData("DeleteTasks", new List<int>());
+                                CallContext.SetData("DeleteTasks", new List<Tuple<int, DateTime>>());
                             }
-                            ((List<int>)CallContext.GetData("DeleteTasks")).Add(Node.NodeID);
+                            ((List<Tuple<int, DateTime>>)CallContext.GetData("DeleteTasks")).Add(new Tuple<int, DateTime>(Node.NodeID, DateTime.Now));
                             return;
                         }
                     }
