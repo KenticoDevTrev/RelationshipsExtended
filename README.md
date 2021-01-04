@@ -56,7 +56,7 @@ You can see some samples [check this MVC Controller](https://github.com/KenticoD
 # Contributions, bug fixes and License
 Feel free to Fork and submit pull requests to contribute.
 
-You can submit bugs through the issue list and i will get to them as soon as i can, unless you want to fix it yourself and submit a pull request!
+You can submit bugs through the issue list and I will get to them as soon as I can, unless you want to fix it yourself and submit a pull request!
 
 This is free to use and modify!
 
