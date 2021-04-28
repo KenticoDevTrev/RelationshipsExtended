@@ -37,7 +37,7 @@ namespace RelationshipsExtended
         public static string GetDocumentCategoryWhere(IEnumerable<object> Values, ConditionType Condition = ConditionType.Any, string DocumentIDTableName = "CMS_Document")
         {
             IEnumerable<int> CategoryIDs = null;
-            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID));
             return CacheHelper.Cache<string>(cs =>
             {
                 CategoryIDs = CategoryIdentitiesToIDs(Values);
@@ -68,7 +68,7 @@ namespace RelationshipsExtended
         public static string GetNodeCategoryWhere(IEnumerable<object> Values, ConditionType Condition = ConditionType.Any, string NodeIDTableName = "CMS_Tree")
         {
             IEnumerable<int> CategoryIDs = null;
-            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID));
             return CacheHelper.Cache<string>(cs =>
             {
                 CategoryIDs = CategoryIdentitiesToIDs(Values);
@@ -106,7 +106,7 @@ namespace RelationshipsExtended
             LeftFieldName = GetBracketedColumnName(LeftFieldName);
             RightFieldName = GetBracketedColumnName(RightFieldName);
             ObjectIDFieldName = GetBracketedColumnName(ObjectIDFieldName);
-            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID));
             return CacheHelper.Cache<string>(cs =>
             {
                 // Find class table name
@@ -172,7 +172,7 @@ namespace RelationshipsExtended
             LeftFieldName = GetBracketedColumnName(LeftFieldName);
             RightFieldName = GetBracketedColumnName(RightFieldName);
             ObjectIDFieldName = GetBracketedColumnName(ObjectIDFieldName);
-            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID), true);
+            bool CacheWhere = SettingsKeyInfoProvider.GetBoolValue("CacheRelationshipWhereGeneration", new SiteInfoIdentifier(SiteContext.CurrentSiteID));
             return CacheHelper.Cache<string>(cs =>
             {
                 // Find class table name
@@ -317,7 +317,7 @@ namespace RelationshipsExtended
             //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
 
             //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
-            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
+            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument))
             {
                 //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                 TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
@@ -768,7 +768,7 @@ namespace RelationshipsExtended
                     DocumentDataSet.ReadXml(new StringReader(DataSetXML));
                     DataTable BoundObjectTable = DocumentDataSet.Tables[0];
 
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstObject;
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
 
                     string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
                     ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
