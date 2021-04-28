@@ -322,7 +322,7 @@ namespace RelationshipsExtended
             //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
 
             //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask2", eventDescription: "NodeID: " + e.Task.TaskNodeID);
-            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
+            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument))
             {
                 //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
                 TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
@@ -389,7 +389,7 @@ namespace RelationshipsExtended
                         }
                     }
 
-
+                    
                     // If contains relationships and the data set does not contain relationships, then add them manually
                     /*
                     if(ValidationHelper.GetBoolean(SettingsKeyInfoProvider.GetValue("IncludeRelationshipsOnPublish", e.Task.TaskSiteID), false) && !DocumentDataSet.Tables.Cast<DataTable>().Any(x => x.TableName.Equals("CMS_Relationship", StringComparison.InvariantCultureIgnoreCase)))
@@ -837,7 +837,7 @@ namespace RelationshipsExtended
                     DocumentDataSet.ReadXml(new StringReader(DataSetXML));
                     DataTable BoundObjectTable = DocumentDataSet.Tables[0];
 
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstObject;
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
 
                     string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
                     ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
