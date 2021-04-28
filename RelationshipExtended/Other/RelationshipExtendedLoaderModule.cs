@@ -174,7 +174,7 @@ namespace RelationshipsExtended
 
         private void ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
         {
-            if (e.TaskType == TaskTypeEnum.UpdateDocument || e.TaskType == TaskTypeEnum.CreateDocument || e.TaskType == TaskTypeEnum.MoveDocument || e.TaskType == TaskTypeEnum.PublishDocument || e.TaskType == TaskTypeEnum.ArchiveDocument)
+            if (e.TaskType == TaskTypeEnum.UpdateDocument || e.TaskType == TaskTypeEnum.CreateDocument)
             {
                 // Seems the first table is always the node's table, the table name dose change by the document page type.
                 DataTable NodeTable = e.TaskData.Tables[0];
@@ -241,7 +241,7 @@ namespace RelationshipsExtended
 
             if (IsCustomAdhocRelationshipName(RelationshipNameObj))
             {
-                TreeNode LeftNode = new DocumentQuery().WhereEquals("NodeID", RelationshipObj.LeftNodeId).FirstObject;
+                TreeNode LeftNode = new DocumentQuery().WhereEquals("NodeID", RelationshipObj.LeftNodeId).FirstOrDefault();
                 if (RelHelper.IsStagingEnabled(LeftNode.NodeSiteID))
                 {
                     DocumentSynchronizationHelper.LogDocumentChange(LeftNode.NodeSiteName, LeftNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, LeftNode.TreeProvider);

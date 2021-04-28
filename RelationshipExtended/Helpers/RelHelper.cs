@@ -314,10 +314,10 @@ namespace RelationshipsExtended
         public static void UpdateTaskDataWithNodeBinding(StagingLogTaskEventArgs e, NodeBinding_DocumentLogTaskBefore_Configuration[] Configurations)
         {
             //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask1", eventDescription: "NodeID: " + e.Task.TaskNodeID);
-            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
+            if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument))
             {
                 //EventLogProvider.LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
-                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstObject;
+                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
                 if (IsStagingEnabled(Node.NodeSiteID))
                 {
 
@@ -765,7 +765,7 @@ namespace RelationshipsExtended
                     DocumentDataSet.ReadXml(new StringReader(DataSetXML));
                     DataTable BoundObjectTable = DocumentDataSet.Tables[0];
 
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstObject;
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
 
                     string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
                     ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
@@ -851,10 +851,10 @@ namespace RelationshipsExtended
         {
             return CacheHelper.Cache<int>(cs =>
             {
-                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstObject;
+                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstOrDefault();
                 while (NodeObj != null && NodeObj.NodeLinkedNodeID > 0)
                 {
-                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstObject;
+                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstOrDefault();
                 }
                 int PrimaryNodeID = (NodeObj != null ? NodeObj.NodeID : -1);
                 if (cs.Cached)
