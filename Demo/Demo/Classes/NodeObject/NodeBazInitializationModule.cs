@@ -44,8 +44,7 @@ namespace Demo
             List<TaskTypeEnum> DocumentTaskTypes = new List<TaskTypeEnum>()
         {
             TaskTypeEnum.CreateDocument,
-            TaskTypeEnum.UpdateDocument,
-            TaskTypeEnum.PublishDocument
+            TaskTypeEnum.UpdateDocument
         };
 
             if (DocumentTaskTypes.Contains(e.TaskType))
