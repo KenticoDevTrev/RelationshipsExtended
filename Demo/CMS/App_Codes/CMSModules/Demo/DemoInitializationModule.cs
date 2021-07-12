@@ -54,7 +54,7 @@ public class DemoInitializationModule : Module
 
     private void ProcessTask_After(object sender, StagingSynchronizationEventArgs e)
     {
-        if (e.TaskType == TaskTypeEnum.UpdateDocument)
+        if (e.TaskType == TaskTypeEnum.UpdateDocument || e.TaskType == TaskTypeEnum.CreateDocument)
         {
             // First table is the Node Data
             DataTable NodeTable = e.TaskData.Tables[0];
