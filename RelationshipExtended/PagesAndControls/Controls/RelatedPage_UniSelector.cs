@@ -445,14 +445,14 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         {
             DataClassInfo PageTypeClass = DataClassInfoProvider.GetDataClassInfo(AllowedClass.Trim());
             FormInfo PageTypeFormInfo = new FormInfo(PageTypeClass.ClassFormDefinition);
-            foreach (string ColumnName in PageTypeFormInfo.ItemsList.Select(x => ((FormFieldInfo)x).Name.ToLower().Trim('[').Trim(']')))
+            foreach (string ColumnName in PageTypeFormInfo.ItemsList.Where(x => x is FormFieldInfo).Select(x => ((FormFieldInfo)x).Name.ToLower().Trim('[').Trim(']')))
             {
                 if (!ColumnsToDataClass.ContainsKey(ColumnName))
                 {
                     ColumnsToDataClass.Add(ColumnName, PageTypeClass);
                 }
             }
-            FormFieldInfo PrimaryKeyField = (FormFieldInfo)PageTypeFormInfo.ItemsList.Where(x => ((FormFieldInfo)x).PrimaryKey).FirstOrDefault();
+            FormFieldInfo PrimaryKeyField = (FormFieldInfo)PageTypeFormInfo.ItemsList.Where(x => x is FormFieldInfo).Where(x => ((FormFieldInfo)x).PrimaryKey).FirstOrDefault();
             if (PrimaryKeyField != null)
             {
                 ClassToPrimaryKeyColumn.Add(AllowedClass.ToLower(), PrimaryKeyField.Name);

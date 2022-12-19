@@ -11,7 +11,7 @@
     <Company>Heartland Business Systems</Company>
     <Product>RelationshipsExtended</Product>
     <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
-    <PackageIcon>icon-48x48.png</PackageIcon>
+    <PackageIcon>hbs-favicon-96x96.png</PackageIcon>
     <PackageProjectUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</PackageProjectUrl>
     <RepositoryType>GIT</RepositoryType>
     <PackageTags>Kentico, Xperience, Relationships</PackageTags>
@@ -32,9 +32,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="C:\Users\tfayas\Desktop\icon-48x48.png">
+    <None Include="..\..\hbs-favicon-96x96.png">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
 
