@@ -41,6 +41,45 @@ If you are new to the tool, you have two options for learning how to use this.
 1. Check out the [Demo section](https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo), which contains an example project with each scenario and it's configuration.  You can include the Demo project on your Admin, and go to Site -> Import site or objects on the `RelationshipsExtendedDemoModule.13.0.0.zip`  file to install the Demo module and it's UI elements.
 2. Check out the [Wiki page](https://github.com/KenticoDevTrev/RelationshipsExtended/wiki/Relationships-Extended-Overview) on this GitHub to get a general overview.
 
+## Batch Modification
+It is possible that during batch adjustments across multiple objects, that transactions can get locked, causing errors.  It is recommended in this case to not log the synchronization task during the batch operations, and then manually trigger an update a staging event after if something was changed. Under normaly operations on single items
+
+```csharp
+
+using(CMSActionContext context = new CMSActionContect() {
+   LogSynchronization = false
+   }) {
+    // Batch operation where multiple related objects are done
+   }
+   
+   if(UpdateWasMade) {
+        // Tree node update
+        DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
+        {
+            NodeAliasPath = AssetParent.NodeAliasPath,
+            CultureCode = AssetParent.DocumentCulture,
+            TaskType = TaskTypeEnum.UpdateDocument,
+            Tree = AssetParent.TreeProvider,
+            SiteName = AssetParent.NodeSiteName,
+            RunAsynchronously = false,
+            User = MembershipContext.AuthenticatedUser
+        });
+        // Object update
+        ParentObjectInfoProvider.Set(TheParentObject);
+   }
+
+    // In a global event hook
+    private void ParentCategories_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
+    {
+        if (CMSActionContext.CurrentLogSynchronization)
+        {
+            RelHelper.HandleNodeBindingInsertUpdateDeleteEvent(((ParentCategoryInfo.TypesInfo)e.Object).refNodeID, ParentCategoryInfo.TypesInfo.OBJECT_TYPE);
+        }
+    }
+
+
+```
+
 ## Query Extensions
 The following Extension methods have been added to all ObjectQuery and DocumentQuery, see the project's readme for more info on usage.  Except for InRelationWithOrder which is available in all versions, these are only in 13+
 
