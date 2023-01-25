@@ -145,7 +145,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
     {
         get
         {
-            return GetValue("RelationshipName", String.Empty);
+            return GetValue("RelationshipName", ValidationHelper.GetString(UIContext.Data.GetValue("RelationshipName"), string.Empty));
         }
         set
         {
@@ -394,15 +394,22 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
     /// </summary>
     protected override void OnInit(EventArgs e)
     {
-        // Set default items on Grid
-        InitUniGrid();
+        if (this.StopProcessing)
+        {
+            return;
+        }
+        else
+        {
+            // Set default items on Grid
+            InitUniGrid();
 
-        // Allow ControlExtender to overwrite if needed
-        base.OnInit(e);
+            // Allow ControlExtender to overwrite if needed
+            base.OnInit(e);
 
-        // Paging
-        UniGridRelationship.PageSize = PageSize;
-        UniGridRelationship.Pager.DefaultPageSize = DefaultPageSize;
+            // Paging
+            UniGridRelationship.PageSize = PageSize;
+            UniGridRelationship.Pager.DefaultPageSize = DefaultPageSize;
+        }
 
     }
 
@@ -412,20 +419,20 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
     /// </summary>
     protected void Page_Load(object sender, EventArgs e)
     {
-        UniGridRelationship.Attributes.Add("AllowedPageTypes", AllowedPageTypes);
-        UniGridRelationship.Attributes.Add("DisplayNameFormat", DisplayNameFormat);
-        UniGridRelationship.Attributes.Add("ToolTipFormat", ToolTipFormat);
-
-        // Object type cannot be defined in xml definition -> it would ignore code behind configuration
-        UniGridRelationship.ObjectType = (IsAdHocRelationship) ? RelationshipInfo.OBJECT_TYPE_ADHOC : RelationshipInfo.OBJECT_TYPE;
-
-        //UniGridRelationship.ObjectType = RelationshipInfo.OBJECT_TYPE_ADHOC;
 
         if (StopProcessing)
         {
             UniGridRelationship.StopProcessing = StopProcessing;
             return;
         }
+
+        UniGridRelationship.Attributes.Add("AllowedPageTypes", AllowedPageTypes);
+        UniGridRelationship.Attributes.Add("DisplayNameFormat", DisplayNameFormat);
+        UniGridRelationship.Attributes.Add("ToolTipFormat", ToolTipFormat);
+
+        // Object type cannot be defined in xml definition -> it would ignore code behind configuration
+        // Also, sadly the mass actions don't work when the object type is the adhoc :(
+        UniGridRelationship.ObjectType = IsAdHocRelationship ? RelationshipInfo.OBJECT_TYPE_ADHOC : RelationshipInfo.OBJECT_TYPE;
 
         // Set tree node from Form object
         if ((TreeNode == null) && (Form != null) && (Form.EditedObject != null))
@@ -657,11 +664,13 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 {
                     // Remove relationship
                     RelationshipInfoProvider.RemoveRelationship(relationshipId);
-                    if (RelHelper.IsStagingEnabled())
-                    {
-                        // Log synchronization
-                        DocumentSynchronizationHelper.LogDocumentChange(TreeNode.NodeSiteName, TreeNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, TreeProvider);
-                    }
+                    
+                    // Tfayas - Not needed as the log change is done through the RelationshipInfo event
+                    //if (RelHelper.IsStagingEnabled())
+                    //{
+                    //    // Log synchronization
+                    //    DocumentSynchronizationHelper.LogDocumentChange(TreeNode.NodeSiteName, TreeNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, TreeProvider);
+                    //}
                     ShowConfirmation(GetString("relationship.wasdeleted"));
                     URLHelper.RefreshCurrentPage();
                 }

@@ -162,7 +162,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
             if (NodeID > 0 && BindOnPrimaryNodeOnly && NodeID != OriginalNodeID)
             {
                 return OriginalWhereCondition.Replace(OriginalNodeID.ToString(), NodeID.ToString());
-            } else
+            }
+            else
             {
                 return OriginalWhereCondition;
             }
@@ -213,6 +214,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
 
     protected override void OnInit(EventArgs e)
     {
+
         // CUSTOMIZATION START
         // Pass properties to the UniSelector to be used in the extender
         editElem.Attributes.Add("CorrectObjectID", CorrectObjectID.ToString());
@@ -234,6 +236,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
             ShowError(GetString("ui.editing.noobjecttype"));
             StopProcessing = true;
         }
+
     }
 
 
@@ -330,7 +333,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
         var BindingObject = ModuleManager.GetReadOnlyObject(BindingObjectType);
 
         // Get the bound reference column if IBindingBaseInfo is implemented
-        if(BindingObject is IBindingBaseInfo BindingObjectInfo)
+        if (BindingObject is IBindingBaseInfo BindingObjectInfo)
         {
             bindingTargetIdColumn = BindingObjectInfo.ChildObjectReferenceColumnName();
         }
@@ -339,7 +342,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
         var targetIds = BindingObject.Generalized
                                      .GetDataQuery(true, s => s.Where(WhereCondition).Column(bindingTargetIdColumn), false)
                                      .Select(row => row[bindingTargetIdColumn]);
-        
+
         return TextHelper.Join(";", targetIds);
     }
 

@@ -196,46 +196,58 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
 
     protected override void OnInit(EventArgs e)
     {
+        if (this.StopProcessing)
+        {
+            return;
+        }
+        else
+        {
+            base.OnInit(e);
 
-        base.OnInit(e);
-
-        // Initialize node
-        relatedDocuments.TreeNode = Node;
-        relatedDocuments.AllowSwitchSides = AllowSwitchSides;
-        relatedDocuments.RelationshipName = RelationshipName;
-        relatedDocuments.DisableSort = DisableSort;
-        // Odd as it is, the DefaultSide should be false if the current node is left...
-        relatedDocuments.DefaultSide = (DirectionMode == "RightNode");
-        relatedDocuments.AllowedPageTypes = AllowedPageTypes;
-        relatedDocuments.DisplayNameFormat = DisplayNameFormat;
-        relatedDocuments.ToolTipFormat = ToolTipFormat;
-        relatedDocuments.RelatedNodeSite = RelatedNodeSite;
+            // Initialize node
+            relatedDocuments.TreeNode = Node;
+            relatedDocuments.AllowSwitchSides = AllowSwitchSides;
+            relatedDocuments.RelationshipName = RelationshipName;
+            relatedDocuments.DisableSort = DisableSort;
+            // Odd as it is, the DefaultSide should be false if the current node is left...
+            relatedDocuments.DefaultSide = (DirectionMode == "RightNode");
+            relatedDocuments.AllowedPageTypes = AllowedPageTypes;
+            relatedDocuments.DisplayNameFormat = DisplayNameFormat;
+            relatedDocuments.ToolTipFormat = ToolTipFormat;
+            relatedDocuments.RelatedNodeSite = RelatedNodeSite;
+        }
     }
 
 
     protected void Page_Load(object sender, EventArgs e)
     {
-
-        // Check if any relationship exists
-        DataSet dsRel = RelationshipNameInfoProvider.GetRelationshipNames("RelationshipAllowedObjects LIKE '%" + ObjectHelper.GROUP_DOCUMENTS + "%' AND RelationshipNameID IN (SELECT RelationshipNameID FROM CMS_RelationshipNameSite WHERE SiteID = " + SiteContext.CurrentSiteID + ")", null, 1, "RelationshipNameID");
-        if (DataHelper.DataSourceIsEmpty(dsRel))
+        if (this.StopProcessing)
         {
-            relatedDocuments.Visible = false;
-            ShowInformation(ResHelper.GetString("relationship.norelationship"));
+            return;
         }
         else
         {
-            if (Node != null)
+            // Check if any relationship exists
+            DataSet dsRel = RelationshipNameInfoProvider.GetRelationshipNames("RelationshipAllowedObjects LIKE '%" + ObjectHelper.GROUP_DOCUMENTS + "%' AND RelationshipNameID IN (SELECT RelationshipNameID FROM CMS_RelationshipNameSite WHERE SiteID = " + SiteContext.CurrentSiteID + ")", null, 1, "RelationshipNameID");
+            if (DataHelper.DataSourceIsEmpty(dsRel))
             {
-                // Check modify permissions
-                if (!DocumentUIHelper.CheckDocumentPermissions(Node, PermissionsEnum.Modify))
+                relatedDocuments.Visible = false;
+                ShowInformation(ResHelper.GetString("relationship.norelationship"));
+            }
+            else
+            {
+                if (Node != null)
                 {
-                    relatedDocuments.Enabled = false;
+                    // Check modify permissions
+                    if (!DocumentUIHelper.CheckDocumentPermissions(Node, PermissionsEnum.Modify))
+                    {
+                        relatedDocuments.Enabled = false;
+                    }
                 }
             }
-        }
 
-        pnlContent.Enabled = !DocumentManager.ProcessingAction;
+            pnlContent.Enabled = !DocumentManager.ProcessingAction;
+        }
     }
 
     #endregion

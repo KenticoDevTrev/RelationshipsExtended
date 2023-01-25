@@ -11,6 +11,7 @@ using CMS.Relationships;
 using CMS.SiteProvider;
 using CMS.Synchronization;
 using CMS.Taxonomy;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using RelationshipsExtended;
 using RelationshipsExtended.Enums;
 using RelationshipsExtended.Helpers;
@@ -19,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using DataTable = System.Data.DataTable;
 
 [assembly: RegisterModule(typeof(RelationshipsExtendedLoaderModuleBase))]
 namespace RelationshipsExtended
@@ -73,7 +75,8 @@ namespace RelationshipsExtended
             // Also make sure that the foreign key exists for the class
             try
             {
-                if(DataClassInfoProvider.GetDataClassInfo("CMS.TreeCategory") != null) { 
+                if (DataClassInfoProvider.GetDataClassInfo("CMS.TreeCategory") != null)
+                {
                     ConnectionHelper.ExecuteQuery("CMS.TreeCategory.EnsureForeignKeys", null);
                 }
             }
@@ -81,6 +84,9 @@ namespace RelationshipsExtended
             {
                 Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "ErrorSettingForeignKeys", ex, additionalMessage: "Make sure the Query CMS.TreeCategory.EnsureForeignKey exists.  IGNORE if you just installed the module as this will run before the class installs on the first application start after installation.");
             }
+
+            // Register TreeNode in search fields
+            DocumentEvents.GetContent.Execute += TreeNodeCategory_GetContent_Execute;
 
             // Registers "CustomNamespace" into the macro engine
             MacroContext.GlobalResolver.SetNamedSourceData("RelHelper", RelHelperMacroNamespace.Instance);
@@ -114,6 +120,27 @@ namespace RelationshipsExtended
                     FormIsCustom = true
                 };
                 AlternativeFormInfoProvider.SetAlternativeFormInfo(RelationshipNewForm);
+            }
+        }
+
+        private void TreeNodeCategory_GetContent_Execute(object sender, DocumentSearchEventArgs e)
+        {
+            // Gets an object representing the page that is being indexed
+            TreeNode indexedPage = e.Node;
+            var categoryInfoProvider = Service.Resolve<ICategoryInfoProvider>();
+            var categories = categoryInfoProvider.Get()
+                .Source(x => x.InnerJoin<TreeCategoryInfo>("cms_category.categoryid", "cms_treecategory.categoryid"))
+                .WhereEquals(nameof(TreeCategoryInfo.NodeID), indexedPage.NodeID)
+                .Columns(nameof(CategoryInfo.CategoryName), $"cms_category.{nameof(CategoryInfo.CategoryID)}")
+                .GetEnumerableTypedResult();
+
+            if(categories.Any()) { 
+                e.SearchDocument.Add("documenttreecategories", string.Join(",", categories.Select(x => x.CategoryName)));
+                e.SearchDocument.Add("documenttreecategoryids", string.Join(",", categories.Select(x => x.CategoryID)));
+            } else
+            {
+                e.SearchDocument.Add("documenttreecategories", string.Empty);
+                e.SearchDocument.Add("documenttreecategoryids", string.Empty);
             }
         }
 
@@ -236,16 +263,15 @@ namespace RelationshipsExtended
 
         private void Relationship_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
         {
-            RelationshipInfo RelationshipObj = (RelationshipInfo)e.Object;
-            RelationshipNameInfo RelationshipNameObj = RelationshipNameInfo.Provider.Get(RelationshipObj.RelationshipNameId);
+            RelationshipInfo relationshipObj = (RelationshipInfo)e.Object;
+            RelationshipNameInfo relationshipNameObj = RelationshipNameInfo.Provider.Get(relationshipObj.RelationshipNameId);
 
-            if (IsCustomAdhocRelationshipName(RelationshipNameObj))
+            var leftNode = new DocumentQuery().Columns(nameof(TreeNode.NodeAliasPath), nameof(TreeNode.NodeSiteID)).Published(false).LatestVersion(true).WhereEquals("NodeID", relationshipObj.LeftNodeId).FirstOrDefault();
+            var siteName = RelHelper.GetSiteCached(leftNode.NodeSiteID).SiteName;
+
+            if (RelHelper.IsStagingEnabled(leftNode.NodeSiteID))
             {
-                TreeNode LeftNode = new DocumentQuery().WhereEquals("NodeID", RelationshipObj.LeftNodeId).FirstOrDefault();
-                if (RelHelper.IsStagingEnabled(LeftNode.NodeSiteID))
-                {
-                    DocumentSynchronizationHelper.LogDocumentChange(LeftNode.NodeSiteName, LeftNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, LeftNode.TreeProvider);
-                }
+                DocumentSynchronizationHelper.LogDocumentChange(siteName, leftNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, new TreeProvider(MembershipContext.AuthenticatedUser));
             }
         }
 

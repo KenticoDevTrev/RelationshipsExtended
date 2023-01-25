@@ -257,18 +257,27 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
 
     protected override void OnInit(EventArgs e)
     {
-        // set direction initially if unset
-        if (SessionHelper.GetValue("RelatedPageTreeDirection_" + CurrentNodeID + "_" + UIContext.ElementGuid) == null || !AllowSwitchSides)
+        if (this.StopProcessing)
         {
-            SessionHelper.SetValue("RelatedPageTreeDirection_" + CurrentNodeID + "_" + UIContext.ElementGuid, DirectionMode);
-            ddlCurrentNodeDirection.SelectedValue = "LeftNode";
+
+            this.Visible = false;
+            return;
         }
-        ddlCurrentNodeDirection.SelectedValue = (string)SessionHelper.GetValue("RelatedPageTreeDirection_" + CurrentNodeID + "_" + UIContext.ElementGuid);
-        ddlCurrentNodeDirection.Visible = AllowSwitchSides;
+        else
+        {
+            // set direction initially if unset
+            if (SessionHelper.GetValue("RelatedPageTreeDirection_" + CurrentNodeID + "_" + UIContext.ElementGuid) == null || !AllowSwitchSides)
+            {
+                SessionHelper.SetValue("RelatedPageTreeDirection_" + CurrentNodeID + "_" + UIContext.ElementGuid, DirectionMode);
+                ddlCurrentNodeDirection.SelectedValue = "LeftNode";
+            }
+            ddlCurrentNodeDirection.SelectedValue = (string)SessionHelper.GetValue("RelatedPageTreeDirection_" + CurrentNodeID + "_" + UIContext.ElementGuid);
+            ddlCurrentNodeDirection.Visible = AllowSwitchSides;
 
-        SetupControl();
+            SetupControl();
 
-        base.OnInit(e);
+            base.OnInit(e);
+        }
     }
 
     private void SetupControl()

@@ -339,57 +339,63 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedC
     /// <param name="e"></param>
     protected override void OnInit(EventArgs e)
     {
-        base.OnInit(e);
-        // Add resources dynamically so can resolve the url.
-        ScriptHelper.RegisterScriptFile(this.Page, ResolveUrl("~/CMSModules/RelationshipsExtended/Controls/RelatedCategories_Files/jquery.js"));
-        ScriptHelper.RegisterScriptFile(this.Page, ResolveUrl("~/CMSModules/RelationshipsExtended/Controls/RelatedCategories_Files/AdvancedCategorySelector.js"));
-
-        PossibleCategories = new List<CategoryInfo>();
-        tbxOnlyLeafSelectable.Text = OnlyLeafSelectable.ToString();
-        tbxParentSelectsChildren.Text = (OnlyLeafSelectable ? ParentSelectsChildren.ToString() : "False");
-        // Set Enum Values
-        switch (SaveMode)
+        if (this.StopProcessing)
         {
-            case "ToCategories":
-                SaveModeVal = SaveType.ToCategory;
-                break;
-            case "ToNodeCategories":
-                // Same as Join table but with presets
-                SaveModeVal = SaveType.ToJoinTable;
-                JoinTableThisObjectForeignKey = "NodeID";
-                JoinTableName = "CMS.TreeCategory";
-                JoinTableLeftFieldName = "NodeID";
-                JoinTableRightFieldName = "CategoryID";
-                JoinTableGUIDFieldOverride = "";
-                JoinTableLastModifiedFieldOverride = "";
-                JoinTableCodeNameFieldOverride = "";
-                JoinTableSiteIDFieldOverride = "";
-                FieldSaveMode = "ID";
-                break;
-            case "ToJoinTable":
-                SaveModeVal = SaveType.ToJoinTable;
-                break;
+            return;
         }
-
-        switch (FieldSaveMode)
+        else
         {
-            case "ID":
-                FieldSaveModeVal = FieldSaveType.ID;
-                break;
-            case "GUID":
-                FieldSaveModeVal = FieldSaveType.GUID;
-                break;
-            case "CategoryName":
-                FieldSaveModeVal = FieldSaveType.CategoryName;
-                break;
+            base.OnInit(e);
+            // Add resources dynamically so can resolve the url.
+            ScriptHelper.RegisterScriptFile(this.Page, ResolveUrl("~/CMSModules/RelationshipsExtended/Controls/RelatedCategories_Files/jquery.js"));
+            ScriptHelper.RegisterScriptFile(this.Page, ResolveUrl("~/CMSModules/RelationshipsExtended/Controls/RelatedCategories_Files/AdvancedCategorySelector.js"));
+
+            PossibleCategories = new List<CategoryInfo>();
+            tbxOnlyLeafSelectable.Text = OnlyLeafSelectable.ToString();
+            tbxParentSelectsChildren.Text = (OnlyLeafSelectable ? ParentSelectsChildren.ToString() : "False");
+            // Set Enum Values
+            switch (SaveMode)
+            {
+                case "ToCategories":
+                    SaveModeVal = SaveType.ToCategory;
+                    break;
+                case "ToNodeCategories":
+                    // Same as Join table but with presets
+                    SaveModeVal = SaveType.ToJoinTable;
+                    JoinTableThisObjectForeignKey = "NodeID";
+                    JoinTableName = "CMS.TreeCategory";
+                    JoinTableLeftFieldName = "NodeID";
+                    JoinTableRightFieldName = "CategoryID";
+                    JoinTableGUIDFieldOverride = "";
+                    JoinTableLastModifiedFieldOverride = "";
+                    JoinTableCodeNameFieldOverride = "";
+                    JoinTableSiteIDFieldOverride = "";
+                    FieldSaveMode = "ID";
+                    break;
+                case "ToJoinTable":
+                    SaveModeVal = SaveType.ToJoinTable;
+                    break;
+            }
+
+            switch (FieldSaveMode)
+            {
+                case "ID":
+                    FieldSaveModeVal = FieldSaveType.ID;
+                    break;
+                case "GUID":
+                    FieldSaveModeVal = FieldSaveType.GUID;
+                    break;
+                case "CategoryName":
+                    FieldSaveModeVal = FieldSaveType.CategoryName;
+                    break;
+            }
+
+            // Set the mode based on the field.
+            DisplayMode = (CategoryDisplayMode == "Tree" ? DisplayType.Tree : DisplayType.List);
+            btnSearch.OnClientClick = "SearchCategories('.FormTool_" + this.ID + "');return false;";
+            tvwCategoryTree.LineImagesFolder = "~/CMSModules/RelationshipsExtended/Controls/RelatedCategories_Files";
+            tvwCategoryTree.NodeStyle.CssClass = "InputNode";
         }
-
-        // Set the mode based on the field.
-        DisplayMode = (CategoryDisplayMode == "Tree" ? DisplayType.Tree : DisplayType.List);
-        btnSearch.OnClientClick = "SearchCategories('.FormTool_" + this.ID + "');return false;";
-        tvwCategoryTree.LineImagesFolder = "~/CMSModules/RelationshipsExtended/Controls/RelatedCategories_Files";
-        tvwCategoryTree.NodeStyle.CssClass = "InputNode";
-
     }
 
 

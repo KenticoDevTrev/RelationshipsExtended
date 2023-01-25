@@ -11,6 +11,7 @@ using CMS.OnlineForms;
 using CMS.SiteProvider;
 using CMS.Synchronization;
 using CMS.Taxonomy;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using RelationshipsExtended.Enums;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ using System.Linq;
 using System.Timers;
 using System.Web;
 using System.Xml;
+using DataTable = System.Data.DataTable;
 
 namespace RelationshipsExtended.Helpers
 {
@@ -289,11 +291,21 @@ namespace RelationshipsExtended.Helpers
             {
                 // Various checkts to make sure we have the SiteInfo, it is missing in context randomly it seems so this should allow us to do multiple checks with a fallback
                 // of just the first site, since rare that a multisite has staging on some but not all.
-                if (SiteContext.CurrentSite == null)
+                SiteInfo Site = SiteContext.CurrentSite;
+                if(SiteID > 0)
                 {
-                    SiteInfo Site = SiteInfo.Provider.Get(SiteID);
-                    SiteContext.CurrentSite = Site ?? SiteInfo.Provider.Get().FirstOrDefault();
+                    Site = GetSiteCached(SiteID);
                 }
+                if (Site == null)
+                {
+                    Site = SiteInfo.Provider.Get().FirstOrDefault();
+                }
+                // Certain cases this is null, so set.
+                if(SiteContext.CurrentSite == null)
+                {
+                    SiteContext.CurrentSite = Site;
+                }
+
                 if (LicenseHelper.CheckFeature(SiteContext.CurrentSite.DomainName, FeatureEnum.Staging))
                 {
                     return true;
@@ -309,6 +321,19 @@ namespace RelationshipsExtended.Helpers
                 Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "CannotDetectStagingEnabled", ex, additionalMessage: "Could not detect the LicenseHelper.CurrentEdition to see if Staging is enabled, related staging tasks will not run. Please contact tfayas@hbs.net if you see this error.");
                 return false;
             }
+        }
+
+        public static SiteInfo GetSiteCached(int siteID)
+        {
+            return CacheHelper.Cache(cs =>
+            {
+                if (cs.Cached)
+                {
+                    cs.CacheDependency = CacheHelper.GetCacheDependency(new string[] { "cms.site|all" });
+                }
+                var siteInfoProvider = CMS.Core.Service.Resolve<ISiteInfoProvider>();
+                return siteInfoProvider.Get(siteID);
+            }, new CacheSettings(60, "GetSiteInfoFromID", siteID));
         }
 
         /// <summary>
@@ -502,10 +527,18 @@ namespace RelationshipsExtended.Helpers
         /// <param name="BoundObjectIDReferenceField">The Bound ObjectID reference field for your Node-Binding Object (ex "CategoryID")</param>
         /// <param name="BoundObjectTypeInfo">The TypeInfo of the object that the Node is bound to (ex new CategoryInfo().TypeInfo)</param>
         /// <returns>The List of all the New Object IDs that the node should be bound to.</returns>
-        public static List<int> NewBoundObjectIDs(StagingSynchronizationEventArgs e, string NodeBindingObjectClassName, string NodeIDReferenceField, string BoundObjectIDReferenceField, ObjectTypeInfo BoundObjectTypeInfo)
+        public static List<int> NewBoundObjectIDs(StagingSynchronizationEventArgs e, string NodeBindingObjectClassName, string NodeIDReferenceField, string BoundObjectIDReferenceField, ObjectTypeInfo BoundObjectTypeInfo, bool IsCMSNode = false)
         {
+            string className = (IsCMSNode ? "cms.node" : BoundObjectTypeInfo.ObjectType);
+            string idColumn = (IsCMSNode ? "nodeid" : BoundObjectTypeInfo.IDColumn);
+            string guidColumn = (IsCMSNode ? "nodeguid" : BoundObjectTypeInfo.GUIDColumn);
+            string codeNameColumn = (IsCMSNode ? "nodealiaspath" : BoundObjectTypeInfo.CodeNameColumn);
+            string siteIDColumn = (IsCMSNode ? "nodesiteid" : BoundObjectTypeInfo.SiteIDColumn);
+
             string NodeBindingObjectClassNameTableName = NodeBindingObjectClassName.ToLower().Replace(".", "_");
-            string BoundObjectClassNameTableName = BoundObjectTypeInfo.ObjectType.ToLower().Replace(".", "_");
+            string BoundObjectClassNameTableName = className.ToLower().Replace(".", "_");
+
+
             // Get the Tree Category table.
             DataTable NodeBoundTable = e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == NodeBindingObjectClassNameTableName).FirstOrDefault();
 
@@ -524,26 +557,26 @@ namespace RelationshipsExtended.Helpers
             // Go through the Bound object tables which we'll use to gather the fields to translate the IDs from old env to new.
             foreach (DataTable BoundObjectTable in e.TaskData.Tables.Cast<DataTable>().Where(x => x.TableName.ToLower() == BoundObjectClassNameTableName))
             {
-                bool ContainsGuidColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.GUIDColumn);
-                bool ContainsCodeNameColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.CodeNameColumn);
-                bool ContainsSiteIDColumn = BoundObjectTable.Columns.Contains(BoundObjectTypeInfo.SiteIDColumn);
+                bool ContainsGuidColumn = BoundObjectTable.Columns.Contains(guidColumn);
+                bool ContainsCodeNameColumn = BoundObjectTable.Columns.Contains(codeNameColumn);
+                bool ContainsSiteIDColumn = BoundObjectTable.Columns.Contains(siteIDColumn);
                 foreach (DataRow BoundObjectDR in BoundObjectTable.Rows)
                 {
-                    int ObjectID = ValidationHelper.GetInteger(BoundObjectDR[BoundObjectTypeInfo.IDColumn], 0);
+                    int ObjectID = ValidationHelper.GetInteger(BoundObjectDR[idColumn], 0);
                     if (TaskBoundIDs.Contains(ObjectID))
                     {
                         GetIDParameters ObjectParams = new GetIDParameters();
-                        if (ContainsGuidColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.GUIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        if (ContainsGuidColumn && !string.IsNullOrWhiteSpace(guidColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
                         {
-                            ObjectParams.Guid = ValidationHelper.GetGuid(BoundObjectDR[BoundObjectTypeInfo.GUIDColumn], Guid.Empty);
+                            ObjectParams.Guid = ValidationHelper.GetGuid(BoundObjectDR[guidColumn], Guid.Empty);
                         }
-                        if (ContainsCodeNameColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.CodeColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        if (ContainsCodeNameColumn && !string.IsNullOrWhiteSpace(codeNameColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
                         {
-                            ObjectParams.CodeName = ValidationHelper.GetString(BoundObjectDR[BoundObjectTypeInfo.CodeColumn], "");
+                            ObjectParams.CodeName = ValidationHelper.GetString(BoundObjectDR[codeNameColumn], "");
                         }
-                        if (ContainsSiteIDColumn && !string.IsNullOrWhiteSpace(BoundObjectTypeInfo.SiteIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
+                        if (ContainsSiteIDColumn && !string.IsNullOrWhiteSpace(siteIDColumn.Replace(ObjectTypeInfo.COLUMN_NAME_UNKNOWN, "")))
                         {
-                            int SiteID = ValidationHelper.GetInteger(BoundObjectDR[BoundObjectTypeInfo.SiteIDColumn], -1);
+                            int SiteID = ValidationHelper.GetInteger(BoundObjectDR[siteIDColumn], -1);
                             if (SiteID > 0)
                             {
                                 ObjectParams.SiteId = SiteID;
@@ -551,7 +584,7 @@ namespace RelationshipsExtended.Helpers
                         }
                         try
                         {
-                            int NewID = TranslationHelper.GetIDFromDB(ObjectParams, BoundObjectTypeInfo.ObjectType);
+                            int NewID = TranslationHelper.GetIDFromDB(ObjectParams, className);
                             if (NewID > 0)
                             {
                                 NewBoundIDs.Add(NewID);
@@ -593,7 +626,7 @@ namespace RelationshipsExtended.Helpers
                         }
                         try
                         {
-                            int NewID = TranslationHelper.GetIDFromDB(GetIDParams, BoundObjectTypeInfo.ObjectType);
+                            int NewID = TranslationHelper.GetIDFromDB(GetIDParams, className);
                             if (NewID > 0)
                             {
                                 NewBoundIDs.Add(NewID);

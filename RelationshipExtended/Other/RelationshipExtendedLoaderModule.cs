@@ -54,14 +54,14 @@ namespace RelationshipsExtended
             {
                 e.Manifest.Metadata.SetIconUrl("https://www.kentico.com/icons/icon-48x48.png");
                 e.Manifest.Metadata.SetProjectUrl("https://github.com/KenticoDevTrev/RelationshipsExtended");
-                e.Manifest.Metadata.ReleaseNotes = "Fixed bug on UniSelector when selecting a class with Field Categories.";
+                e.Manifest.Metadata.ReleaseNotes = "Fixed bug where Related Pages Tree / Uniselector would always load, even if not visible, causing performance issues.";
                 e.Manifest.Metadata.Copyright = "Heartland Business Systems";
                 
                 // Add dependencies
                 List<PackageDependency> NetStandardDependencies = new List<PackageDependency>()
                 {
                     new PackageDependency("Kentico.Xperience.Libraries", new VersionRange(new NuGetVersion("13.0.0")), new string[] { }, new string[] {"Build","Analyzers"}),
-                    new PackageDependency("RelationshipsExtended.Base", new VersionRange(new NuGetVersion("13.0.2")), new string[] { }, new string[] {"Build","Analyzers"})
+                    new PackageDependency("RelationshipsExtended.Base", new VersionRange(new NuGetVersion("13.0.3")), new string[] { }, new string[] {"Build","Analyzers"})
                 };
                 PackageDependencyGroup PackageGroup = new PackageDependencyGroup(new NuGet.Frameworks.NuGetFramework(".NETStandard2.0"), NetStandardDependencies);
                 e.Manifest.Metadata.DependencyGroups = new PackageDependencyGroup[] { PackageGroup };
