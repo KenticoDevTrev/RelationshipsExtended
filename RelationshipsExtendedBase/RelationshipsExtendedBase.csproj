@@ -27,7 +27,7 @@ Added some extension methods to make type casting to object or IEnumerable&lt;ob
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.0" />
+    <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.13" />
   </ItemGroup>
 
   <ItemGroup>
