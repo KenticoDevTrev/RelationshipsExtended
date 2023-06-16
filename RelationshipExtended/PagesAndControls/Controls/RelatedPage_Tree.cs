@@ -1,4 +1,5 @@
-﻿using CMS.DataEngine;
+﻿using CMS.Base;
+using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.Helpers;
 using CMS.MacroEngine;
@@ -287,7 +288,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         pageTree.ShowLines = true;
 
         // Build a list of the pages
-        var docQuery = new DocumentQuery().OrderBy("NodeLevel, NodeOrder");
+        var docQuery = new DocumentQuery().OrderBy("NodeLevel, NodeOrder").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture();
         foreach (string Path in StartingPathArray)
         {
             docQuery.Path(Path, PathTypeEnum.Section);
@@ -323,7 +324,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
 
         where = SqlHelper.AddWhereCondition(where, string.Format("NodeID <> {0}", CurrentNodeID));
 
-        AlreadySelectedNodes = new DocumentQuery().Where(where).Columns("NodeID").Select(x => x.NodeID).ToList();
+        AlreadySelectedNodes = new DocumentQuery().Where(where).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().Select(x => x.NodeID).ToList();
 
         // Exclude the current node, can't relate a node to itself.
         AlreadySelectedNodes.Add(CurrentNodeID);
@@ -336,7 +337,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         {
             AdditionalWhere = SqlHelper.AddWhereCondition(AdditionalWhere, WhereCondition);
             FilterSelectableNodes = true;
-            SelectableSelectedNodes.AddRange(new DocumentQuery().Where(AdditionalWhere).Columns("NodeID").Select(x => x.NodeID).ToList());
+            SelectableSelectedNodes.AddRange(new DocumentQuery().Where(AdditionalWhere).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().Select(x => x.NodeID).ToList());
         }
 
         pageTree.Nodes.Clear();
@@ -571,12 +572,25 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
                 .WhereEquals("NodeID", Node.NodeID)
                 .Columns(Columns)
                 .Culture(Culture)
-                .CombineWithDefaultCulture(true).Result;
-
-            foreach (DataColumn item in FullData.Tables[0].Columns)
+                .Published(false)
+                .LatestVersion(true)
+                .CombineWithDefaultCulture(true)
+                .CombineWithAnyCulture().Result;
+            if (FullData.Tables[0].Rows.Count > 0)
             {
-                resolver.SetNamedSourceData(item.ColumnName, FullData.Tables[0].Rows[0][item.ColumnName]);
+                foreach (DataColumn item in FullData.Tables[0].Columns)
+                {
+                    resolver.SetNamedSourceData(item.ColumnName, FullData.Tables[0].Rows[0][item.ColumnName]);
+                }
+            } else
+            {
+                // couldn't find data normal way, use database at this point, just use getvalue
+                foreach (DataColumn item in FullData.Tables[0].Columns)
+                {
+                    resolver.SetNamedSourceData(item.ColumnName, Node.GetValue(item.ColumnName));
+                }
             }
+            
 
             if (cs.Cached)
             {

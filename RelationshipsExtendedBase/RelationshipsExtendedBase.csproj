@@ -5,7 +5,7 @@
     <AssemblyName>RelationshipsExtendedBase</AssemblyName>
     <RootNamespace>RelationshipsExtended</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>13.0.3</Version>
+    <Version>13.0.8</Version>
     <Description>This is the Base module that contains libraries and interfaces used both in the Admin and MVC Site.</Description>
     <Authors>Trevor Fayas</Authors>
     <Company>Heartland Business Systems</Company>
@@ -17,7 +17,9 @@
     <PackageTags>Kentico, Xperience, Relationships</PackageTags>
     <Copyright>Heartland Business Systems 2020</Copyright>
     <PackageId>RelationshipsExtended.Base</PackageId>
-    <PackageReleaseNotes>Fixed issue with Binding on Tree by adding NewBoundObjectIDs optional "IsCMSNode" field, added documenttreecategories and documenttreecategoryids fields to smart search
+    <PackageReleaseNotes>Fixed queries that were not properly closed, which lead to Open DataReader errors.
+
+Added some extension methods to make type casting to object or IEnumerable&lt;object&gt; easier
 </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageIconUrl>https://www.kentico.com/icons/icon-48x48.png</PackageIconUrl>

@@ -115,7 +115,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
         {
             if(mTrueTreeNode == null)
             {
-                mTrueTreeNode = new DocumentQuery().WhereEquals("NodeID", CurrentNodeID).FirstOrDefault();
+                mTrueTreeNode = new DocumentQuery().WhereEquals("NodeID", CurrentNodeID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
             }
             return mTrueTreeNode;
         }
@@ -868,12 +868,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Rela
         try
         {
             // Test to make sure the selected page is a Right Side macro-allowed page or left side, and also matches the Page type limiter
-            var SelectedTreeNode = (AllowAllTypes ? new DocumentQuery() : new DocumentQuery(AllowedPageTypes)).WhereEquals("NodeID", selectedNodeId).FirstOrDefault();
+            var SelectedTreeNode = (AllowAllTypes ? new DocumentQuery() : new DocumentQuery(AllowedPageTypes)).WhereEquals("NodeID", selectedNodeId).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
             
             // If null probably not an allowed page type, but we will need it to validate below
             if(SelectedTreeNode == null)
             {
-                SelectedTreeNode = new DocumentQuery().WhereEquals("NodeID", selectedNodeId).FirstOrDefault();
+                SelectedTreeNode = new DocumentQuery().WhereEquals("NodeID", selectedNodeId).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
             }
             var CurrentPageMacroResolver = MacroResolver.GetInstance();
             CurrentPageMacroResolver.SetNamedSourceData("CurrentDocument", TreeNode);

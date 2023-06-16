@@ -874,7 +874,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                         // Get the node
                         return CacheHelper.Cache<object>(cs =>
                         {
-                            var DocQuery = new DocumentQuery().WhereEquals(JoinTableThisObjectForeignKey, ForiegnKeyValue).Columns("NodeID");
+                            var DocQuery = new DocumentQuery().WhereEquals(JoinTableThisObjectForeignKey, ForiegnKeyValue).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture();
                             if(JoinTableThisObjectForeignKey.ToLower() == "nodealiaspath")
                             {
                                 DocQuery.OnCurrentSite();
@@ -884,7 +884,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                             object NewValue = ForiegnKeyValue;
                             if (PrimaryNodeID != Page.NodeID)
                             {
-                                NewValue = new DocumentQuery().WhereEquals("NodeID", PrimaryNodeID).Columns(JoinTableThisObjectForeignKey).FirstOrDefault().GetValue(JoinTableThisObjectForeignKey);
+                                NewValue = new DocumentQuery().WhereEquals("NodeID", PrimaryNodeID).Columns(JoinTableThisObjectForeignKey).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault().GetValue(JoinTableThisObjectForeignKey);
                             }
                             if (cs.Cached)
                             {

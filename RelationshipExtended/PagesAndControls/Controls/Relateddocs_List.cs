@@ -133,7 +133,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
     {
         get
         {
-            return new DocumentQuery().WhereEquals("NodeID", (CurrentNodeID > 0 ? CurrentNodeID : QueryHelper.GetInteger("nodeid", 0))).Culture((!string.IsNullOrWhiteSpace(CurrentCulture) ? CurrentCulture : QueryHelper.GetString("culture", "en-US"))).CombineWithDefaultCulture(true).FirstOrDefault();
+            return new DocumentQuery().WhereEquals("NodeID", (CurrentNodeID > 0 ? CurrentNodeID : QueryHelper.GetInteger("nodeid", 0))).Culture((!string.IsNullOrWhiteSpace(CurrentCulture) ? CurrentCulture : QueryHelper.GetString("culture", "en-US"))).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
         }
     }
 

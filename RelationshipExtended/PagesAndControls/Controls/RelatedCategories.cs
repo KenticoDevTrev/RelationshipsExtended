@@ -57,7 +57,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedC
                 {
                     NodeID = RelHelper.GetPrimaryNodeID(NodeID);
                 }
-                var ProperTreeNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Culture(Culture).CombineWithDefaultCulture(true).FirstOrDefault();
+                var ProperTreeNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Culture(Culture).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
                 if(cs.Cached)
                 {
                     cs.CacheDependency = CacheHelper.GetCacheDependency(new string[] { "nodeid|" + NodeID, "nodeid|" + ProperTreeNode.NodeID });

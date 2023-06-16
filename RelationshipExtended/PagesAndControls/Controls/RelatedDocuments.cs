@@ -735,12 +735,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 string tooltip = null;
                 string customName = null;
                 int NodeID = ValidationHelper.GetInteger(parameter, 0);
-                var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeName, NodeLevel, ClassName").FirstOrDefault();
+                var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeName, NodeLevel, ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
                 // Not root and is in the allowed page types
                 if (NodeObj.NodeLevel != 0 && (!string.IsNullOrWhiteSpace(ToolTipFormat) || !string.IsNullOrWhiteSpace(DisplayNameFormat)) && AllowedPageTypes.ToLower().Split(";,|".ToCharArray()).Contains(NodeObj.NodeClassName.ToLower()))
                 {
                     ValidationHelper.GetInteger(parameter, 0);
-                    MacroResolver NodeResolver = GetNodeMacroResolver(NodeObj.NodeID, NodeObj.ClassName);
+                    MacroResolver NodeResolver = GetNodeMacroResolver(NodeObj, NodeObj.ClassName);
                     if (!string.IsNullOrWhiteSpace(ToolTipFormat))
                     {
                         tooltip = NodeResolver.ResolveMacros(ToolTipFormat);
@@ -767,8 +767,9 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
         return parameter;
     }
 
-    private MacroResolver GetNodeMacroResolver(int NodeID, string ClassName)
+    private MacroResolver GetNodeMacroResolver(TreeNode Node, string ClassName)
     {
+        int NodeID = Node.NodeID;
         string Culture = URLHelper.GetQueryValue(Request.RawUrl, "culture");
         return CacheHelper.Cache<MacroResolver>(cs =>
         {
@@ -789,11 +790,19 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                     .WhereEquals("NodeID", NodeID)
                     .Columns(Columns)
                     .Culture(Culture)
-                    .CombineWithDefaultCulture(true).Result;
+                    .Published(false)
+                    .LatestVersion(true)
+                    .CombineWithDefaultCulture(true)
+                    .CombineWithAnyCulture().Result;
 
             foreach (DataColumn item in FullData.Tables[0].Columns)
             {
-                resolver.SetNamedSourceData(item.ColumnName, FullData.Tables[0].Rows[0][item.ColumnName]);
+                if (FullData.Tables[0].Rows.Count > 0) { 
+                    resolver.SetNamedSourceData(item.ColumnName, FullData.Tables[0].Rows[0][item.ColumnName]);
+                } else
+                {
+                    resolver.SetNamedSourceData(item.ColumnName, Node.GetValue(item.ColumnName));
+                }
             }
 
             if (cs.Cached)
@@ -803,6 +812,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
             return resolver;
         }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), "RelationshipTree_GetNodeMacroResolver", NodeID, Culture, ToolTipFormat, DisplayNameFormat));
     }
+
 
     /// <summary>
     /// PreRender event handler.
@@ -870,7 +880,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                         ToolTipFormat = ValidationHelper.GetString(GridObj.Attributes["ToolTipFormat"], "");
                     }
                     int NodeID = ValidationHelper.GetInteger(parameter, 0);
-                    var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeLevel, NodeName, ClassName").FirstObject;
+                    var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeLevel, NodeName, ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstObject;
                     // Not root and is in the allowed page types
                     if (GridObj != null && NodeObj.NodeLevel != 0 && (!string.IsNullOrWhiteSpace(ToolTipFormat) || !string.IsNullOrWhiteSpace(DisplayNameFormat)) && AllowedPageTypes.ToLower().Split(";,|".ToCharArray()).Contains(NodeObj.NodeClassName.ToLower()))
                     {
@@ -969,7 +979,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                     .WhereEquals("NodeID", NodeID)
                     .Columns(Columns)
                     .Culture(Culture)
-                    .CombineWithDefaultCulture(true).Result;
+                    .Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().Result;
 
                 foreach (DataColumn item in FullData.Tables[0].Columns)
                 {
