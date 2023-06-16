@@ -1,3 +1,0 @@
-﻿using CMS;
-
-[assembly: AssemblyDiscoverable]

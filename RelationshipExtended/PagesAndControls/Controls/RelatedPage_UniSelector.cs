@@ -521,14 +521,16 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
             return RelationshipInfo.Provider.Get()
                                            .WhereEquals("RelationshipNameID", RelationshipNameID)
                                            .Where(string.Format("(LeftNodeID = {0} or RightNodeID = {0})", CurrentNodeID))
-                                           .Count;
+                                           .GetEnumerableTypedResult()
+                                           .Count();
         }
         else
         {
             return RelationshipInfo.Provider.Get()
                                            .WhereEquals("RelationshipNameID", RelationshipNameID)
                                            .WhereEquals(DirectionMode == "LeftNode" ? "LeftNodeID" : "RightNodeID", CurrentNodeID)
-                                           .Count;
+                                           .GetEnumerableTypedResult()
+                                           .Count();
         }
     }
 }

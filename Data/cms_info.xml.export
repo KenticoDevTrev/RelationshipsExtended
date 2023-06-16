@@ -1,0 +1,40 @@
+﻿<cms_info version="13.0">
+  <NewDataSet>
+    <cms_info>
+      <Key>machinename</Key>
+      <Value>HBS-TFAYAS05</Value>
+    </cms_info>
+    <cms_info>
+      <Key>domainname</Key>
+      <Value>admin.kentico13core.hbstest.net</Value>
+    </cms_info>
+    <cms_info>
+      <Key>currentuser</Key>
+      <Value>administrator</Value>
+    </cms_info>
+    <cms_info>
+      <Key>starttime</Key>
+      <Value>5/3/2023 10:57:29 AM</Value>
+    </cms_info>
+    <cms_info>
+      <Key>systemversion</Key>
+      <Value>13.0.0.21407</Value>
+    </cms_info>
+    <cms_info>
+      <Key>hotfixversion</Key>
+      <Value>0</Value>
+    </cms_info>
+    <cms_info>
+      <Key>webapplication</Key>
+      <Value>True</Value>
+    </cms_info>
+    <cms_info>
+      <Key>historyname</Key>
+      <Value>RelationshipsExtendedExtras13.0.0.zip</Value>
+    </cms_info>
+    <cms_info>
+      <Key>historydate</Key>
+      <Value>11/10/2020 10:36:27 PM</Value>
+    </cms_info>
+  </NewDataSet>
+</cms_info>

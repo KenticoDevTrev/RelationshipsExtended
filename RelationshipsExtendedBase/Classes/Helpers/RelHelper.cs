@@ -235,7 +235,7 @@ namespace RelationshipsExtended.Helpers
                 if (CallContext.GetData("UpdateAfterProcesses_" + nodeGUID) != null)
                 {
 
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeGUID", nodeGUID).FirstOrDefault();
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeGUID", nodeGUID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                     // Destroy any delete task items
                     if (CallContext.GetData("DeleteTasks") != null)
                     {
@@ -251,7 +251,7 @@ namespace RelationshipsExtended.Helpers
                     // Add a catcher so it doesn't cause a loop in thinking this event is from another source and trigger the same logic of this thing.
                     CallContext.SetData("UpdateAfterProcessesProcessed_" + nodeGUID, true);
 
-                    foreach (ServerInfo Server in ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo))
+                    foreach (ServerInfo Server in ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).WhereIn("ServerName", ServersToSendTo).GetEnumerableTypedResult())
                     {
 
                         DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
@@ -272,7 +272,8 @@ namespace RelationshipsExtended.Helpers
             }
             catch (Exception ex)
             {
-                EventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
+                var eventLogProvider = Service.Resolve<IEventLogService>();
+                eventLogProvider.LogException("RelHelper", "CheckIfTaskCreationShouldOccurr", ex);
             }
         }
 
@@ -298,7 +299,7 @@ namespace RelationshipsExtended.Helpers
                 }
                 if (Site == null)
                 {
-                    Site = SiteInfo.Provider.Get().FirstOrDefault();
+                    Site = SiteInfo.Provider.Get().GetEnumerableTypedResult().FirstOrDefault();
                 }
                 // Certain cases this is null, so set.
                 if(SiteContext.CurrentSite == null)
@@ -349,7 +350,7 @@ namespace RelationshipsExtended.Helpers
             if (ValidationHelper.GetInteger(e.Task.TaskDocumentID, 0) > 1 && (e.Task.TaskType == TaskTypeEnum.UpdateDocument || e.Task.TaskType == TaskTypeEnum.CreateDocument || e.Task.TaskType == TaskTypeEnum.MoveDocument || e.Task.TaskType == TaskTypeEnum.PublishDocument || e.Task.TaskType == TaskTypeEnum.ArchiveDocument))
             {
                 //Service.Resolve<IEventLogService>().LogEvent("W", "RelHelper", "UpdateTask3", eventDescription: "NodeID: " + e.Task.TaskNodeID);
-                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).FirstOrDefault();
+                TreeNode Node = new DocumentQuery().WhereEquals("DocumentID", e.Task.TaskDocumentID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                 if (IsStagingEnabled(Node.NodeSiteID))
                 {
 
@@ -360,7 +361,7 @@ namespace RelationshipsExtended.Helpers
                         {
                             cs.CacheDependency = CacheHelper.GetCacheDependency("staging.server|all");
                         }
-                        return ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).Select(x => x.ServerName.ToLower()).ToArray();
+                        return ServerInfo.Provider.Get().WhereEquals("ServerSiteID", Node.NodeSiteID).GetEnumerableTypedResult().Select(x => x.ServerName.ToLower()).ToArray();
                     }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSite.SiteName), "GetServers"));
 
 
@@ -443,7 +444,7 @@ namespace RelationshipsExtended.Helpers
             // Trigger update on document, uses a Timer so if you insert multiple items, it will simply reset the timer so there will only be 1 or so calls total.
             TreeNode Node = CacheHelper.Cache<TreeNode>(cs =>
             {
-                TreeNode FoundNode = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstOrDefault();
+                TreeNode FoundNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                 if (cs.Cached)
                 {
                     cs.CacheDependency = CacheHelper.GetCacheDependency("NodeID|" + FoundNode.NodeID);
@@ -805,7 +806,7 @@ namespace RelationshipsExtended.Helpers
                     DocumentDataSet.ReadXml(new StringReader(DataSetXML));
                     DataTable BoundObjectTable = DocumentDataSet.Tables[0];
 
-                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").FirstOrDefault();
+                    TreeNode Node = new DocumentQuery().WhereEquals("NodeID", ValidationHelper.GetInteger(BoundObjectTable.Rows[0][NodeBindingNodeIDField], -1)).Columns("NodeAliasPath").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
 
                     string ColumnToGet = BoundObjectTypeInfo.DisplayNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.DisplayNameColumn : "";
                     ColumnToGet = string.IsNullOrWhiteSpace(ColumnToGet) && BoundObjectTypeInfo.CodeNameColumn != ObjectTypeInfo.COLUMN_NAME_UNKNOWN ? BoundObjectTypeInfo.CodeNameColumn : ColumnToGet;
@@ -891,10 +892,10 @@ namespace RelationshipsExtended.Helpers
         {
             return CacheHelper.Cache<int>(cs =>
             {
-                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).FirstOrDefault();
+                TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                 while (NodeObj != null && NodeObj.NodeLinkedNodeID > 0)
                 {
-                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).FirstOrDefault();
+                    NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeObj.NodeLinkedNodeID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                 }
                 int PrimaryNodeID = (NodeObj != null ? NodeObj.NodeID : -1);
                 if (cs.Cached)
@@ -958,7 +959,7 @@ namespace RelationshipsExtended.Helpers
         /// <returns>List of Category IDs</returns>
         public static IEnumerable<int> CategoryIdentitiesToIDs(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").Select(x => x.CategoryID).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryID").GetEnumerableTypedResult().Select(x => x.CategoryID).ToArray();
         }
 
         /// <summary>
@@ -968,7 +969,7 @@ namespace RelationshipsExtended.Helpers
         /// <returns>List of Category GUIDs</returns>
         public static IEnumerable<Guid> CategoryIdentitiesToGUIDs(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").Select(x => x.CategoryGUID).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryGUID").GetEnumerableTypedResult().Select(x => x.CategoryGUID).ToArray();
         }
 
         /// <summary>
@@ -978,7 +979,7 @@ namespace RelationshipsExtended.Helpers
         /// <returns>List of Category Code Names</returns>
         public static IEnumerable<string> CategoryIdentitiesToCodeNames(IEnumerable<object> CategoryIdentifications)
         {
-            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").Select(x => x.CategoryName).ToArray();
+            return CategoryInfo.Provider.Get().Where(CategoryIdentitiesWhere(CategoryIdentifications)).Columns("CategoryName").GetEnumerableTypedResult().Select(x => x.CategoryName).ToArray();
         }
 
         /// <summary>
@@ -1100,23 +1101,23 @@ namespace RelationshipsExtended.Helpers
             {
                 case "cms.tree":
                 case "cms.document":
-                    return new DocumentQuery().Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
+                    return new DocumentQuery().Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
                 default:
                     if (classObjSummary.ClassIsDocumentType)
                     {
-                        return new DocumentQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
+                        return new DocumentQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
                     }
                     else if (classObjSummary.ClassIsCustomTable)
                     {
-                        return CustomTableItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
+                        return CustomTableItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).GetEnumerableTypedResult().Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
                     }
                     else if (classObjSummary.ClassIsForm)
                     {
-                        return BizFormItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
+                        return BizFormItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).GetEnumerableTypedResult().Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
                     }
                     else
                     {
-                        return new ObjectQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
+                        return new ObjectQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.IDColumn).GetEnumerableTypedResult().Select(x => (int)x.GetValue(classObjSummary.IDColumn)).ToArray();
                     }
             }
         }
@@ -1134,23 +1135,23 @@ namespace RelationshipsExtended.Helpers
             {
                 case "cms.tree":
                 case "cms.document":
-                    return new DocumentQuery().Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
+                    return new DocumentQuery().Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
                 default:
                     if (classObjSummary.ClassIsDocumentType)
                     {
-                        return new DocumentQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
+                        return new DocumentQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
                     }
                     else if (classObjSummary.ClassIsCustomTable)
                     {
-                        return CustomTableItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
+                        return CustomTableItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).GetEnumerableTypedResult().Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
                     }
                     else if (classObjSummary.ClassIsForm)
                     {
-                        return BizFormItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
+                        return BizFormItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).GetEnumerableTypedResult().Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
                     }
                     else
                     {
-                        return new ObjectQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
+                        return new ObjectQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.GUIDColumn).GetEnumerableTypedResult().Select(x => (Guid)x.GetValue(classObjSummary.GUIDColumn)).ToArray();
                     }
             }
         }
@@ -1167,23 +1168,23 @@ namespace RelationshipsExtended.Helpers
             {
                 case "cms.tree":
                 case "cms.document":
-                    return new DocumentQuery().Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
+                    return new DocumentQuery().Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
                 default:
                     if (classObjSummary.ClassIsDocumentType)
                     {
-                        return new DocumentQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
+                        return new DocumentQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
                     }
                     else if (classObjSummary.ClassIsCustomTable)
                     {
-                        return CustomTableItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
+                        return CustomTableItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).GetEnumerableTypedResult().Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
                     }
                     else if (classObjSummary.ClassIsForm)
                     {
-                        return BizFormItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
+                        return BizFormItemProvider.GetItems(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).GetEnumerableTypedResult().Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
                     }
                     else
                     {
-                        return new ObjectQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
+                        return new ObjectQuery(classObjSummary.ClassName).Where(ObjectIdentitiesWhere(classObjSummary, ObjectIdentifications)).Columns(classObjSummary.CodeNameColumn).GetEnumerableTypedResult().Select(x => (string)x.GetValue(classObjSummary.CodeNameColumn)).ToArray();
                     }
             }
 

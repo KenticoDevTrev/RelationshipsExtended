@@ -459,7 +459,6 @@ namespace RelationshipsExtended
                         }
                     }
                     break;
-                    break;
                 case BindingQueryType.GetParentsByChild:
                     baseQuery.Source((QuerySource s) => s.InnerJoin(new QuerySourceTable(BindingClass.BindingTableName()), new WhereCondition($"{RelHelper.GetBracketedColumnName(BindingClass.ParentClassReferenceColumn())} = {RelHelper.GetBracketedColumnName(BindingClass.ParentObjectReferenceColumnName())}").WhereEquals(BindingClass.ChildObjectReferenceColumnName(), GetLookupValue(BindingClass.ChildClassName(), InRelationshipWithValue, BindingClass.ChildReferenceType()))));
                     break;
@@ -1613,6 +1612,7 @@ namespace RelationshipsExtended
                 .CombineWithAnyCulture()
                 .CombineWithDefaultCulture()
                 .Columns("NodeID")
+                .ToList()
                 .FirstOrDefault();
 
                 if (node != null)
