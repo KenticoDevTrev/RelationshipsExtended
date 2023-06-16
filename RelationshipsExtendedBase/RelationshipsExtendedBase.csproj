@@ -5,7 +5,7 @@
     <AssemblyName>RelationshipsExtendedBase</AssemblyName>
     <RootNamespace>RelationshipsExtended</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Version>13.0.8</Version>
+    <Version>13.0.10</Version>
     <Description>This is the Base module that contains libraries and interfaces used both in the Admin and MVC Site.</Description>
     <Authors>Trevor Fayas</Authors>
     <Company>Heartland Business Systems</Company>
@@ -23,7 +23,7 @@ Added some extension methods to make type casting to object or IEnumerable&lt;ob
 </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageIconUrl>https://www.kentico.com/icons/icon-48x48.png</PackageIconUrl>
-    <FileVersion>13.0.3.0</FileVersion>
+    <FileVersion>13.0.10.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

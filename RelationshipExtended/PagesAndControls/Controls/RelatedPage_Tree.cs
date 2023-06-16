@@ -297,7 +297,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         {
             docQuery.OnSite(RelatedNodeSiteName);
         }
-        List<CMS.DocumentEngine.TreeNode> Nodes = docQuery.TypedResult.ToList();
+        List<CMS.DocumentEngine.TreeNode> Nodes = docQuery.GetEnumerableTypedResult().ToList();
 
         // Get existing selected nodes
         string where = string.Format("NodeClassID in (select ClassID from CMS_Class where ClassName in ('{0}'))",
@@ -324,7 +324,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
 
         where = SqlHelper.AddWhereCondition(where, string.Format("NodeID <> {0}", CurrentNodeID));
 
-        AlreadySelectedNodes = new DocumentQuery().Where(where).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().Select(x => x.NodeID).ToList();
+        AlreadySelectedNodes = new DocumentQuery().Where(where).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => x.NodeID).ToList();
 
         // Exclude the current node, can't relate a node to itself.
         AlreadySelectedNodes.Add(CurrentNodeID);
@@ -337,7 +337,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
         {
             AdditionalWhere = SqlHelper.AddWhereCondition(AdditionalWhere, WhereCondition);
             FilterSelectableNodes = true;
-            SelectableSelectedNodes.AddRange(new DocumentQuery().Where(AdditionalWhere).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().Select(x => x.NodeID).ToList());
+            SelectableSelectedNodes.AddRange(new DocumentQuery().Where(AdditionalWhere).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().Select(x => x.NodeID).ToList());
         }
 
         pageTree.Nodes.Clear();
@@ -637,14 +637,16 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedP
             return RelationshipInfo.Provider.Get()
                                            .WhereEquals("RelationshipNameID", RelationshipNameID)
                                            .Where(string.Format("(LeftNodeID = {0} or RightNodeID = {0})", CurrentNodeID))
-                                           .Count;
+                                           .GetEnumerableTypedResult()
+                                           .Count();
         }
         else
         {
             return RelationshipInfo.Provider.Get()
                                            .WhereEquals("RelationshipNameID", RelationshipNameID)
                                            .WhereEquals(DirectionMode == "LeftNode" ? "LeftNodeID" : "RightNodeID", CurrentNodeID)
-                                           .Count;
+                                           .GetEnumerableTypedResult()
+                                           .Count();
         }
     }
 }

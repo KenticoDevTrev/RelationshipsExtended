@@ -47,7 +47,7 @@ namespace RelationshipsExtended
                         return CacheHelper.Cache<string>(cs =>
                         {
                             int ClassID = DataClassInfoProvider.GetDataClassInfo(ClassName).ClassID;
-                            int NodeID = new DocumentQuery().Path(ParentNodeAlias, PathTypeEnum.Single).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault().NodeID;
+                            int NodeID = new DocumentQuery().Path(ParentNodeAlias, PathTypeEnum.Single).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault().NodeID;
                             return SiteDomain+URLHelper.ResolveUrl(string.Format("~/CMSModules/Content/CMSDesk/Edit/Edit.aspx?action=new&classid={0}&parentnodeid={1}&parentculture={2}", ClassID, NodeID, Culture));
                         }, new CacheSettings(CacheHelper.CacheMinutes(SiteContext.CurrentSiteName), ClassName, ParentNodeAlias, Culture, SiteName));
                     }
@@ -193,7 +193,7 @@ namespace RelationshipsExtended
             {
                 return CacheHelper.Cache<TreeNode>(cs =>
                 {
-                    TreeNode currentNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Culture(Culture).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
+                    TreeNode currentNode = new DocumentQuery().WhereEquals("NodeID", NodeID).Culture(Culture).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                     if (currentNode != null && cs.Cached)
                     {
                         cs.CacheDependency = CacheHelper.GetCacheDependency("nodeid|" + NodeID);

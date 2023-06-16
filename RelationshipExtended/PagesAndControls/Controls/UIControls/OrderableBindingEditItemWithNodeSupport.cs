@@ -224,7 +224,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
         // Set Edited Object and ObjectID based on Node parameter if present
         if (NodeID > 0)
         {
-            UIContext.EditedObject = new DocumentQuery().TopN(1).WhereEquals("NodeID", NodeID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
+            UIContext.EditedObject = new DocumentQuery().TopN(1).WhereEquals("NodeID", NodeID).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
         }
         // CUSTOMIZATION END
 
@@ -508,7 +508,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIContro
                     // If binding has object ID column, retrieve all changed objects by single query
                     bindingsToProcess = new ObjectQuery(BindingObjectType, false)
                         .WhereEquals(parentColumn, CorrectObjectID)
-                        .WhereIn(targetColumn, items);
+                        .WhereIn(targetColumn, items)
+                        .GetEnumerableTypedResult();
                 }
             }
         }

@@ -824,14 +824,14 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     {
                         CustomTableItemProvider.GetItems(JoinTableClassInfo.ClassName).WhereEquals(JoinTableLeftFieldName, CurrentItemIdentification)
                             .WhereEquals(JoinTableRightFieldName, GetProperObjectValue(ObjectToRemove))
-                            .ToList().ForEach(x => ((CustomTableItem)x).Delete());
+                            .GetEnumerableTypedResult().ToList().ForEach(x => ((CustomTableItem)x).Delete());
                     }
                     else
                     {
                         new ObjectQuery(JoinTableClassInfo.ClassName)
                             .WhereEquals(JoinTableLeftFieldName, CurrentItemIdentification)
                             .WhereEquals(JoinTableRightFieldName, GetProperObjectValue(ObjectToRemove))
-                            .ToList().ForEach(x => x.Delete());
+                            .GetEnumerableTypedResult().ToList().ForEach(x => x.Delete());
                     }
                 }
             }
@@ -879,12 +879,12 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                             {
                                 DocQuery.OnCurrentSite();
                             }
-                            TreeNode Page = DocQuery.FirstOrDefault();
+                            TreeNode Page = DocQuery.GetEnumerableTypedResult().FirstOrDefault();
                             int PrimaryNodeID = RelHelper.GetPrimaryNodeID(Page.NodeID);
                             object NewValue = ForiegnKeyValue;
                             if (PrimaryNodeID != Page.NodeID)
                             {
-                                NewValue = new DocumentQuery().WhereEquals("NodeID", PrimaryNodeID).Columns(JoinTableThisObjectForeignKey).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault().GetValue(JoinTableThisObjectForeignKey);
+                                NewValue = new DocumentQuery().WhereEquals("NodeID", PrimaryNodeID).Columns(JoinTableThisObjectForeignKey).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault().GetValue(JoinTableThisObjectForeignKey);
                             }
                             if (cs.Cached)
                             {

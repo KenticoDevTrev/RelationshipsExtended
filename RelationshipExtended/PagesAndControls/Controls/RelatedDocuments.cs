@@ -511,7 +511,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
 
         if (
             (!string.IsNullOrWhiteSpace(RelatedNodeSiteName) && !RelatedNodeSiteName.Equals(SiteContext.CurrentSiteName, StringComparison.InvariantCultureIgnoreCase)
-            || (string.IsNullOrWhiteSpace(RelatedNodeSiteName) && SiteInfo.Provider.Get().Count > 1))
+            || (string.IsNullOrWhiteSpace(RelatedNodeSiteName) && SiteInfo.Provider.Get().GetEnumerableTypedResult().Count() > 1))
             )
         {
             ltrStyleHide.Visible = true;
@@ -735,7 +735,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                 string tooltip = null;
                 string customName = null;
                 int NodeID = ValidationHelper.GetInteger(parameter, 0);
-                var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeName, NodeLevel, ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
+                var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeName, NodeLevel, ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                 // Not root and is in the allowed page types
                 if (NodeObj.NodeLevel != 0 && (!string.IsNullOrWhiteSpace(ToolTipFormat) || !string.IsNullOrWhiteSpace(DisplayNameFormat)) && AllowedPageTypes.ToLower().Split(";,|".ToCharArray()).Contains(NodeObj.NodeClassName.ToLower()))
                 {
@@ -880,7 +880,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
                         ToolTipFormat = ValidationHelper.GetString(GridObj.Attributes["ToolTipFormat"], "");
                     }
                     int NodeID = ValidationHelper.GetInteger(parameter, 0);
-                    var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeLevel, NodeName, ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstObject;
+                    var NodeObj = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("NodeID, NodeLevel, NodeName, ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstObject;
                     // Not root and is in the allowed page types
                     if (GridObj != null && NodeObj.NodeLevel != 0 && (!string.IsNullOrWhiteSpace(ToolTipFormat) || !string.IsNullOrWhiteSpace(DisplayNameFormat)) && AllowedPageTypes.ToLower().Split(";,|".ToCharArray()).Contains(NodeObj.NodeClassName.ToLower()))
                     {
@@ -1139,7 +1139,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedD
     {
         return RelationshipInfo.Provider.Get()
                                        .WhereEquals("RelationshipNameID", GetRelationshipNameId())
-                                       .WhereEquals("LeftNodeID", TreeNode.NodeID).Count;
+                                       .WhereEquals("LeftNodeID", TreeNode.NodeID)
+                                       .GetEnumerableTypedResult().Count();
     }
 
     #endregion

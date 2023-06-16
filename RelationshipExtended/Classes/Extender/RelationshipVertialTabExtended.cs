@@ -79,8 +79,8 @@ namespace RelationshipsExtended
                     string Culture = DataHelper.GetNotEmpty(URLHelper.GetQueryValue(RequestContext.RawURL, "culture"), "en-US");
                     TreeNode CurrentDocument = CacheHelper.Cache<TreeNode>(cs =>
                     {
-                        TreeNode Document = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
-                        Document = new DocumentQuery(Document.ClassName).WhereEquals("NodeID", NodeID).Culture(Culture).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
+                        TreeNode Document = new DocumentQuery().WhereEquals("NodeID", NodeID).Columns("ClassName").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
+                        Document = new DocumentQuery(Document.ClassName).WhereEquals("NodeID", NodeID).Culture(Culture).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
                         if (cs.Cached)
                         {
                             cs.CacheDependency = CacheHelper.GetCacheDependency(new string[] { string.Format("node|{0}|{1}|{2}", Document.NodeSiteName, Document.NodeAliasPath, Culture,

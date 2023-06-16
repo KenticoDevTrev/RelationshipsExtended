@@ -125,7 +125,8 @@ namespace RelationshipsExtended
             var BindingObjectSingleton = BindingObjectFactory.Singleton;
             var BindingObj = new ObjectQuery(BindingObjectType)
                            .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName(), CorrectObjectID)
-                           .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName(), actionArgument).FirstOrDefault();
+                           .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName(), actionArgument)
+                           .GetEnumerableTypedResult().FirstOrDefault();
 
             var ObjectFactory = new InfoObjectFactory(ObjectType);
             var ObjectSingleton = (ObjectFactory != null && ObjectFactory.Singleton != null ? ObjectFactory.Singleton : null);
@@ -147,7 +148,8 @@ namespace RelationshipsExtended
                                 int NewPosition = ValidationHelper.GetInteger(Values[2], 0);
                                 BindingObj = new ObjectQuery(BindingObjectType)
                                     .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ParentObjectReferenceColumnName(), CorrectObjectID)
-                                    .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName(), ObjectID).FirstOrDefault();
+                                    .WhereEquals(((IBindingBaseInfo)BindingObjectSingleton).ChildObjectReferenceColumnName(), ObjectID)
+                                    .GetEnumerableTypedResult().FirstOrDefault();
                                 ((IOrderableBaseInfo)BindingObj).SetObjectOrderRelative(NewPosition - OrigPosition);
                             }
                         }
@@ -331,6 +333,7 @@ namespace RelationshipsExtended
                 var OrderItem = new ObjectQuery(BindingObjectType)
                     .WhereEquals(ParentObjectReference, CorrectObjectID)
                     .WhereEquals(BoundObjectReference, dr[ObjectIDColumn])
+                    .GetEnumerableTypedResult()
                     .FirstOrDefault();
                 if (OrderItem != null)
                 {

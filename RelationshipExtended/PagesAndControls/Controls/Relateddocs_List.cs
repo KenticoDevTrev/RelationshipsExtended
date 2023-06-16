@@ -133,7 +133,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
     {
         get
         {
-            return new DocumentQuery().WhereEquals("NodeID", (CurrentNodeID > 0 ? CurrentNodeID : QueryHelper.GetInteger("nodeid", 0))).Culture((!string.IsNullOrWhiteSpace(CurrentCulture) ? CurrentCulture : QueryHelper.GetString("culture", "en-US"))).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().FirstOrDefault();
+            return new DocumentQuery().WhereEquals("NodeID", (CurrentNodeID > 0 ? CurrentNodeID : QueryHelper.GetInteger("nodeid", 0))).Culture((!string.IsNullOrWhiteSpace(CurrentCulture) ? CurrentCulture : QueryHelper.GetString("culture", "en-US"))).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
         }
     }
 
@@ -228,7 +228,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_Relatedd
         else
         {
             // Check if any relationship exists
-            DataSet dsRel = RelationshipNameInfoProvider.GetRelationshipNames("RelationshipAllowedObjects LIKE '%" + ObjectHelper.GROUP_DOCUMENTS + "%' AND RelationshipNameID IN (SELECT RelationshipNameID FROM CMS_RelationshipNameSite WHERE SiteID = " + SiteContext.CurrentSiteID + ")", null, 1, "RelationshipNameID");
+            DataSet dsRel = RelationshipNameInfoProvider.GetRelationshipNames("RelationshipAllowedObjects LIKE '%" + ObjectHelper.GROUP_DOCUMENTS + "%' AND RelationshipNameID IN (SELECT RelationshipNameID FROM CMS_RelationshipNameSite WHERE SiteID = " + SiteContext.CurrentSiteID + ")", null, 1, "RelationshipNameID").Result;
             if (DataHelper.DataSourceIsEmpty(dsRel))
             {
                 relatedDocuments.Visible = false;
