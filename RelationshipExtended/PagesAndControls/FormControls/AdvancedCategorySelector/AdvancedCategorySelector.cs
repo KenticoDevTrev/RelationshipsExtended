@@ -1249,7 +1249,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             {
                 TreeProvider tree = new TreeProvider(MembershipContext.AuthenticatedUser);
 
-                List<ServerInfo> targetServers = ServerInfo.Provider.Get().Where(x => x.ServerSiteID == SiteContext.CurrentSiteID && x.ServerEnabled).GetEnumerableTypedResult().ToList();
+                List<ServerInfo> targetServers = ServerInfo.Provider.Get().WhereEquals(nameof(ServerInfo.ServerSiteID), SiteContext.CurrentSiteID).WhereTrue(nameof(ServerInfo.ServerEnabled)).GetEnumerableTypedResult().ToList();
                 foreach (ServerInfo targetServer in targetServers)
                 {
                     var docObj = DocumentHelper.GetDocument(DocumentID, tree);

@@ -537,7 +537,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_RelatedC
         var AllowableCategoryList = CategoryInfoProvider.GetCategories(TempWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult();
         if (AllowableCategoryList.Count() > 0)
         {
-            AllowableCategoryIDWhere = "CategoryID in (" + string.Join(",", AllowableCategoryList.Select(x => new CategoryInfo(x).CategoryID)) + ")";
+            AllowableCategoryIDWhere = "CategoryID in (" + string.Join(",", AllowableCategoryList.Select(x => x.CategoryID)) + ")";
         }
         else
         {

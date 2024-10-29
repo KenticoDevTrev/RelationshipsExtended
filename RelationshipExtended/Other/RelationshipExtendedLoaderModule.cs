@@ -60,7 +60,7 @@ namespace RelationshipsExtended
                 // Add dependencies
                 List<PackageDependency> NetStandardDependencies = new List<PackageDependency>()
                 {
-                    new PackageDependency("Kentico.Xperience.Libraries", new VersionRange(new NuGetVersion("13.0.0")), new string[] { }, new string[] {"Build","Analyzers"}),
+                    new PackageDependency("Kentico.Xperience.Libraries", new VersionRange(new NuGetVersion("13.0.13")), new string[] { }, new string[] {"Build","Analyzers"}),
                     new PackageDependency("RelationshipsExtended.Base", new VersionRange(new NuGetVersion("13.0.7")), new string[] { }, new string[] {"Build","Analyzers"})
                 };
                 PackageDependencyGroup PackageGroup = new PackageDependencyGroup(new NuGet.Frameworks.NuGetFramework(".NETStandard2.0"), NetStandardDependencies);
