@@ -17,13 +17,13 @@
     <None Remove="Client\node_modules\**" />
   </ItemGroup>
   <ItemGroup>
-    <AssemblyAttribute Include="CMS.AssemblyDiscoverableAttribute"></AssemblyAttribute>
+    <AssemblyAttribute Include="CMS.AssemblyDiscoverableAttribute" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="kentico.xperience.admin" Version="29.5.2" />
+    <PackageReference Include="kentico.xperience.admin" Version="29.6.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XperienceCommunity.RelationshipsExtended.Core\XperienceCommunity.RelationshipsExtended.Core.csproj" />

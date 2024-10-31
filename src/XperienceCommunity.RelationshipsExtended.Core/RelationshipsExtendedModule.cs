@@ -30,7 +30,7 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
             _installer = _services.GetRequiredService<RelationshipsExtendedModuleInstaller>();
             _options = _services.GetRequiredService<RelationshipsExtendedOptions>();
             ApplicationEvents.Initialized.Execute += InitializeModule;
-            if(_options.AllowLanguageSyncConfiguration) {
+            if (_options.AllowLanguageSyncConfiguration) {
                 ContentItemEvents.Publish.Execute += LanguageSync_Publish_Execute;
             }
         }
@@ -44,7 +44,7 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
             var languageSyncService = _services.GetRequiredService<ILanguageSyncService>();
         }
 
-        private void InitializeModule(object sender, EventArgs e)
+        private void InitializeModule(object? sender, EventArgs e)
         {
             _installer?.Install();
         }

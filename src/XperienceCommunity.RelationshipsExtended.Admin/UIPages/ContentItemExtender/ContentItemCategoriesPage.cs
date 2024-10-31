@@ -26,7 +26,7 @@ namespace XperienceCommunity.RelationshipsExtended.UIPages.ContentItemExtender
         protected override string TargetBindingColumn => nameof(ContentItemCategoryInfo.ContentItemCategoryTagID);
 
         // UI page configuration
-        public override async Task ConfigurePage()
+        public override Task ConfigurePage()
         {
             PageConfiguration.ExistingBindingsListing.ColumnConfigurations
                 .AddColumn(nameof(TagInfo.TagName), "Category", searchable: true, defaultSortDirection: SortTypeEnum.Asc);
@@ -36,6 +36,8 @@ namespace XperienceCommunity.RelationshipsExtended.UIPages.ContentItemExtender
 
             // Sets the heading of the page
             PageConfiguration.ExistingBindingsListing.Caption = "Add Categories to the Content Item.  These are Language-Agnostic and not Workflow-compatible, all changes are instant.";
+
+            return Task.CompletedTask;
         }
     }
 }

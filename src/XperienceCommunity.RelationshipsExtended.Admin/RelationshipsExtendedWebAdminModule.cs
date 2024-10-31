@@ -2,9 +2,6 @@
 
 using Kentico.Xperience.Admin.Base;
 using CMS.Core;
-using Microsoft.Extensions.DependencyInjection;
-using CMS.Base;
-using System;
 
  [assembly: CMS.RegisterModule(typeof(RelationshipsExtendedWebAdminModule))]
 
@@ -15,7 +12,7 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
 {
     internal class RelationshipsExtendedWebAdminModule : AdminModule
     {
-        private RelationshipsExtendedModuleInstaller installer = null!;
+        //private RelationshipsExtendedModuleInstaller installer = null!;
 
 
         public const string CUSTOM_CATEGORY = "xperiencecommunity.relationshipsextended.web.admin.category";

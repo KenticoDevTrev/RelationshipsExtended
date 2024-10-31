@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using XperienceCommunity.RelationshipsExtended;
 using XperienceCommunity.RelationshipsExtended.Services;
 using XperienceCommunity.RelationshipsExtended.Services.Implementations;
 
-namespace XperienceCommunity.RelationshipsExtended
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class RelationshipsExtendedStartupExtension
     {

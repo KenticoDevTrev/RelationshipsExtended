@@ -1,6 +1,7 @@
 ﻿using CMS.ContentEngine;
 using CMS.ContentEngine.Internal;
 using CMS.DataEngine;
+using CMS.EventLog;
 using CMS.FormEngine;
 using CMS.Modules;
 using RelationshipsExtended;
@@ -38,7 +39,7 @@ namespace XperienceCommunity.RelationshipsExtended
             }
         }
 
-        private void InitializeContentItemCategory(ResourceInfo resource)
+        private static void InitializeContentItemCategory(ResourceInfo resource)
         {
             var info = DataClassInfoProvider.GetDataClassInfo(ContentItemCategoryInfo.OBJECT_TYPE) ?? DataClassInfo.New(ContentItemCategoryInfo.OBJECT_TYPE);
 
@@ -101,13 +102,15 @@ BEGIN
 END
 ";
                     ConnectionHelper.ExecuteNonQuery(foreignKeySql, [], QueryTypeEnum.SQLQuery);
-                } catch (Exception) {
-                    // TODO: Hook up to event log
+                } catch (Exception ex) {
+                    EventLogProvider.LogEvent(new EventLogInfo("E", "RelationshipsExtended", "InitializeContentItemCategory Error") {
+                        Exception = ex
+                    });
                 }
             }
         }
 
-        private void SetFormDefinition(DataClassInfo info, FormInfo form)
+        private static void SetFormDefinition(DataClassInfo info, FormInfo form)
         {
             if (info.ClassID > 0) {
                 var existingForm = new FormInfo(info.ClassFormDefinition);

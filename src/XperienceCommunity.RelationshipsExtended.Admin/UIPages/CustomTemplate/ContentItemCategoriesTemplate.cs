@@ -133,7 +133,7 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
             }
 
             // Perform operations
-            if(categoryNamesToRemove.Any()) { 
+            if(categoryNamesToRemove.Count != 0) { 
                 var removeTagIds = (await TagInfoProvider.Get()
                     .WhereIn(nameof(TagInfo.TagName), categoryNamesToRemove)
                     .Columns(nameof(TagInfo.TagID))
@@ -145,7 +145,7 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
                 ContentItemCategoryInfoProvider.BulkDelete(removeWhereCondition);
             }
 
-            if(categoryNamesToAdd.Any()) {
+            if(categoryNamesToAdd.Count != 0) {
                 var addTagIds = (await TagInfoProvider.Get()
                 .WhereIn(nameof(TagInfo.TagName), categoryNamesToAdd)
                 .Columns(nameof(TagInfo.TagID))
