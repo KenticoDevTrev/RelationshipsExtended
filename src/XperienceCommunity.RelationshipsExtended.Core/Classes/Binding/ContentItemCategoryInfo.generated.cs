@@ -124,10 +124,10 @@ namespace RelationshipsExtended
         /// </summary>
         /// <param name="info">Serialization info.</param>
         /// <param name="context">Streaming context.</param>
-        protected ContentItemCategoryInfo(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+        //protected ContentItemCategoryInfo(SerializationInfo info, StreamingContext context)
+        //    : base(info, context)
+        //{
+        //}
 
 
         /// <summary>

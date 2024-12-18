@@ -27,9 +27,10 @@ namespace Microsoft.Extensions.DependencyInjection
         private static IServiceCollection AddRelationshipsExtendedInternal(this IServiceCollection services, RelationshipsExtendedOptions options) =>
             services
                .AddSingleton(options)
-               .AddSingleton<ILanguageSyncService, LanguageSyncService>()
                .AddSingleton<RelationshipsExtendedModuleInstaller>()
-               .AddScoped<IContentItemCategoryUIService, DefaultContentItemCategoryUIService>();
+               .AddScoped<ILanguageSyncService, LanguageSyncService>()
+               .AddScoped<IContentItemCategoryUIService, DefaultContentItemCategoryUIService>()
+               .AddScoped<IRelationshipExtendedHelper, RelationshipExtendedHelper>();
     }
 
     
