@@ -22,12 +22,12 @@ namespace XperienceCommunity.RelationshipsExtended
         /// <summary>
         /// Allows language syncing of specified fields (LanguageSyncConfiguration) and/or through custom implementation of ILanguageSyncService
         /// </summary>
-        public bool AllowLanguageSyncConfiguration { get; set; } = false;
+        //public bool AllowLanguageSyncConfiguration { get; set; } = false;
 
         /// <summary>
         /// The Language Sync Configuration.
         /// </summary>
-        public LanguageSyncConfiguration? LanguageSyncConfiguration { get; set; } = null;
+        //public LanguageSyncConfiguration? LanguageSyncConfiguration { get; set; } = null;
 
         
     }

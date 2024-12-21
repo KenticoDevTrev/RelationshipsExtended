@@ -30,9 +30,9 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
             _installer = _services.GetService<RelationshipsExtendedModuleInstaller>();
             _options = _services.GetService<RelationshipsExtendedOptions>();
             ApplicationEvents.Initialized.Execute += InitializeModule;
-            if (_options?.AllowLanguageSyncConfiguration ?? false) {
-                ContentItemEvents.Publish.Execute += LanguageSync_Publish_Execute;
-            }
+            //if (_options?.AllowLanguageSyncConfiguration ?? false) {
+            //    ContentItemEvents.Publish.Execute += LanguageSync_Publish_Execute;
+            //}
         }
 
         private void LanguageSync_Publish_Execute(object? sender, PublishContentItemEventArgs e)

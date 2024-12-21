@@ -4,8 +4,33 @@
     <AdminOrgName>xperiencecommunity.relationshipsextended</AdminOrgName>
     <RootNamespace>XperienceCommunity.RelationshipsExtended</RootNamespace>
     <TargetFramework>net8.0</TargetFramework>
-    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Xperience Community Relationships Extended</Title>
+    <Authors>Trevor Fayas @KenticoDevTrev</Authors>
+    <Company>Xperience Community</Company>
+    <Description>Aid to help fill in any remaining gaps for relationships in Xperience by Kentico.  Restores the ContentItemTag (Category) as a central taxonomy binding for multiple page types, eventually will have language syncing and other features. This is the admin portion, can be installed alone or separately.</Description>
+    <PackageProjectUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</PackageProjectUrl>
+    <PackageIcon>kentico-icon-128x128.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Xperience by Kentico, XbyK, Kentico, Relationships</PackageTags>
+    <PackageReleaseNotes>Initial Release, only contains Content Item Categories on the Properties tab of a Content Items.</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.0.0</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\kentico-icon-128x128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
   <ItemGroup>
     <AdminClientPath Include="Client\dist\**">
       <ProjectName>web-admin</ProjectName>
