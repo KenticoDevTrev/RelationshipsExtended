@@ -23,6 +23,7 @@ namespace CMS
             return GetObjectQuery().TopN(1)
                 .WhereEquals("NodeID", nodeId)
                 .WhereEquals("CategoryID", categoryId)
+                .GetEnumerableTypedResult()
                 .FirstOrDefault();
         }
 

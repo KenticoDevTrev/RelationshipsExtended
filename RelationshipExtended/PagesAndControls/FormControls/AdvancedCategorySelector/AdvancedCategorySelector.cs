@@ -347,24 +347,24 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     {
                         case "ID":
                             string returnVal1 = "";
-                            var Categories1 = CategoryInfoProvider.GetCategories(string.Format("CategoryID in ('{0}')", string.Join("','", SplitAndSecure(CategoryValues))), null, -1, null, SiteContext.CurrentSiteID);
-                            foreach (DataRow cdr in Categories1.Execute().Tables[0].Rows)
+                            var Categories1 = CategoryInfoProvider.GetCategories(string.Format("CategoryID in ('{0}')", string.Join("','", SplitAndSecure(CategoryValues))), null, -1, null, SiteContext.CurrentSiteID).Execute();
+                            foreach (DataRow cdr in Categories1.Tables[0].Rows)
                             {
                                 returnVal1 += SeparatorCharacter + cdr["CategoryID"].ToString();
                             }
                             return (string.IsNullOrWhiteSpace(returnVal1) ? "" : returnVal1.Substring(1));
                         case "GUID":
                             string returnVal2 = "";
-                            var Categories2 = CategoryInfoProvider.GetCategories(string.Format("CategoryGUID in ('{0}')", string.Join("','", SplitAndSecure(string.IsNullOrWhiteSpace(CategoryValues) ? new Guid().ToString() : CategoryValues))), null, -1, null, SiteContext.CurrentSiteID);
-                            foreach (DataRow cdr in Categories2.Execute().Tables[0].Rows)
+                            var Categories2 = CategoryInfoProvider.GetCategories(string.Format("CategoryGUID in ('{0}')", string.Join("','", SplitAndSecure(string.IsNullOrWhiteSpace(CategoryValues) ? new Guid().ToString() : CategoryValues))), null, -1, null, SiteContext.CurrentSiteID).Execute();
+                            foreach (DataRow cdr in Categories2.Tables[0].Rows)
                             {
                                 returnVal2 += SeparatorCharacter + cdr["CategoryGUID"].ToString();
                             }
                             return (string.IsNullOrWhiteSpace(returnVal2) ? "" : returnVal2.Substring(1));
                         case "CategoryName":
                             string returnVal3 = "";
-                            var Categories3 = CategoryInfoProvider.GetCategories(string.Format("CategoryName in ('{0}')", string.Join("','", SplitAndSecure(CategoryValues))), null, -1, null, SiteContext.CurrentSiteID);
-                            foreach (DataRow cdr in Categories3.Execute().Tables[0].Rows)
+                            var Categories3 = CategoryInfoProvider.GetCategories(string.Format("CategoryName in ('{0}')", string.Join("','", SplitAndSecure(CategoryValues))), null, -1, null, SiteContext.CurrentSiteID).Execute();
+                            foreach (DataRow cdr in Categories3.Tables[0].Rows)
                             {
                                 returnVal3 += SeparatorCharacter + cdr["CategoryName"].ToString();
                             }
@@ -373,7 +373,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     break;
                 case SaveType.Both:
                 case SaveType.BothNode:
-                    var Categories = CategoryInfoProvider.GetCategories(string.Format("CategoryID in ('{0}')", string.Join("','", SplitAndSecure(CategoryValues))), null, -1, null, SiteContext.CurrentSiteID);
+                    var Categories = CategoryInfoProvider.GetCategories(string.Format("CategoryID in ('{0}')", string.Join("','", SplitAndSecure(CategoryValues))), null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult();
                     List<string> CategoryTextVal = new List<string>();
                     foreach (var Category in Categories)
                     {
@@ -573,13 +573,13 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             switch (FieldSaveModeVal)
             {
                 case CategoryFieldSaveType.ID:
-                    CurrentCategories.AddRange(CategoryInfoProvider.GetCategories("CategoryID in ('" + string.Join("','", SplitAndSecure(string.IsNullOrWhiteSpace(initialCategories) ? "-1" : initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID));
+                    CurrentCategories.AddRange(CategoryInfoProvider.GetCategories("CategoryID in ('" + string.Join("','", SplitAndSecure(string.IsNullOrWhiteSpace(initialCategories) ? "-1" : initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult());
                     break;
                 case CategoryFieldSaveType.GUID:
-                    CurrentCategories.AddRange(CategoryInfoProvider.GetCategories("CategoryGUID in ('" + string.Join("','", SplitAndSecure(string.IsNullOrWhiteSpace(initialCategories) ? new Guid().ToString() : initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID));
+                    CurrentCategories.AddRange(CategoryInfoProvider.GetCategories("CategoryGUID in ('" + string.Join("','", SplitAndSecure(string.IsNullOrWhiteSpace(initialCategories) ? new Guid().ToString() : initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult());
                     break;
                 case CategoryFieldSaveType.CategoryName:
-                    CurrentCategories.AddRange(CategoryInfoProvider.GetCategories("CategoryName in ('" + string.Join("','", SplitAndSecure(initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID));
+                    CurrentCategories.AddRange(CategoryInfoProvider.GetCategories("CategoryName in ('" + string.Join("','", SplitAndSecure(initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult());
                     break;
             }
         }
@@ -612,8 +612,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     currentCategories.Add(ValidationHelper.GetString(dr[JoinTableRightFieldName], ""));
                 }
 
-                var CurrentCategoryObjects = CategoryInfoProvider.GetCategories(null, null, -1, null, SiteContext.CurrentSiteID).WhereIn(CategoryFieldName, currentCategories).Select(x => CategoryInfo.New(x));
-                if (CurrentCategoryObjects != null)
+                var CurrentCategoryObjects = CategoryInfoProvider.GetCategories(null, null, -1, null, SiteContext.CurrentSiteID).WhereIn(CategoryFieldName, currentCategories).GetEnumerableTypedResult();
+                if (CurrentCategoryObjects != null && CurrentCategoryObjects.Any())
                 {
                     CurrentCategories.AddRange(CurrentCategoryObjects);
                 }
@@ -622,8 +622,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             {
                 // Set from Text value
                 string initialCategories = txtValue.Text;
-                var CurrentCategoriesOfDoc = CategoryInfoProvider.GetCategories("CategoryID in ('" + string.Join("','", SplitAndSecure(initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID);
-                if (CurrentCategoriesOfDoc != null)
+                var CurrentCategoriesOfDoc = CategoryInfoProvider.GetCategories("CategoryID in ('" + string.Join("','", SplitAndSecure(initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult();
+                if (CurrentCategoriesOfDoc != null && CurrentCategoriesOfDoc.Any())
                 {
                     CurrentCategories.AddRange(CurrentCategoriesOfDoc);
                 }
@@ -637,8 +637,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             if (!IsPostBack)
             {
                 // Will set the txtValue to the current proper categories after the first setup.
-                var CurrentCategoriesOfDoc = DocumentCategoryInfoProvider.GetDocumentCategories(ValidationHelper.GetInteger(Form.GetDataValue("DocumentID"), -1));
-                if (CurrentCategoriesOfDoc != null)
+                var CurrentCategoriesOfDoc = DocumentCategoryInfoProvider.GetDocumentCategories(ValidationHelper.GetInteger(Form.GetDataValue("DocumentID"), -1)).GetEnumerableTypedResult();
+                if (CurrentCategoriesOfDoc != null && CurrentCategoriesOfDoc.Any())
                 {
                     CurrentCategories.AddRange(CurrentCategoriesOfDoc);
                 }
@@ -659,7 +659,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     {
                         DefaultValueWhereCondition = SqlHelper.AddWhereCondition(DefaultValueWhereCondition, string.Format("CategoryGUID in ('{0}')", string.Join("','", guidArray)), "OR");
                     }
-                    foreach (CategoryInfo catInfo in CategoryInfo.Provider.Get().Where(DefaultValueWhereCondition))
+                    foreach (CategoryInfo catInfo in CategoryInfo.Provider.Get().Where(DefaultValueWhereCondition).GetEnumerableTypedResult())
                     {
                         CurrentCategories.Add(catInfo);
                     }
@@ -668,8 +668,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             else
             {
                 string initialCategories = txtValue.Text;
-                var CurrentCategoriesOfDoc = CategoryInfoProvider.GetCategories("CategoryID in ('" + string.Join("','", SplitAndSecure(initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID);
-                if (CurrentCategoriesOfDoc != null)
+                var CurrentCategoriesOfDoc = CategoryInfoProvider.GetCategories("CategoryID in ('" + string.Join("','", SplitAndSecure(initialCategories)) + "')", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult();
+                if (CurrentCategoriesOfDoc != null && CurrentCategoriesOfDoc.Any())
                 {
                     CurrentCategories.AddRange(CurrentCategoriesOfDoc);
                 }
@@ -714,10 +714,10 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
         // Grab allowable Categories if user sets a WHERE
         string TempWhere = "CategoryNamePath like " + (rootCategory == null ? "'/%'" : "'" + rootCategory.CategoryNamePath + "/%'") + (string.IsNullOrWhiteSpace(WhereFilter) ? "" : " and " + WhereFilter);
         DefaultSortOrder = (string.IsNullOrWhiteSpace(OrderBy) ? (DisplayMode == DisplayType.List ? "CategoryDisplayName" : "CategoryLevel, CategoryOrder") : OrderBy);
-        var AllowableCategoryList = CategoryInfoProvider.GetCategories(TempWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID);
-        if (AllowableCategoryList.Count > 0)
+        var AllowableCategoryList = CategoryInfoProvider.GetCategories(TempWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult();
+        if (AllowableCategoryList.Count() > 0)
         {
-            AllowableCategoryIDWhere = "CategoryID in (" + string.Join(",", AllowableCategoryList.Select(x => new CategoryInfo(x).CategoryID)) + ")";
+            AllowableCategoryIDWhere = "CategoryID in (" + string.Join(",", AllowableCategoryList.Select(x => x.CategoryID)) + ")";
         }
         else
         {
@@ -832,7 +832,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
     private void CreateChildTreeNodes(CategoryInfo ParentCategoryNode, ref TreeNode ParentNode, ref List<CategoryInfo> SelectedCategories)
     {
         // Grab all valid child categories
-        var ChildCategories = (ParentCategoryNode == null ? CategoryInfoProvider.GetCategories(AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).WhereEquals("CategoryLevel", 0) : CategoryInfoProvider.GetChildCategories(ParentCategoryNode.CategoryID, AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID));
+        var ChildCategories = (ParentCategoryNode == null ? CategoryInfoProvider.GetCategories(AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).WhereEquals("CategoryLevel", 0).GetEnumerableTypedResult() : CategoryInfoProvider.GetChildCategories(ParentCategoryNode.CategoryID, AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult());
         foreach (CategoryInfo childCategory in ChildCategories)
         {
             TreeNode childTreeObj = new TreeNode(GetInputDataPrepend(childCategory), GetNodeValue(childCategory));
@@ -964,14 +964,14 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     int.TryParse(e.Node.Value, out categoryID);
                     break;
                 case CategoryFieldSaveType.GUID:
-                    CategoryInfo temp = CategoryInfoProvider.GetCategories("CategoryGUID = '" + (!string.IsNullOrWhiteSpace(e.Node.Value) ? new Guid().ToString() : e.Node.Value) + "'", null, -1, null, SiteContext.CurrentSiteID).FirstOrDefault();
+                    CategoryInfo temp = CategoryInfoProvider.GetCategories("CategoryGUID = '" + (!string.IsNullOrWhiteSpace(e.Node.Value) ? new Guid().ToString() : e.Node.Value) + "'", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult().FirstOrDefault();
                     if (temp != null)
                     {
                         categoryID = temp.CategoryID;
                     }
                     break;
                 case CategoryFieldSaveType.CategoryName:
-                    CategoryInfo temp2 = CategoryInfoProvider.GetCategories("CategoryName = '" + e.Node.Value + "'", null, -1, null, SiteContext.CurrentSiteID).FirstOrDefault();
+                    CategoryInfo temp2 = CategoryInfoProvider.GetCategories("CategoryName = '" + e.Node.Value + "'", null, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult().FirstOrDefault();
                     if (temp2 != null)
                     {
                         categoryID = temp2.CategoryID;
@@ -1007,17 +1007,17 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                         // Get the node
                         return CacheHelper.Cache<object>(cs =>
                         {
-                            var DocQuery = new DocumentQuery().WhereEquals(JoinTableThisObjectForeignKey, ForiegnKeyValue).Columns("NodeID");
+                            var DocQuery = new DocumentQuery().WhereEquals(JoinTableThisObjectForeignKey, ForiegnKeyValue).Columns("NodeID").Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture();
                             if (JoinTableThisObjectForeignKey.ToLower() == "nodealiaspath")
                             {
                                 DocQuery.OnCurrentSite();
                             }
-                            CMS.DocumentEngine.TreeNode Page = DocQuery.FirstOrDefault();
+                            CMS.DocumentEngine.TreeNode Page = DocQuery.GetEnumerableTypedResult().FirstOrDefault();
                             int PrimaryNodeID = RelHelper.GetPrimaryNodeID(Page.NodeID);
                             object NewValue = ForiegnKeyValue;
                             if (PrimaryNodeID != Page.NodeID)
                             {
-                                NewValue = new DocumentQuery().WhereEquals("NodeID", PrimaryNodeID).Columns(JoinTableThisObjectForeignKey).FirstOrDefault().GetValue(JoinTableThisObjectForeignKey);
+                                NewValue = new DocumentQuery().WhereEquals("NodeID", PrimaryNodeID).Columns(JoinTableThisObjectForeignKey).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault().GetValue(JoinTableThisObjectForeignKey);
                             }
                             if (cs.Cached)
                             {
@@ -1087,7 +1087,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                         }
                         break;
                     case CategoryFieldSaveType.GUID:
-                        var ClassObject = CategoryInfo.Provider.Get().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).FirstOrDefault();
+                        var ClassObject = CategoryInfo.Provider.Get().WhereEquals("CategoryGUID", ValidationHelper.GetGuid(dr[JoinTableRightFieldName], new Guid())).GetEnumerableTypedResult().FirstOrDefault();
                         if (ClassObject != null)
                         {
                             DocumentCategoryIds.Add(ValidationHelper.GetInteger(ClassObject["CategoryID"], 0));
@@ -1116,14 +1116,14 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
                     {
                         CustomTableItemProvider.GetItems(JoinTableClassInfo.ClassName).WhereEquals(JoinTableLeftFieldName, CurrentItemIdentification)
                                     .WhereEquals(JoinTableRightFieldName, CategoryInfo.Provider.Get(DeselectId).GetValue(FieldSaveColumnName))
-                                    .ToList().ForEach(x => ((CustomTableItem)x).Delete());
+                                    .GetEnumerableTypedResult().ToList().ForEach(x => ((CustomTableItem)x).Delete());
                     }
                     else
                     {
                         new ObjectQuery(JoinTableClassInfo.ClassName)
                             .WhereEquals(JoinTableLeftFieldName, CurrentItemIdentification)
                             .WhereEquals(JoinTableRightFieldName, CategoryInfo.Provider.Get(DeselectId).GetValue(FieldSaveColumnName))
-                            .ToList().ForEach(x => x.Delete());
+                            .GetEnumerableTypedResult().ToList().ForEach(x => x.Delete());
                     }
                 }
             }
@@ -1223,7 +1223,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             List<int> SelectedCategoryIds = (string.IsNullOrWhiteSpace(CategoryIDs) ? new List<int>() : CategoryIDs.Split(SeparatorCharacter.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Select(x => int.Parse(x)).ToList()); //CategoryInfoProvider.GetCategories(string.Format("CategoryID in ('{0}')", string.Join("','", CategoryIDs.Split('|'))), null);
             List<int> PossibleCategoryIds = PossibleCategories.Select(x => x.CategoryID).ToList();
             List<int> DocumentCategoryIds = new List<int>();
-            foreach (var DocCategory in DocumentCategoryInfoProvider.GetDocumentCategories(DocumentID))
+            foreach (var DocCategory in DocumentCategoryInfoProvider.GetDocumentCategories(DocumentID).GetEnumerableTypedResult())
             {
                 DocumentCategoryIds.Add(DocCategory.CategoryID);
             }
@@ -1249,7 +1249,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
             {
                 TreeProvider tree = new TreeProvider(MembershipContext.AuthenticatedUser);
 
-                List<ServerInfo> targetServers = ServerInfo.Provider.Get().Where(x => x.ServerSiteID == SiteContext.CurrentSiteID && x.ServerEnabled).ToList();
+                List<ServerInfo> targetServers = ServerInfo.Provider.Get().WhereEquals(nameof(ServerInfo.ServerSiteID), SiteContext.CurrentSiteID).WhereTrue(nameof(ServerInfo.ServerEnabled)).GetEnumerableTypedResult().ToList();
                 foreach (ServerInfo targetServer in targetServers)
                 {
                     var docObj = DocumentHelper.GetDocument(DocumentID, tree);
@@ -1291,7 +1291,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
         // Grab allowable Categories if user sets a WHERE
         string TempWhere = "CategoryNamePath like " + (rootCategory == null ? "'/%'" : "'" + rootCategory.CategoryNamePath + "/%'") + (string.IsNullOrWhiteSpace(WhereFilter) ? "" : " and " + WhereFilter);
         DefaultSortOrder = (string.IsNullOrWhiteSpace(OrderBy) ? (DisplayMode == DisplayType.List ? "CategoryDisplayName" : "CategoryLevel, CategoryOrder") : OrderBy);
-        var AllowableCategoryList = CategoryInfoProvider.GetCategories(TempWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID);
+        var AllowableCategoryList = CategoryInfoProvider.GetCategories(TempWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult();
 
         if (DisplayMode == DisplayType.Tree)
         {
@@ -1318,7 +1318,7 @@ public partial class Compiled_CMSModules_RelationshipsExtended_FormControls_Adva
     private void SetPossibleCategoriesTreeRecursive(CategoryInfo ParentCategoryNode)
     {
         // Grab all valid child categories
-        var ChildCategories = (ParentCategoryNode == null ? CategoryInfoProvider.GetCategories(AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).WhereEquals("CategoryLevel", 0) : CategoryInfoProvider.GetChildCategories(ParentCategoryNode.CategoryID, AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID));
+        var ChildCategories = (ParentCategoryNode == null ? CategoryInfoProvider.GetCategories(AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).WhereEquals("CategoryLevel", 0).GetEnumerableTypedResult() : CategoryInfoProvider.GetChildCategories(ParentCategoryNode.CategoryID, AllowableCategoryIDWhere, DefaultSortOrder, -1, null, SiteContext.CurrentSiteID).GetEnumerableTypedResult());
         foreach (CategoryInfo childCategory in ChildCategories)
         {
             // If either all items selectable, or if only leaf selectable and this is a leaf node, save to the possible categories list.
