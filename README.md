@@ -7,7 +7,9 @@ This package then is much more limited in scope than the others in the past.  It
 1. Ensures Taxonomy is language agnostic (so you don't end up with taxonomy differences across multiple languages)
 2. Allows for faster filtering for large number of content items (The default Taxonomy fields on a Content Item store the taxonomy in a JSON array, and to filter it has to parse all the content item's Json arrays and do matches, which is slower than a Where In)
 
-It also has some extension methods to aid in this.  I have hopes that eventually this will also have logic to 'sync' taxonomy fields that are in the Content Item Fields if you want to keep using the built-in taxonomy field type.
+It also has some extension methods to the `ContentTypeQueryParameters` to leverage these language agnostic categories, as well as other Binding/Relational Binding Condition Generators in the `IRelationshipsExtendedHelper`. It is important to note if migrating from KX13 or prior, that due to the limitation of the Where Condition on the `ContentTypeQueryParameters` Only the `BindingTagsCondition` was implementable.
+
+I have hopes that eventually this will also have logic to 'sync' taxonomy fields that are in the Content Item Fields if you want to keep using the built-in taxonomy field type.
 
 
 # Installation

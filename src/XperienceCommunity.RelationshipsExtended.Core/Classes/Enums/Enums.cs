@@ -28,6 +28,18 @@
         None
     }
 
+    public enum ContentItemConditionType
+    {
+        /// <summary>
+        /// Any of the given values match
+        /// </summary>
+        Any,
+        /// <summary>
+        /// That none of the given values are found in the binding.
+        /// </summary>
+        None
+    }
+
     /// <summary>
     /// The identity field type
     /// </summary>

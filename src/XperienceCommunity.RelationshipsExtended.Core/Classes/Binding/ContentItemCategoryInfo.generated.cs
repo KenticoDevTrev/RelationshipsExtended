@@ -7,6 +7,9 @@ using CMS;
 using CMS.DataEngine;
 using CMS.Helpers;
 using RelationshipsExtended;
+using RelationshipsExtended.Interfaces;
+using RelationshipsExtended.Enums;
+using CMS.ContentEngine;
 
 [assembly: RegisterObjectType(typeof(ContentItemCategoryInfo), ContentItemCategoryInfo.OBJECT_TYPE)]
 
@@ -16,12 +19,35 @@ namespace RelationshipsExtended
     /// Data container class for <see cref="ContentItemCategoryInfo"/>.
     /// </summary>
     [Serializable]
-    public partial class ContentItemCategoryInfo : AbstractInfo<ContentItemCategoryInfo, IContentItemCategoryInfoProvider>, IInfoWithId
+    public partial class ContentItemCategoryInfo : AbstractInfo<ContentItemCategoryInfo, IContentItemCategoryInfoProvider>, IInfoWithId, IBindingInfo
     {
         /// <summary>
         /// Object type.
         /// </summary>
         public const string OBJECT_TYPE = "relationshipsextended.contentitemcategory";
+
+
+        public string ParentClassReferenceColumn() => nameof(ContentItemFields.ContentItemID);
+
+        public string ChildClassReferenceColumn() => nameof(TagInfo.TagID);
+
+        public IdentityType ParentReferenceType() => IdentityType.ID;
+
+        public IdentityType ChildReferenceType() => IdentityType.ID;
+
+        public string ParentClassName() => "CMS.ContentItem";
+
+        public string ChildClassName() => TagInfo.OBJECT_TYPE;
+
+        public string BindingTableName() => "RelationshipsExtended_ContentItemCategory";
+
+        public string OrderColumn() => string.Empty;
+
+        string IBindingBaseInfo.ObjectClassName() => OBJECT_TYPE;
+
+        public string ParentObjectReferenceColumnName() => nameof(ContentItemCategoryInfo.ContentItemCategoryContentItemID);
+
+        public string ChildObjectReferenceColumnName() => nameof(ContentItemCategoryInfo.ContentItemCategoryTagID);
 
 
         /// <summary>
@@ -117,6 +143,7 @@ namespace RelationshipsExtended
         {
             Provider.Set(this);
         }
+
 
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace RelationshipsExtended.Interfaces
         /// Should get the object's class name
         /// </summary>
         /// <returns></returns>
-        string ClassName();
+        string ObjectClassName();
 
         /// <summary>
         /// This should return the column name of the parent object id (ex "NodeFooNodeID")

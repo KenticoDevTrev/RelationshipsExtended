@@ -1,95 +1,171 @@
 ﻿using CMS.ContentEngine;
 using CMS.DataEngine;
 using CMS.Helpers;
+using RelationshipsExtended;
 using RelationshipsExtended.Enums;
 using RelationshipsExtended.Helpers;
 using RelationshipsExtended.Interfaces;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using XperienceCommunity.RelationshipsExtended.Classes.Enums;
 using XperienceCommunity.RelationshipsExtended.Classes.Helpers;
 
 namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
 {
-    public class RelationshipExtendedHelper(IRelHelper relHelper, IProgressiveCache progressiveCache, RelationshipsExtendedOptions options) : IRelationshipExtendedHelper
+    public class RelationshipExtendedHelper(IRelHelper relHelper, IProgressiveCache progressiveCache, RelationshipsExtendedOptions options,
+        IInfoProvider<ContentItemCategoryInfo> contentItemCategoryInfo) : IRelationshipExtendedHelper
     {
         private readonly IRelHelper _relHelper = relHelper;
         private readonly IProgressiveCache _progressiveCache = progressiveCache;
         private readonly RelationshipsExtendedOptions _options = options;
+        private readonly IInfoProvider<ContentItemCategoryInfo> _contentItemCategoryInfo = contentItemCategoryInfo;
 
-        public async Task<ObjectQuery> BindingCategoryCondition(ObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+        public async Task<ObjectQuery> BindingTagsCondition(ObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
         {
-            baseQuery.Where(await GetBindingCategoryWhere(bindingClass.ClassName(), bindingClass.ParentClassReferenceColumn(), bindingClass.ParentObjectReferenceColumnName(), bindingClass.ChildObjectReferenceColumnName(), values, condition: condition, objectIDTableName: bindingClass.BindingTableName());
+            baseQuery.Where(await GetBindingTagWhere(bindingClass, bindingCondition, values, condition));
             return baseQuery;
         }
 
-        public ObjectQuery<TObject> BindingCategoryCondition<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any) where TObject : BaseInfo, new()
+        public async Task<ObjectQuery<TObject>> BindingTagsCondition<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any) where TObject : BaseInfo, new()
         {
-            throw new NotImplementedException();
+            baseQuery.Where(await GetBindingTagWhere(bindingClass, bindingCondition, values, condition));
+            return baseQuery;
         }
 
-        public MultiObjectQuery BindingCategoryCondition(MultiObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+        public async Task<MultiObjectQuery> BindingTagsCondition(MultiObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
         {
-            throw new NotImplementedException();
+            baseQuery.Where(await GetBindingTagWhere(bindingClass, bindingCondition, values, condition));
+            return baseQuery;
         }
 
-        public ContentTypeQueryParameters BindingCondition(ContentTypeQueryParameters baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+        public async Task<ContentTypeQueryParameters> BindingTagsCondition(ContentTypeQueryParameters baseQuery, IEnumerable<object> values, ContentItemConditionType condition = ContentItemConditionType.Any)
         {
-            throw new NotImplementedException();
+            // Since Content Type Queries can't do a string Where Condition, must get all the ContentItemIDs in the given categories and then do the In or not in
+            var bindingClass = new ContentItemCategoryInfo();
+            var contentItemIds = await GetContentItemIdsForTags(values);
+            baseQuery.Where(x => {
+                if (condition == ContentItemConditionType.Any) {
+                    x.WhereIn(nameof(ContentItemFields.ContentItemID), contentItemIds);
+                } else {
+                    x.WhereNotIn(nameof(ContentItemFields.ContentItemID), contentItemIds);
+                }
+            });
+            return baseQuery;
         }
 
-        public ObjectQuery BindingCondition(ObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+        public async Task<ObjectQuery> BindingCondition(ObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
         {
-            throw new NotImplementedException();
+            baseQuery.Where(await GetBindingWhere(bindingClass, bindingCondition, values, condition));
+            return baseQuery;
         }
 
-        public ObjectQuery<TObject> BindingCondition<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any) where TObject : BaseInfo, new()
+        public async Task<ObjectQuery<TObject>> BindingCondition<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any) where TObject : BaseInfo, new()
         {
-            throw new NotImplementedException();
+            baseQuery.Where(await GetBindingWhere(bindingClass, bindingCondition, values, condition));
+            return baseQuery;
         }
 
-        public MultiObjectQuery BindingCondition(MultiObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+        public async Task<MultiObjectQuery> BindingCondition(MultiObjectQuery baseQuery, IBindingInfo bindingClass, BindingConditionType bindingCondition, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
         {
-            throw new NotImplementedException();
+            baseQuery.Where(await GetBindingWhere(bindingClass, bindingCondition, values, condition));
+            return baseQuery;
         }
 
-        public ContentTypeQueryParameters CategoryConditionCustomBinding(ContentTypeQueryParameters baseQuery, IBindingInfo bindingClass, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+
+        public async Task<ObjectQuery> InCustomRelationshipWithPossibleOrder(ObjectQuery baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true)
         {
-            throw new NotImplementedException();
+            var lookupVal = await GetLookupValue(bindingClass.ParentClassName(), inRelationshipWithValue, bindingClass.ChildReferenceType());
+            baseQuery.Source((QuerySource s) =>
+                s.InnerJoin(new QuerySourceTable(bindingClass.BindingTableName()),
+                    new WhereCondition($"{_relHelper.GetBracketedColumnName(bindingClass.ParentClassReferenceColumn())} = {_relHelper.GetBracketedColumnName(bindingClass.ParentObjectReferenceColumnName())}")
+                        .WhereEquals(bindingClass.ChildObjectReferenceColumnName(), lookupVal)
+                        )
+            );
+
+            // add the order by
+            if (!string.IsNullOrWhiteSpace(bindingClass.OrderColumn())) {
+                if (orderAsc) {
+                    baseQuery.OrderBy(bindingClass.OrderColumn());
+                } else {
+                    baseQuery.OrderByDescending(bindingClass.OrderColumn());
+                }
+            }
+            return baseQuery;
         }
 
-        public ContentTypeQueryParameters ContentItemCategoryCondition(ContentTypeQueryParameters baseQuery, IEnumerable<object> values, ConditionType condition = ConditionType.Any)
+        public async Task<ObjectQuery<TObject>> InCustomRelationshipWithPossibleOrder<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true) where TObject : BaseInfo, new()
         {
-            throw new NotImplementedException();
+            var lookupVal = await GetLookupValue(bindingClass.ParentClassName(), inRelationshipWithValue, bindingClass.ChildReferenceType());
+            baseQuery.Source((QuerySource s) =>
+                s.InnerJoin(new QuerySourceTable(bindingClass.BindingTableName()),
+                    new WhereCondition($"{_relHelper.GetBracketedColumnName(bindingClass.ParentClassReferenceColumn())} = {_relHelper.GetBracketedColumnName(bindingClass.ParentObjectReferenceColumnName())}")
+                        .WhereEquals(bindingClass.ChildObjectReferenceColumnName(), lookupVal)
+                        )
+            );
+
+            // add the order by
+            if (!string.IsNullOrWhiteSpace(bindingClass.OrderColumn())) {
+                if (orderAsc) {
+                    baseQuery.OrderBy(bindingClass.OrderColumn());
+                } else {
+                    baseQuery.OrderByDescending(bindingClass.OrderColumn());
+                }
+            }
+            return baseQuery;
         }
 
-        public ContentTypeQueryParameters ContentItemLanguageCategoryCondition(ContentTypeQueryParameters baseQuery, string field, IEnumerable<object> values, TaxonomyStorageType taxonomyStorageType = TaxonomyStorageType.TaxonomyIdentifier, ConditionType condition = ConditionType.Any)
+        public async Task<MultiObjectQuery> InCustomRelationshipWithPossibleOrder(MultiObjectQuery baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true)
         {
-            throw new NotImplementedException();
+            var lookupVal = await GetLookupValue(bindingClass.ParentClassName(), inRelationshipWithValue, bindingClass.ChildReferenceType());
+            baseQuery.Source((QuerySource s) => 
+                s.InnerJoin(new QuerySourceTable(bindingClass.BindingTableName()), 
+                    new WhereCondition($"{ _relHelper.GetBracketedColumnName(bindingClass.ParentClassReferenceColumn())} = {_relHelper.GetBracketedColumnName(bindingClass.ParentObjectReferenceColumnName())}")
+                        .WhereEquals(bindingClass.ChildObjectReferenceColumnName(), lookupVal)
+                        )
+            );
+
+            // add the order by
+            if (!string.IsNullOrWhiteSpace(bindingClass.OrderColumn())) {
+                if (orderAsc) {
+                    baseQuery.OrderBy(bindingClass.OrderColumn());
+                } else {
+                    baseQuery.OrderByDescending(bindingClass.OrderColumn());
+                }
+            }
+            return baseQuery;
         }
 
-        public ContentTypeQueryParameters InCustomRelationshipWithPossibleOrder(ContentTypeQueryParameters baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true)
+        /// <summary>
+        /// Gets the Lookup value for the class, converting whatever the value is passed to the ID type.
+        /// </summary>
+        /// <param name="primaryClass"></param>
+        /// <param name="inRelationshipWithValue"></param>
+        /// <param name="identity"></param>
+        /// <returns></returns>
+        private async Task<object> GetLookupValue(string primaryClass, object inRelationshipWithValue, IdentityType identity)
         {
-            throw new NotImplementedException();
-        }
-
-        public ObjectQuery InCustomRelationshipWithPossibleOrder(ObjectQuery baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ObjectQuery<TObject> InCustomRelationshipWithPossibleOrder<TObject>(ObjectQuery<TObject> baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true) where TObject : BaseInfo, new()
-        {
-            throw new NotImplementedException();
-        }
-
-        public MultiObjectQuery InCustomRelationshipWithPossibleOrder(MultiObjectQuery baseQuery, IBindingInfo bindingClass, BindingQueryType bindingType, object inRelationshipWithValue, bool orderAsc = true)
-        {
-            throw new NotImplementedException();
+            switch (identity) {
+                default:
+                case IdentityType.ID:
+                    return (await _relHelper.ObjectIdentitiesToIDs(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault();
+                case IdentityType.CodeName:
+                    return (await _relHelper.ObjectIdentitiesToCodeNames(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault() ?? string.Empty;
+                case IdentityType.Guid:
+                    return (await _relHelper.ObjectIdentitiesToGUIDs(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault();
+            }
         }
 
 
         #region "Where Condition Generators"
+
+        private async Task<IEnumerable<int>> GetContentItemIdsForTags(IEnumerable<object> tagValues)
+        {
+            var intValues = (tagValues.Any(x => x is not int) ? await _relHelper.TagIdentitiesToIDs(tagValues) : tagValues.Select(x => (int)x));
+            return await _progressiveCache.LoadAsync(async cs => {
+                if (cs.Cached) {
+                    cs.CacheDependency = CacheHelper.GetCacheDependency($"{ContentItemCategoryInfo.OBJECT_TYPE}|all");
+                }
+                return (await _contentItemCategoryInfo.Get().WhereIn(nameof(ContentItemCategoryInfo.ContentItemCategoryTagID), intValues).Columns(nameof(ContentItemCategoryInfo.ContentItemCategoryContentItemID)).GetEnumerableTypedResultAsync()).Select(x => x.ContentItemCategoryContentItemID);
+            }, new CacheSettings(_options.CacheMinutes, "GetContentItemIdsFromTags", string.Join(",", intValues)));
+        }
 
         /// <summary>
         /// Returns a full where condition (for Relationships Extended Content Item Category (Tag) Relationships) to be used in filtering (ex repeaters).  
@@ -100,7 +176,7 @@ namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
         /// <returns>The Where Condition, If no categories provided or none found, returns 1=1</returns>
         public async Task<string> GetContentItemCategoryWhere(IEnumerable<object> values, ConditionType condition = ConditionType.Any, string contentItemIDTableName = "CMS_ContentItem")
         {
-            
+
             return await _progressiveCache.LoadAsync(async cs => {
                 var tagIDs = await _relHelper.TagIdentitiesToIDs(values);
                 if (!tagIDs.Any()) {
