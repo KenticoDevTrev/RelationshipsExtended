@@ -1076,7 +1076,8 @@ public partial class Compiled_CMSModules_RelationshipsExtended_Controls_EditMenu
             allowed = WorkflowInfo.Provider.Get()
                                           .WhereTrue("WorkflowEnabled")
                                           .Where(new WhereCondition().WhereNotEquals("WorkflowType", (int)WorkflowTypeEnum.Automation).Or().WhereNull("WorkflowType"))
-                                          .Count > 0;
+                                          .GetEnumerableTypedResult()
+                                          .Count() > 0;
         }
 
         return allowed;

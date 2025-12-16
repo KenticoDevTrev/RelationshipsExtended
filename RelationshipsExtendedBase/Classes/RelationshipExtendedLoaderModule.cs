@@ -77,12 +77,40 @@ namespace RelationshipsExtended
             {
                 if (DataClassInfoProvider.GetDataClassInfo("CMS.TreeCategory") != null)
                 {
-                    ConnectionHelper.ExecuteQuery("CMS.TreeCategory.EnsureForeignKeys", null);
+                    ConnectionHelper.ExecuteQuery(@"IF NOT EXISTS (SELECT * FROM sys.objects o WHERE o.object_id = object_id(N'[dbo].[FK_CMS_TreeCategory_CMS_Category]') AND OBJECTPROPERTY(o.object_id, N'IsForeignKey') = 1)
+BEGIN
+ALTER TABLE [dbo].[CMS_TreeCategory]  WITH CHECK ADD  CONSTRAINT [FK_CMS_TreeCategory_CMS_Category] FOREIGN KEY([CategoryID])
+REFERENCES [dbo].[CMS_Category] ([CategoryID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+
+ALTER TABLE [dbo].[CMS_TreeCategory] CHECK CONSTRAINT [FK_CMS_TreeCategory_CMS_Category]
+END
+
+IF NOT EXISTS (SELECT * FROM sys.objects o WHERE o.object_id = object_id(N'[dbo].[FK_CMS_TreeCategory_CMS_Tree]') AND OBJECTPROPERTY(o.object_id, N'IsForeignKey') = 1)
+BEGIN
+ALTER TABLE [dbo].[CMS_TreeCategory]  WITH CHECK ADD  CONSTRAINT [FK_CMS_TreeCategory_CMS_Tree] FOREIGN KEY([NodeID])
+REFERENCES [dbo].[CMS_Tree] ([NodeID])
+ON UPDATE CASCADE
+ON DELETE CASCADE
+
+ALTER TABLE [dbo].[CMS_TreeCategory] CHECK CONSTRAINT [FK_CMS_TreeCategory_CMS_Tree]
+END
+
+-- Also add TreeCategory Binding View
+IF NOT EXISTS (SELECT * FROM sys.objects o WHERE o.object_id = object_id(N'[dbo].[View_TreeCategory_Bindable]') and o.type = 'V')
+BEGIN EXEC(' 
+CREATE VIEW [dbo].[View_TreeCategory_Bindable]
+AS
+SELECT        TreeCategoryID, NodeID AS TreeCategoryNodeID, CategoryID AS TreeCategoryCategoryID
+FROM            dbo.CMS_TreeCategory
+')
+END", null, QueryTypeEnum.SQLQuery);
                 }
             }
             catch (Exception ex)
             {
-                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "ErrorSettingForeignKeys", ex, additionalMessage: "Make sure the Query CMS.TreeCategory.EnsureForeignKey exists.  IGNORE if you just installed the module as this will run before the class installs on the first application start after installation.");
+                Service.Resolve<IEventLogService>().LogException("RelationshipsExtended", "ErrorSettingForeignKeys", ex, additionalMessage: "Error executing foreign key setup for Tree Category.  IGNORE if you just installed the module as this will run before the class installs on the first application start after installation.");
             }
 
             // Register TreeNode in search fields
@@ -132,7 +160,8 @@ namespace RelationshipsExtended
                 .Source(x => x.InnerJoin<TreeCategoryInfo>("cms_category.categoryid", "cms_treecategory.categoryid"))
                 .WhereEquals(nameof(TreeCategoryInfo.NodeID), indexedPage.NodeID)
                 .Columns(nameof(CategoryInfo.CategoryName), $"cms_category.{nameof(CategoryInfo.CategoryID)}")
-                .GetEnumerableTypedResult();
+                .GetEnumerableTypedResult()
+                .ToList();
 
             if(categories.Any()) { 
                 e.SearchDocument.Add("documenttreecategories", string.Join(",", categories.Select(x => x.CategoryName)));
@@ -208,7 +237,7 @@ namespace RelationshipsExtended
                 if (NodeTable != null && NodeTable.Columns.Contains("NodeGuid"))
                 {
                     // Don't want to trigger updates as we set the data in the database, so we won't log synchronziations
-                    TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeGUID", NodeTable.Rows[0]["NodeGuid"]).FirstOrDefault();
+                    TreeNode NodeObj = new DocumentQuery().WhereEquals("NodeGUID", NodeTable.Rows[0]["NodeGuid"]).Published(false).LatestVersion(true).CombineWithDefaultCulture().CombineWithAnyCulture().GetEnumerableTypedResult().FirstOrDefault();
 
                     using (new CMSActionContext()
                     {
@@ -219,8 +248,8 @@ namespace RelationshipsExtended
                         List<int> NewNodeCategoryIDs = RelHelper.NewBoundObjectIDs(e, TreeCategoryInfo.OBJECT_TYPE, "NodeID", "CategoryID", CategoryInfo.TYPEINFO);
 
                         // Now handle categories, deleting categories not found, and adding ones that are not set yet.
-                        TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).WhereNotIn("CategoryID", NewNodeCategoryIDs).ForEachObject(x => x.Delete());
-                        List<int> CurrentCategories = TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).Select(x => x.CategoryID).ToList();
+                        TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).WhereNotIn("CategoryID", NewNodeCategoryIDs).GetEnumerableTypedResult().ToList().ForEach(x => x.Delete());
+                        List<int> CurrentCategories = TreeCategoryInfo.Provider.Get().WhereEquals("NodeID", NodeObj.NodeID).GetEnumerableTypedResult().Select(x => x.CategoryID).ToList();
                         foreach (int NewCategoryID in NewNodeCategoryIDs.Except(CurrentCategories))
                         {
                             TreeCategoryInfo.Provider.Add(NodeObj.NodeID, NewCategoryID);
@@ -264,14 +293,16 @@ namespace RelationshipsExtended
         private void Relationship_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
         {
             RelationshipInfo relationshipObj = (RelationshipInfo)e.Object;
-            RelationshipNameInfo relationshipNameObj = RelationshipNameInfo.Provider.Get(relationshipObj.RelationshipNameId);
-
-            var leftNode = new DocumentQuery().Columns(nameof(TreeNode.NodeAliasPath), nameof(TreeNode.NodeSiteID)).Published(false).LatestVersion(true).WhereEquals("NodeID", relationshipObj.LeftNodeId).FirstOrDefault();
-            var siteName = RelHelper.GetSiteCached(leftNode.NodeSiteID).SiteName;
-
-            if (RelHelper.IsStagingEnabled(leftNode.NodeSiteID))
+            var leftNodeDR = ConnectionHelper.ExecuteQuery($"Select NodeAliasPath, NodeSiteID from CMS_Tree where NodeID = {relationshipObj.LeftNodeId}", new QueryDataParameters(), QueryTypeEnum.SQLQuery).Tables[0].Rows.Cast<DataRow>().FirstOrDefault();
+            if (leftNodeDR != null)
             {
-                DocumentSynchronizationHelper.LogDocumentChange(siteName, leftNode.NodeAliasPath, TaskTypeEnum.UpdateDocument, new TreeProvider(MembershipContext.AuthenticatedUser));
+
+                if (RelHelper.IsStagingEnabled((int)leftNodeDR["NodeSiteID"]))
+                {
+                    var siteName = RelHelper.GetSiteCached((int)leftNodeDR["NodeSiteID"]).SiteName;
+
+                    DocumentSynchronizationHelper.LogDocumentChange(siteName, (string)leftNodeDR["NodeAliasPath"], TaskTypeEnum.UpdateDocument, new TreeProvider(MembershipContext.AuthenticatedUser));
+                }
             }
         }
 
@@ -322,7 +353,7 @@ namespace RelationshipsExtended
         /// <param name="TaskType"></param>
         private void RelationshipNameSite_CreateStagingTask(RelationshipNameSiteInfo RelationshipSiteObj, TaskTypeEnum TaskType)
         {
-            List<ServerInfo> ActiveServers = ServerInfo.Provider.Get().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).ToList();
+            List<ServerInfo> ActiveServers = ServerInfo.Provider.Get().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).GetEnumerableTypedResult().ToList();
             RelationshipNameInfo RelationshipObj = RelationshipNameInfo.Provider.Get(RelationshipSiteObj.RelationshipNameID);
             // If relationship obj is already gone, then the Site deletion thing is already handled with the deletion of the relationship name.
             if (RelationshipObj == null)
@@ -385,7 +416,7 @@ namespace RelationshipsExtended
         /// <param name="TaskType"></param>
         private void RelationshipName_CreateStagingTask(RelationshipNameInfo RelationshipObj, TaskTypeEnum TaskType)
         {
-            List<ServerInfo> ActiveServers = ServerInfo.Provider.Get().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).ToList();
+            List<ServerInfo> ActiveServers = ServerInfo.Provider.Get().WhereEquals("ServerSiteID", SiteContext.CurrentSiteID).WhereEquals("ServerEnabled", true).GetEnumerableTypedResult().ToList();
 
             if (IsCustomAdhocRelationshipName(RelationshipObj) && ActiveServers.Count > 0)
             {
