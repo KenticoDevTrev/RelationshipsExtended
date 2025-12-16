@@ -18,9 +18,9 @@
     <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Xperience by Kentico, XbyK, Kentico, Relationships</PackageTags>
-    <PackageReleaseNotes>Initial Release, only contains Content Item Categories on the Properties tab of a Content Items.  This does not contain the Admin.</PackageReleaseNotes>
+    <PackageReleaseNotes>Updated to include Helper and Query Extensions applicable and updated to Xperience 31.0.0</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Product>XperienceCommunity.RelationshipsExtended</Product>
   </PropertyGroup>
   <ItemGroup>
@@ -39,7 +39,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Kentico.Xperience.WebApp" Version="30.0.0" />
+    <PackageReference Include="Kentico.Xperience.WebApp" Version="31.0.0" />
   </ItemGroup>
 
 </Project>

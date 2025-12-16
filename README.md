@@ -13,79 +13,40 @@ I have hopes that eventually this will also have logic to 'sync' taxonomy fields
 
 
 # Installation
-TBD
+Install the `XperienceCommunity.RelationshipsExtended.Web.Admin` Package on your Project.  Optionally you can install the Admin only on the Admin project, and the `XperienceCommunity.RelationshipsExtended.Core` on the MVC or `Kentico.Xperience.WebApp` dependent project.
 
 
-Lastly hook up RelationshipsExtendedHelper as the implementation for IRelationshipsExtendedHelper.
+## Package Installation
 
-For MVC.Net Core, add to the Startup.cs's ConfigureServices
-`services.AddSingleton(typeof(IRelationshipExtendedHelper), typeof(RelationshipsExtendedHelper));`
-
-For MVC.Net Framework, you will have to use your own IoC, such as AutoFac
-```csharp
-// builder is of type ContainerBuilder
-builder.RegisterType(typeof(RelationshipsExtendedHelper)).As(typeof(IRelationshipExtendedHelper));
+Add the package to your application using the .NET CLI
+```powershell
+dotnet add package XperienceCommunity.RelationshipsExtended.Web.Admin
 ```
 
-This will provide you with TreeCategory, DocumentQuery/ObjectQuery extensions, and AdHoc relationship support and event hooks that the Admin (Mother) also contain, so any adjustments in code will also work properly with staging and such.
+Additionally, you can elect to install only the required packages on specific projects if you have separation of concerns:
+
+**XperienceCommunity.RelationshipsExtended.Core**: Kentico.Xperience.WebApp Dependent (No Admin)
+**XperienceCommunity.RelationshipsExtended.Web.Admin** : Kentico.Xperience.Admin (Admin Items)
+
+## Quick Start
+In your startup, when you call the `.AddRelationshipsExtended(options => ...)` ...
+
+This will hook up all the interfaces (including `IRelationshipsExtendedHelper`, and `IRelHelper`), as well as  and run the installation logic on application run (will set up the `RelationshipsExtended_ContentItemCategory` table and `ContentItemCategoryInfo` class).
+
+
+## Library Version Matrix
+
+This project is using [Xperience Version v31.0.0](https://docs.kentico.com/changelog).
+
+| Xperience Version  | Library Version |
+| ------------------ | --------------- |
+| >= 31.0.*          | 1.1.0           |
+|    30.0.0-30.12.3  | 1.0.1           |
+
 
 
 # Documentation
-If you are new to the tool, you have two options for learning how to use this.
-
-1. Check out the [Demo section](https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo), which contains an example project with each scenario and it's configuration.  You can include the Demo project on your Admin, and go to Site -> Import site or objects on the `RelationshipsExtendedDemoModule.13.0.0.zip`  file to install the Demo module and it's UI elements.
-2. Check out the [Wiki page](https://github.com/KenticoDevTrev/RelationshipsExtended/wiki/Relationships-Extended-Overview) on this GitHub to get a general overview.
-
-## Batch Modification
-It is possible that during batch adjustments across multiple objects, that transactions can get locked, causing errors.  It is recommended in this case to not log the synchronization task during the batch operations, and then manually trigger an update a staging event after if something was changed. Under normaly operations on single items
-
-```csharp
-
-using(CMSActionContext context = new CMSActionContect() {
-   LogSynchronization = false
-   }) {
-    // Batch operation where multiple related objects are done
-   }
-   
-   if(UpdateWasMade) {
-        // Tree node update
-        DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
-        {
-            NodeAliasPath = AssetParent.NodeAliasPath,
-            CultureCode = AssetParent.DocumentCulture,
-            TaskType = TaskTypeEnum.UpdateDocument,
-            Tree = AssetParent.TreeProvider,
-            SiteName = AssetParent.NodeSiteName,
-            RunAsynchronously = false,
-            User = MembershipContext.AuthenticatedUser
-        });
-        // Object update
-        ParentObjectInfoProvider.Set(TheParentObject);
-   }
-
-    // In a global event hook
-    private void ParentCategories_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
-    {
-        if (CMSActionContext.CurrentLogSynchronization)
-        {
-            RelHelper.HandleNodeBindingInsertUpdateDeleteEvent(((ParentCategoryInfo.TypesInfo)e.Object).refNodeID, ParentCategoryInfo.TypesInfo.OBJECT_TYPE);
-        }
-    }
-
-
-```
-
-## Query Extensions
-The following Extension methods have been added to all ObjectQuery and DocumentQuery, see the project's readme for more info on usage.  Except for InRelationWithOrder which is available in all versions, these are only in 13+
-
-* BindingCategoryCondition: Filter items based on a Binding table that leverages CMS_Categories
-* DocumentCategoryCondition: Filter items based on Document Categories
-* TreeCategoryCondition: Filter items based on Tree Categories
-* BindingCondition: Filter items based on a Binding table
-* InCustomRelationshipWithOrder: Show objects related through a custom binding table with ordering support
-* InRelationWithOrder: Show related Pages with order support (Available in Kentico 10-13)
-
-You can see some samples [check this MVC Controller](https://github.com/KenticoDevTrev/RelationshipsExtended/blob/master/Demo/MVC/Controller/TestController.cs)
+Documentation is still TBD, i think the nav I created broke with some update so I need to revisit.  Overall though the `IRelationshipsExtendedHelper` allows you to leverage custom relationships/binding tables in lookups for objects, and there is one `BindingTagsCondition` for the `ContentTypeQueryParameters` that will filter the content items by the Tag IDs, Code Names, or Guids you pass.
 
 # Contributions, bug fixes and License
 Feel free to Fork and submit pull requests to contribute.
@@ -95,4 +56,4 @@ You can submit bugs through the issue list and i will get to them as soon as i c
 This is free to use and modify!
 
 # Compatability
-Can be used on any Kentico 10.0.52, 11.0.48+, and Kentico 12 SP site (hotfix 29 or above), and Kentico 13.0.0
+This version is for Xperience by Kentico 31.0.0+, but older versions are available for Kentico 10.0.52, 11.0.48+, and Kentico 12 SP site (hotfix 29 or above), and Kentico 13.0

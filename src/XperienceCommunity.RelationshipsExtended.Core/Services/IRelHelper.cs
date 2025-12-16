@@ -1,7 +1,7 @@
 ﻿using RelationshipsExtended.Enums;
 using XperienceCommunity.RelationshipsExtended.Classes.Helpers;
 
-namespace RelationshipsExtended.Helpers
+namespace XperienceCommunity.RelationshipsExtended.Services
 {
     public interface IRelHelper
     {

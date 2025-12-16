@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
 {
+    /* Todo
     public class LanguageSyncService : ILanguageSyncService
     {
         public Task HandleLanguageSync(ContentItemDataEventContainer originContentItem, ContentItemDataEventContainer destinationContentItem, IReadOnlyList<string> fieldsToSync)
@@ -15,4 +16,5 @@ namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
             return Task.CompletedTask;
         }
     }
+     */
 }

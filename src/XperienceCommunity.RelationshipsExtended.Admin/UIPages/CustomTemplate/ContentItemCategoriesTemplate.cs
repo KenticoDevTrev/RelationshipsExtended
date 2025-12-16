@@ -51,7 +51,7 @@ namespace XperienceCommunity.RelationshipsExtended.Web.Admin
                 .Columns(nameof(TagInfo.TagName))
                 .GetEnumerableTypedResultAsync();
 
-            properties.SelectedCategories = currentCategories.Select(x => x.TagName).ToList();
+            properties.SelectedCategories = [.. currentCategories.Select(x => x.TagName)];
 
             return properties;
         }

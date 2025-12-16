@@ -3,15 +3,14 @@ using CMS.DataEngine;
 using CMS.Helpers;
 using RelationshipsExtended;
 using RelationshipsExtended.Enums;
-using RelationshipsExtended.Helpers;
 using RelationshipsExtended.Interfaces;
 using System.Text.RegularExpressions;
 using XperienceCommunity.RelationshipsExtended.Classes.Helpers;
 
 namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
 {
-    public class RelationshipExtendedHelper(IRelHelper relHelper, IProgressiveCache progressiveCache, RelationshipsExtendedOptions options,
-        IInfoProvider<ContentItemCategoryInfo> contentItemCategoryInfo) : IRelationshipExtendedHelper
+    public class RelationshipsExtendedHelper(IRelHelper relHelper, IProgressiveCache progressiveCache, RelationshipsExtendedOptions options,
+        IInfoProvider<ContentItemCategoryInfo> contentItemCategoryInfo) : IRelationshipsExtendedHelper
     {
         private readonly IRelHelper _relHelper = relHelper;
         private readonly IProgressiveCache _progressiveCache = progressiveCache;
@@ -142,15 +141,11 @@ namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
         /// <returns></returns>
         private async Task<object> GetLookupValue(string primaryClass, object inRelationshipWithValue, IdentityType identity)
         {
-            switch (identity) {
-                default:
-                case IdentityType.ID:
-                    return (await _relHelper.ObjectIdentitiesToIDs(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault();
-                case IdentityType.CodeName:
-                    return (await _relHelper.ObjectIdentitiesToCodeNames(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault() ?? string.Empty;
-                case IdentityType.Guid:
-                    return (await _relHelper.ObjectIdentitiesToGUIDs(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault();
-            }
+            return identity switch {
+                IdentityType.CodeName => (await _relHelper.ObjectIdentitiesToCodeNames(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault() ?? string.Empty,
+                IdentityType.Guid => (await _relHelper.ObjectIdentitiesToGUIDs(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault(),
+                _ => (await _relHelper.ObjectIdentitiesToIDs(await _relHelper.GetClassObjSummary(primaryClass), [inRelationshipWithValue])).FirstOrDefault(),
+            };
         }
 
 
@@ -279,7 +274,7 @@ namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
                 switch (identity) {
                     case IdentityType.ID:
                         var objectIDs = await _relHelper.ObjectIdentitiesToIDs(classObjSummary, values);
-                        whereInValue = (objectIDs.Count() > 0 ? string.Join(",", objectIDs) : "''");
+                        whereInValue = (objectIDs.Any() ? string.Join(",", objectIDs) : "''");
                         count = objectIDs.Count();
                         break;
                     case IdentityType.Guid:
@@ -448,7 +443,7 @@ namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
                 switch (identity) {
                     case IdentityType.ID:
                         var objectIDs = await _relHelper.ObjectIdentitiesToIDs(classObjSummary, values);
-                        whereInValue = (objectIDs.Count() > 0 ? string.Join(",", objectIDs) : "''");
+                        whereInValue = (objectIDs.Any() ? string.Join(",", objectIDs) : "''");
                         count = objectIDs.Count();
                         break;
                     case IdentityType.Guid:

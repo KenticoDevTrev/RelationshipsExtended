@@ -6,8 +6,9 @@ using System.Data;
 using System.Xml;
 using XperienceCommunity.RelationshipsExtended;
 using XperienceCommunity.RelationshipsExtended.Classes.Helpers;
+using XperienceCommunity.RelationshipsExtended.Services;
 
-namespace RelationshipsExtended.Helpers
+namespace XperienceCommunity.RelationshipsExtended.Services.Implementations
 {
     public class RelHelper(IInfoProvider<TagInfo> tagInfoProvider, IProgressiveCache progressiveCache, RelationshipsExtendedOptions options) : IRelHelper
     {
@@ -125,7 +126,7 @@ namespace RelationshipsExtended.Helpers
                 switch (identity) {
                     case IdentityType.ID:
                         var objectIDs = await ObjectIdentitiesToIDs(classObjSummary, values);
-                        whereInValue = (objectIDs.Any() ? string.Join(",", objectIDs) : "''");
+                        whereInValue = objectIDs.Any() ? string.Join(",", objectIDs) : "''";
                         count = objectIDs.Count();
                         break;
                     case IdentityType.Guid:
@@ -191,7 +192,7 @@ namespace RelationshipsExtended.Helpers
             if (strings.Count > 0) {
                 whereCondition = SqlHelper.AddWhereCondition(whereCondition, $"(TagName in ('{string.Join("','", strings)}'))", "OR");
             }
-            return (!string.IsNullOrWhiteSpace(whereCondition) ? whereCondition : "(1=0)");
+            return !string.IsNullOrWhiteSpace(whereCondition) ? whereCondition : "(1=0)";
 
         }
 
@@ -269,7 +270,7 @@ namespace RelationshipsExtended.Helpers
                     if (ClassObj != null) {
                         // if still missing fields, try parsing XML
                         if (string.IsNullOrWhiteSpace(summaryObj.CodeNameColumn) || string.IsNullOrWhiteSpace(summaryObj.GUIDColumn) || string.IsNullOrWhiteSpace(summaryObj.IDColumn)) {
-                            XmlDocument classXML = new XmlDocument();
+                            var classXML = new XmlDocument();
                             classXML.LoadXml(ClassObj.ClassFormDefinition);
                             if (string.IsNullOrWhiteSpace(summaryObj.IDColumn)) {
                                 try {
@@ -342,7 +343,7 @@ namespace RelationshipsExtended.Helpers
         /// <param name="classObjSummary">The Class Object Summary</param>
         /// <param name="ObjectIdentifications">List of IDs, Guids, or CodeNames</param>
         /// <returns>The WHERE condition to select the objects (ex MyObjectID in (1,2,3) )</returns>
-        public string ObjectIdentitiesWhere(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
+        public static string ObjectIdentitiesWhere(ClassObjSummary classObjSummary, IEnumerable<object> ObjectIdentifications)
         {
             List<Guid> guids = [];
             List<int> ints = [];
@@ -371,7 +372,7 @@ namespace RelationshipsExtended.Helpers
             if (strings.Count > 0 && !string.IsNullOrWhiteSpace(classObjSummary.CodeNameColumn)) {
                 whereCondition = SqlHelper.AddWhereCondition(whereCondition, $"({classObjSummary.CodeNameColumn} in ('{string.Join("','", strings)}'))", "OR");
             }
-            return (!string.IsNullOrWhiteSpace(whereCondition) ? whereCondition : "(1=0)");
+            return !string.IsNullOrWhiteSpace(whereCondition) ? whereCondition : "(1=0)";
         }
 
         /// <summary>

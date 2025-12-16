@@ -5,7 +5,7 @@ using RelationshipsExtended.Interfaces;
 
 namespace XperienceCommunity.RelationshipsExtended.Services
 {
-    public interface IRelationshipExtendedHelper
+    public interface IRelationshipsExtendedHelper
     {
 
         #region "Retrieve Items by Parent-Child Relationship with Ordering possible"

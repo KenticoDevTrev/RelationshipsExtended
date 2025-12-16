@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using CMS.Base;
 using CMS.DataEngine;
 using CMS.ContentEngine;
-using XperienceCommunity.RelationshipsExtended.Services;
 
 [assembly: CMS.RegisterModule(typeof(RelationshipsExtendedModule))]
 
