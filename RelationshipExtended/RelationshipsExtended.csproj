@@ -475,14 +475,16 @@
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Common, Version=5.3.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\NuGet.Common.5.3.1\lib\net472\NuGet.Common.dll</HintPath>
+    <Reference Include="NuGet.Common, Version=5.11.5.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\NuGet.Common.5.11.5\lib\net472\NuGet.Common.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NuGet.Configuration, Version=5.3.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\NuGet.Configuration.5.3.1\lib\net472\NuGet.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="NuGet.Frameworks, Version=5.3.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\NuGet.Frameworks.5.3.1\lib\net472\NuGet.Frameworks.dll</HintPath>
+    <Reference Include="NuGet.Frameworks, Version=7.0.1.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\NuGet.Frameworks.7.0.1\lib\net472\NuGet.Frameworks.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="NuGet.Packaging, Version=5.3.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\Kentico13Core\KenticoAdmin\packages\NuGet.Packaging.5.3.1\lib\net472\NuGet.Packaging.dll</HintPath>
