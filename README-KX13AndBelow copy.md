@@ -1,18 +1,25 @@
 
 # RelationshipsExtended
-Unlike Kentico Xperience 13 or lower versions, Xperience by Kentico handles relationships MUCH better, including tools to create many to one relationships between Content Items and the ability to make custom fields that can store relationships between Pages and Objects (in a Serialized Json Array).
+Relationships Extended Module for Kentico
+This tool extends Kentico by allowing support and management tools for 6 Relationship scenarios:
 
-This package then is much more limited in scope than the others in the past.  It contains a "Content Item Category [Tag]" table and interfaces to set this.  This allows linking of Tags on the Content Item (language agnostic) instead of in a language-specific field on the content item.  This does 2 things:
-
-1. Ensures Taxonomy is language agnostic (so you don't end up with taxonomy differences across multiple languages)
-2. Allows for faster filtering for large number of content items (The default Taxonomy fields on a Content Item store the taxonomy in a JSON array, and to filter it has to parse all the content item's Json arrays and do matches, which is slower than a Where In)
-
-It also has some extension methods to aid in this.  I have hopes that eventually this will also have logic to 'sync' taxonomy fields that are in the Content Item Fields if you want to keep using the built-in taxonomy field type.
-
+* Related Pages (Both Orderable AdHoc Relationships and Unordered Relationships)
+* Node Categories (using CMS.TreeNode)
+* Node Categories (using a Custom Joining Table)
+* Object to Object binding with Ordering
+* Node to Object binding with Ordering
+* Node to Object binding without Ordering
 
 # Installation
-TBD
+# Admin
+* Open your Kentico Solution and right click on the CMS Project, and select "Manage NuGet Packages..."
+* Search for RelationshipsExtended and select the major version that mathces your Kentico version (ex 10.0.0 = Kentico 10, 11.0.0 = Kentico 11, etc)
+* After your NuGet package finishes installing, run your Keintico site.  Ignore the Event Log Error for the RelationshipsExtended ErrorSettingForeignKeys as that always happens on the first start up.
+* Go to System -> Restart Application
+* Also go to System -> Macros -> Signatures and resign your macros.
 
+# MVC
+If you are using Kentico 12 MVC or Kentico 13 MVC (.Net or .Net Core) you should also install the `RelationshipsExtended.MVC.Standard` for Kentico 13, or `RelationshipsExtendedMVCHelper` for Kentico 12 NuGet package. 
 
 Lastly hook up RelationshipsExtendedHelper as the implementation for IRelationshipsExtendedHelper.
 

@@ -1,4 +1,5 @@
-﻿using XperienceCommunity.RelationshipsExtended;
+﻿using RelationshipsExtended.Helpers;
+using XperienceCommunity.RelationshipsExtended;
 using XperienceCommunity.RelationshipsExtended.Services;
 using XperienceCommunity.RelationshipsExtended.Services.Implementations;
 
@@ -28,6 +29,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services
                .AddSingleton(options)
                .AddSingleton<RelationshipsExtendedModuleInstaller>()
+               .AddSingleton<IRelHelper, RelHelper>()
                .AddScoped<ILanguageSyncService, LanguageSyncService>()
                .AddScoped<IContentItemCategoryUIService, DefaultContentItemCategoryUIService>()
                .AddScoped<IRelationshipExtendedHelper, RelationshipExtendedHelper>();

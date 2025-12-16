@@ -8,6 +8,12 @@ namespace RelationshipsExtended.Interfaces
     public interface IBindingBaseInfo
     {
         /// <summary>
+        /// Should get the object's class name
+        /// </summary>
+        /// <returns></returns>
+        string ClassName();
+
+        /// <summary>
         /// This should return the column name of the parent object id (ex "NodeFooNodeID")
         /// </summary>
         /// <returns>The Column name that contains the Parent ID reference</returns>

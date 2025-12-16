@@ -19,6 +19,9 @@ namespace XperienceCommunity.RelationshipsExtended
         /// </summary>
         public bool AllowContentItemCategories { get; set; } = false;
 
+        public bool CacheWhereConditions { get; set; } = true;
+        public int CacheMinutes { get; set; } = 30;
+
         /// <summary>
         /// Allows language syncing of specified fields (LanguageSyncConfiguration) and/or through custom implementation of ILanguageSyncService
         /// </summary>
@@ -29,6 +32,6 @@ namespace XperienceCommunity.RelationshipsExtended
         /// </summary>
         //public LanguageSyncConfiguration? LanguageSyncConfiguration { get; set; } = null;
 
-        
+
     }
 }

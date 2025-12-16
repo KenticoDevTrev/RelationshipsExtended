@@ -18,9 +18,10 @@
     <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Xperience by Kentico, XbyK, Kentico, Relationships</PackageTags>
-    <PackageReleaseNotes>Initial Release, only contains Content Item Categories on the Properties tab of a Content Items.</PackageReleaseNotes>
+    <PackageReleaseNotes>Initial Release, only contains Content Item Categories on the Properties tab of a Content Items.  This does not contain the Admin.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
+    <Product>XperienceCommunity.RelationshipsExtended</Product>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyAttribute Include="CMS.AssemblyDiscoverableAttribute"></AssemblyAttribute>
@@ -38,7 +39,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Kentico.Xperience.Core" Version="30.0.0" />
+    <PackageReference Include="Kentico.Xperience.WebApp" Version="30.0.0" />
   </ItemGroup>
 
 </Project>
