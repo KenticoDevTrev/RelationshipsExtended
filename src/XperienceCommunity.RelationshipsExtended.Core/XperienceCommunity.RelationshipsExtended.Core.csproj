@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>XperienceCommunity.RelationshipsExtended</RootNamespace>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Xperience Community Relationships Extended</Title>
+    <Authors>Trevor Fayas @KenticoDevTrev</Authors>
+    <Company>Xperience Community</Company>
+    <Description>Aid to help fill in any remaining gaps for relationships in Xperience by Kentico.  Restores the ContentItemTag (Category) as a central taxonomy binding for multiple page types, eventually will have language syncing and other features.</Description>
+    <PackageProjectUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</PackageProjectUrl>
+    <PackageIcon>kentico-icon-128x128.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Xperience by Kentico, XbyK, Kentico, Relationships</PackageTags>
+    <PackageReleaseNotes>Updated to include Helper and Query Extensions applicable and updated to Xperience 31.0.0</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.1.0</Version>
+    <Product>XperienceCommunity.RelationshipsExtended</Product>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="CMS.AssemblyDiscoverableAttribute"></AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\kentico-icon-128x128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Kentico.Xperience.WebApp" Version="31.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,56 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AdminOrgName>xperiencecommunity.relationshipsextended</AdminOrgName>
+    <RootNamespace>XperienceCommunity.RelationshipsExtended</RootNamespace>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Xperience Community Relationships Extended</Title>
+    <Authors>Trevor Fayas @KenticoDevTrev</Authors>
+    <Company>Xperience Community</Company>
+    <Description>Aid to help fill in any remaining gaps for relationships in Xperience by Kentico.  Restores the ContentItemTag (Category) as a central taxonomy binding for multiple page types, eventually will have language syncing and other features. This is the admin portion, can be installed stand alone or separately.</Description>
+    <PackageProjectUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</PackageProjectUrl>
+    <PackageIcon>kentico-icon-128x128.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/KenticoDevTrev/RelationshipsExtended</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Xperience by Kentico, XbyK, Kentico, Relationships</PackageTags>
+    <PackageReleaseNotes>Updated to include Helper and Query Extensions applicable and updated to Xperience 31.0.0</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.1.0</Version>
+    <AssemblyName>XperienceCommunity.RelationshipsExtended.Admin</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\kentico-icon-128x128.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <AdminClientPath Include="Client\dist\**">
+      <ProjectName>web-admin</ProjectName>
+    </AdminClientPath>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Client\node_modules\**" />
+    <EmbeddedResource Remove="Client\node_modules\**" />
+    <None Remove="Client\node_modules\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="CMS.AssemblyDiscoverableAttribute" />
+  </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="kentico.xperience.admin" Version="31.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\XperienceCommunity.RelationshipsExtended.Core\XperienceCommunity.RelationshipsExtended.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,0 @@
-﻿public partial class Compiled_CMSModules_RelationshipsExtended_Controls_UIControls_NodeBindingEditItem
-{
-    protected global::Compiled_CMSModules_RelationshipsExtended_UI_OrderableUniSelector_UniSelector_UniSelector editElem;
-}

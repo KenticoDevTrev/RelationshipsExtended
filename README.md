@@ -1,96 +1,52 @@
 
 # RelationshipsExtended
-Relationships Extended Module for Kentico
-This tool extends Kentico by allowing support and management tools for 6 Relationship scenarios:
+Unlike Kentico Xperience 13 or lower versions, Xperience by Kentico handles relationships MUCH better, including tools to create many to one relationships between Content Items and the ability to make custom fields that can store relationships between Pages and Objects (in a Serialized Json Array).
 
-* Related Pages (Both Orderable AdHoc Relationships and Unordered Relationships)
-* Node Categories (using CMS.TreeNode)
-* Node Categories (using a Custom Joining Table)
-* Object to Object binding with Ordering
-* Node to Object binding with Ordering
-* Node to Object binding without Ordering
+This package then is much more limited in scope than the others in the past.  It contains a "Content Item Category [Tag]" table and interfaces to set this.  This allows linking of Tags on the Content Item (language agnostic) instead of in a language-specific field on the content item.  This does 2 things:
+
+1. Ensures Taxonomy is language agnostic (so you don't end up with taxonomy differences across multiple languages)
+2. Allows for faster filtering for large number of content items (The default Taxonomy fields on a Content Item store the taxonomy in a JSON array, and to filter it has to parse all the content item's Json arrays and do matches, which is slower than a Where In)
+
+It also has some extension methods to the `ContentTypeQueryParameters` to leverage these language agnostic categories, as well as other Binding/Relational Binding Condition Generators in the `IRelationshipsExtendedHelper`. It is important to note if migrating from KX13 or prior, that due to the limitation of the Where Condition on the `ContentTypeQueryParameters` Only the `BindingTagsCondition` was implementable.
+
+I have hopes that eventually this will also have logic to 'sync' taxonomy fields that are in the Content Item Fields if you want to keep using the built-in taxonomy field type.
+
 
 # Installation
-# Admin
-* Open your Kentico Solution and right click on the CMS Project, and select "Manage NuGet Packages..."
-* Search for RelationshipsExtended and select the major version that mathces your Kentico version (ex 10.0.0 = Kentico 10, 11.0.0 = Kentico 11, etc)
-* After your NuGet package finishes installing, run your Keintico site.  Ignore the Event Log Error for the RelationshipsExtended ErrorSettingForeignKeys as that always happens on the first start up.
-* Go to System -> Restart Application
-* Also go to System -> Macros -> Signatures and resign your macros.
+Install the `XperienceCommunity.RelationshipsExtended.Web.Admin` Package on your Project.  Optionally you can install the Admin only on the Admin project, and the `XperienceCommunity.RelationshipsExtended.Core` on the MVC or `Kentico.Xperience.WebApp` dependent project.
 
-# MVC
-If you are using Kentico 12 MVC or Kentico 13 MVC (.Net or .Net Core) you should also install the `RelationshipsExtended.MVC.Standard` for Kentico 13, or `RelationshipsExtendedMVCHelper` for Kentico 12 NuGet package. 
 
-Lastly hook up RelationshipsExtendedHelper as the implementation for IRelationshipsExtendedHelper.
+## Package Installation
 
-For MVC.Net Core, add to the Startup.cs's ConfigureServices
-`services.AddSingleton(typeof(IRelationshipExtendedHelper), typeof(RelationshipsExtendedHelper));`
-
-For MVC.Net Framework, you will have to use your own IoC, such as AutoFac
-```csharp
-// builder is of type ContainerBuilder
-builder.RegisterType(typeof(RelationshipsExtendedHelper)).As(typeof(IRelationshipExtendedHelper));
+Add the package to your application using the .NET CLI
+```powershell
+dotnet add package XperienceCommunity.RelationshipsExtended.Web.Admin
 ```
 
-This will provide you with TreeCategory, DocumentQuery/ObjectQuery extensions, and AdHoc relationship support and event hooks that the Admin (Mother) also contain, so any adjustments in code will also work properly with staging and such.
+Additionally, you can elect to install only the required packages on specific projects if you have separation of concerns:
+
+**XperienceCommunity.RelationshipsExtended.Core**: Kentico.Xperience.WebApp Dependent (No Admin)
+**XperienceCommunity.RelationshipsExtended.Web.Admin** : Kentico.Xperience.Admin (Admin Items)
+
+## Quick Start
+In your startup, when you call the `.AddRelationshipsExtended(options => ...)` ...
+
+This will hook up all the interfaces (including `IRelationshipsExtendedHelper`, and `IRelHelper`), as well as  and run the installation logic on application run (will set up the `RelationshipsExtended_ContentItemCategory` table and `ContentItemCategoryInfo` class).
+
+
+## Library Version Matrix
+
+This project is using [Xperience Version v31.0.0](https://docs.kentico.com/changelog).
+
+| Xperience Version  | Library Version |
+| ------------------ | --------------- |
+| >= 31.0.*          | 1.1.0           |
+|    30.0.0-30.12.3  | 1.0.1           |
+
 
 
 # Documentation
-If you are new to the tool, you have two options for learning how to use this.
-
-1. Check out the [Demo section](https://github.com/KenticoDevTrev/RelationshipsExtended/tree/master/Demo), which contains an example project with each scenario and it's configuration.  You can include the Demo project on your Admin, and go to Site -> Import site or objects on the `RelationshipsExtendedDemoModule.13.0.0.zip`  file to install the Demo module and it's UI elements.
-2. Check out the [Wiki page](https://github.com/KenticoDevTrev/RelationshipsExtended/wiki/Relationships-Extended-Overview) on this GitHub to get a general overview.
-
-## Batch Modification
-It is possible that during batch adjustments across multiple objects, that transactions can get locked, causing errors.  It is recommended in this case to not log the synchronization task during the batch operations, and then manually trigger an update a staging event after if something was changed. Under normaly operations on single items
-
-```csharp
-
-using(CMSActionContext context = new CMSActionContect() {
-   LogSynchronization = false
-   }) {
-    // Batch operation where multiple related objects are done
-   }
-   
-   if(UpdateWasMade) {
-        // Tree node update
-        DocumentSynchronizationHelper.LogDocumentChange(new LogMultipleDocumentChangeSettings()
-        {
-            NodeAliasPath = AssetParent.NodeAliasPath,
-            CultureCode = AssetParent.DocumentCulture,
-            TaskType = TaskTypeEnum.UpdateDocument,
-            Tree = AssetParent.TreeProvider,
-            SiteName = AssetParent.NodeSiteName,
-            RunAsynchronously = false,
-            User = MembershipContext.AuthenticatedUser
-        });
-        // Object update
-        ParentObjectInfoProvider.Set(TheParentObject);
-   }
-
-    // In a global event hook
-    private void ParentCategories_Insert_Or_Delete_After(object sender, ObjectEventArgs e)
-    {
-        if (CMSActionContext.CurrentLogSynchronization)
-        {
-            RelHelper.HandleNodeBindingInsertUpdateDeleteEvent(((ParentCategoryInfo.TypesInfo)e.Object).refNodeID, ParentCategoryInfo.TypesInfo.OBJECT_TYPE);
-        }
-    }
-
-
-```
-
-## Query Extensions
-The following Extension methods have been added to all ObjectQuery and DocumentQuery, see the project's readme for more info on usage.  Except for InRelationWithOrder which is available in all versions, these are only in 13+
-
-* BindingCategoryCondition: Filter items based on a Binding table that leverages CMS_Categories
-* DocumentCategoryCondition: Filter items based on Document Categories
-* TreeCategoryCondition: Filter items based on Tree Categories
-* BindingCondition: Filter items based on a Binding table
-* InCustomRelationshipWithOrder: Show objects related through a custom binding table with ordering support
-* InRelationWithOrder: Show related Pages with order support (Available in Kentico 10-13)
-
-You can see some samples [check this MVC Controller](https://github.com/KenticoDevTrev/RelationshipsExtended/blob/master/Demo/MVC/Controller/TestController.cs)
+Documentation is still TBD, i think the nav I created broke with some update so I need to revisit.  Overall though the `IRelationshipsExtendedHelper` allows you to leverage custom relationships/binding tables in lookups for objects, and there is one `BindingTagsCondition` for the `ContentTypeQueryParameters` that will filter the content items by the Tag IDs, Code Names, or Guids you pass.
 
 # Contributions, bug fixes and License
 Feel free to Fork and submit pull requests to contribute.
@@ -100,4 +56,4 @@ You can submit bugs through the issue list and i will get to them as soon as i c
 This is free to use and modify!
 
 # Compatability
-Can be used on any Kentico 10.0.52, 11.0.48+, and Kentico 12 SP site (hotfix 29 or above), and Kentico 13.0.0
+This version is for Xperience by Kentico 31.0.0+, but older versions are available for Kentico 10.0.52, 11.0.48+, and Kentico 12 SP site (hotfix 29 or above), and Kentico 13.0
